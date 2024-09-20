@@ -1,0 +1,1691 @@
+definitions:
+  types.Column:
+    properties:
+      exp:
+        description: expressions, which default to = when the value is null, have
+          =, !=, >, >=, <, <=, like
+        type: string
+      logic:
+        description: logical type, defaults to and when value is null, only &(and),
+          ||(or)
+        type: string
+      name:
+        description: column name
+        type: string
+      value:
+        description: column value
+    type: object
+  types.Conditions:
+    properties:
+      columns:
+        description: columns info
+        items:
+          $ref: '#/definitions/types.Column'
+        type: array
+    type: object
+  types.CountriesObjDetail:
+    properties:
+      id:
+        description: convert to uint64 id
+        type: integer
+      isoCode:
+        type: string
+      name:
+        type: string
+    type: object
+  types.CountryLanguagesObjDetail:
+    properties:
+      countryID:
+        type: integer
+      id:
+        description: convert to uint64 id
+        type: integer
+      languageID:
+        type: integer
+    type: object
+  types.CreateCountriesReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          id:
+            description: id
+            type: integer
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.CreateCountriesRequest:
+    properties:
+      isoCode:
+        type: string
+      name:
+        type: string
+    type: object
+  types.CreateCountryLanguagesReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          id:
+            description: id
+            type: integer
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.CreateCountryLanguagesRequest:
+    properties:
+      countryID:
+        type: integer
+      languageID:
+        type: integer
+    type: object
+  types.CreateLanguagesReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          id:
+            description: id
+            type: integer
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.CreateLanguagesRequest:
+    properties:
+      isoCode:
+        type: string
+      name:
+        type: string
+      nativeName:
+        type: string
+    type: object
+  types.CreateUsersReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          id:
+            description: id
+            type: integer
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.CreateUsersRequest:
+    properties:
+      age:
+        type: integer
+      countryID:
+        type: integer
+      email:
+        type: string
+      emailVerified:
+        type: integer
+      gender:
+        type: string
+      interests:
+        type: string
+      languageLevel:
+        type: string
+      lastLogin:
+        type: string
+      learningLanguageID:
+        type: integer
+      nativeLanguageID:
+        type: integer
+      passwordHash:
+        type: string
+      profilePicture:
+        type: string
+      registrationDate:
+        type: string
+      status:
+        type: string
+      tokenExpiration:
+        type: string
+      username:
+        type: string
+      verificationToken:
+        type: string
+    type: object
+  types.DeleteCountriesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteCountriessByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteCountriessByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.DeleteCountryLanguagesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteCountryLanguagessByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteCountryLanguagessByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.DeleteLanguagesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteLanguagessByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteLanguagessByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.DeleteUsersByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteUserssByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteUserssByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.GetCountriesByConditionReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          countries:
+            $ref: '#/definitions/types.CountriesObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetCountriesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          countries:
+            $ref: '#/definitions/types.CountriesObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetCountryLanguagesByConditionReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          countryLanguages:
+            $ref: '#/definitions/types.CountryLanguagesObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetCountryLanguagesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          countryLanguages:
+            $ref: '#/definitions/types.CountryLanguagesObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetLanguagesByConditionReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          languages:
+            $ref: '#/definitions/types.LanguagesObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetLanguagesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          languages:
+            $ref: '#/definitions/types.LanguagesObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetUsersByConditionReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          users:
+            $ref: '#/definitions/types.UsersObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetUsersByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          users:
+            $ref: '#/definitions/types.UsersObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.LanguagesObjDetail:
+    properties:
+      id:
+        description: convert to uint64 id
+        type: integer
+      isoCode:
+        type: string
+      name:
+        type: string
+      nativeName:
+        type: string
+    type: object
+  types.ListCountriessByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          countriess:
+            items:
+              $ref: '#/definitions/types.CountriesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListCountriessByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.ListCountriessReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          countriess:
+            items:
+              $ref: '#/definitions/types.CountriesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListCountryLanguagessByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          countryLanguagess:
+            items:
+              $ref: '#/definitions/types.CountryLanguagesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListCountryLanguagessByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.ListCountryLanguagessReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          countryLanguagess:
+            items:
+              $ref: '#/definitions/types.CountryLanguagesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListLanguagessByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          languagess:
+            items:
+              $ref: '#/definitions/types.LanguagesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListLanguagessByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.ListLanguagessReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          languagess:
+            items:
+              $ref: '#/definitions/types.LanguagesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListUserssByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userss:
+            items:
+              $ref: '#/definitions/types.UsersObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListUserssByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.ListUserssReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userss:
+            items:
+              $ref: '#/definitions/types.UsersObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.Params:
+    properties:
+      columns:
+        description: query conditions
+        items:
+          $ref: '#/definitions/types.Column'
+        type: array
+      limit:
+        description: lines per page
+        type: integer
+      page:
+        description: page number, starting from page 0
+        type: integer
+      sort:
+        description: sorted fields, multi-column sorting separated by commas
+        type: string
+    type: object
+  types.UpdateCountriesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.UpdateCountriesByIDRequest:
+    properties:
+      id:
+        description: uint64 id
+        type: integer
+      isoCode:
+        type: string
+      name:
+        type: string
+    type: object
+  types.UpdateCountryLanguagesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.UpdateCountryLanguagesByIDRequest:
+    properties:
+      countryID:
+        type: integer
+      id:
+        description: uint64 id
+        type: integer
+      languageID:
+        type: integer
+    type: object
+  types.UpdateLanguagesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.UpdateLanguagesByIDRequest:
+    properties:
+      id:
+        description: uint64 id
+        type: integer
+      isoCode:
+        type: string
+      name:
+        type: string
+      nativeName:
+        type: string
+    type: object
+  types.UpdateUsersByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.UpdateUsersByIDRequest:
+    properties:
+      age:
+        type: integer
+      countryID:
+        type: integer
+      email:
+        type: string
+      emailVerified:
+        type: integer
+      gender:
+        type: string
+      id:
+        description: uint64 id
+        type: integer
+      interests:
+        type: string
+      languageLevel:
+        type: string
+      lastLogin:
+        type: string
+      learningLanguageID:
+        type: integer
+      nativeLanguageID:
+        type: integer
+      passwordHash:
+        type: string
+      profilePicture:
+        type: string
+      registrationDate:
+        type: string
+      status:
+        type: string
+      tokenExpiration:
+        type: string
+      username:
+        type: string
+      verificationToken:
+        type: string
+    type: object
+  types.UsersObjDetail:
+    properties:
+      age:
+        type: integer
+      countryID:
+        type: integer
+      email:
+        type: string
+      emailVerified:
+        type: integer
+      gender:
+        type: string
+      id:
+        description: convert to uint64 id
+        type: integer
+      interests:
+        type: string
+      languageLevel:
+        type: string
+      lastLogin:
+        type: string
+      learningLanguageID:
+        type: integer
+      nativeLanguageID:
+        type: integer
+      passwordHash:
+        type: string
+      profilePicture:
+        type: string
+      registrationDate:
+        type: string
+      status:
+        type: string
+      tokenExpiration:
+        type: string
+      username:
+        type: string
+      verificationToken:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: http server api docs
+  title: lingua_exchange api docs
+  version: "2.0"
+paths:
+  /api/v1/countries:
+    post:
+      consumes:
+      - application/json
+      description: submit information to create countries
+      parameters:
+      - description: countries information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateCountriesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.CreateCountriesReply'
+      security:
+      - BearerAuth: []
+      summary: create countries
+      tags:
+      - countries
+  /api/v1/countries/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete countries by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteCountriesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: delete countries
+      tags:
+      - countries
+    get:
+      consumes:
+      - application/json
+      description: get countries detail by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetCountriesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: get countries detail
+      tags:
+      - countries
+    put:
+      consumes:
+      - application/json
+      description: update countries information by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: countries information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateCountriesByIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.UpdateCountriesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: update countries
+      tags:
+      - countries
+  /api/v1/countries/condition:
+    post:
+      consumes:
+      - application/json
+      description: get countries by condition
+      parameters:
+      - description: query condition
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Conditions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetCountriesByConditionReply'
+      security:
+      - BearerAuth: []
+      summary: get countries by condition
+      tags:
+      - countries
+  /api/v1/countries/delete/ids:
+    post:
+      consumes:
+      - application/json
+      description: delete countriess by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.DeleteCountriessByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteCountriessByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: delete countriess
+      tags:
+      - countries
+  /api/v1/countries/list:
+    get:
+      consumes:
+      - application/json
+      description: list of countriess by last id and limit
+      parameters:
+      - default: 0
+        description: last id, default is MaxInt32
+        in: query
+        name: lastID
+        required: true
+        type: integer
+      - default: 10
+        description: number per page
+        in: query
+        name: limit
+        type: integer
+      - default: -id
+        description: 'sort by column name of table, and the '
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListCountriessReply'
+      security:
+      - BearerAuth: []
+      summary: list of countriess by last id and limit
+      tags:
+      - countries
+    post:
+      consumes:
+      - application/json
+      description: list of countriess by paging and conditions
+      parameters:
+      - description: query parameters
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Params'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListCountriessReply'
+      security:
+      - BearerAuth: []
+      summary: list of countriess by query parameters
+      tags:
+      - countries
+  /api/v1/countries/list/ids:
+    post:
+      consumes:
+      - application/json
+      description: list of countriess by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.ListCountriessByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListCountriessByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: list of countriess by batch id
+      tags:
+      - countries
+  /api/v1/countryLanguages:
+    post:
+      consumes:
+      - application/json
+      description: submit information to create countryLanguages
+      parameters:
+      - description: countryLanguages information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateCountryLanguagesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.CreateCountryLanguagesReply'
+      security:
+      - BearerAuth: []
+      summary: create countryLanguages
+      tags:
+      - countryLanguages
+  /api/v1/countryLanguages/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete countryLanguages by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteCountryLanguagesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: delete countryLanguages
+      tags:
+      - countryLanguages
+    get:
+      consumes:
+      - application/json
+      description: get countryLanguages detail by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetCountryLanguagesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: get countryLanguages detail
+      tags:
+      - countryLanguages
+    put:
+      consumes:
+      - application/json
+      description: update countryLanguages information by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: countryLanguages information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateCountryLanguagesByIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.UpdateCountryLanguagesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: update countryLanguages
+      tags:
+      - countryLanguages
+  /api/v1/countryLanguages/condition:
+    post:
+      consumes:
+      - application/json
+      description: get countryLanguages by condition
+      parameters:
+      - description: query condition
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Conditions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetCountryLanguagesByConditionReply'
+      security:
+      - BearerAuth: []
+      summary: get countryLanguages by condition
+      tags:
+      - countryLanguages
+  /api/v1/countryLanguages/delete/ids:
+    post:
+      consumes:
+      - application/json
+      description: delete countryLanguagess by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.DeleteCountryLanguagessByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteCountryLanguagessByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: delete countryLanguagess
+      tags:
+      - countryLanguages
+  /api/v1/countryLanguages/list:
+    get:
+      consumes:
+      - application/json
+      description: list of countryLanguagess by last id and limit
+      parameters:
+      - default: 0
+        description: last id, default is MaxInt32
+        in: query
+        name: lastID
+        required: true
+        type: integer
+      - default: 10
+        description: number per page
+        in: query
+        name: limit
+        type: integer
+      - default: -id
+        description: 'sort by column name of table, and the '
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListCountryLanguagessReply'
+      security:
+      - BearerAuth: []
+      summary: list of countryLanguagess by last id and limit
+      tags:
+      - countryLanguages
+    post:
+      consumes:
+      - application/json
+      description: list of countryLanguagess by paging and conditions
+      parameters:
+      - description: query parameters
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Params'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListCountryLanguagessReply'
+      security:
+      - BearerAuth: []
+      summary: list of countryLanguagess by query parameters
+      tags:
+      - countryLanguages
+  /api/v1/countryLanguages/list/ids:
+    post:
+      consumes:
+      - application/json
+      description: list of countryLanguagess by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.ListCountryLanguagessByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListCountryLanguagessByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: list of countryLanguagess by batch id
+      tags:
+      - countryLanguages
+  /api/v1/languages:
+    post:
+      consumes:
+      - application/json
+      description: submit information to create languages
+      parameters:
+      - description: languages information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateLanguagesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.CreateLanguagesReply'
+      security:
+      - BearerAuth: []
+      summary: create languages
+      tags:
+      - languages
+  /api/v1/languages/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete languages by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteLanguagesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: delete languages
+      tags:
+      - languages
+    get:
+      consumes:
+      - application/json
+      description: get languages detail by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetLanguagesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: get languages detail
+      tags:
+      - languages
+    put:
+      consumes:
+      - application/json
+      description: update languages information by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: languages information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateLanguagesByIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.UpdateLanguagesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: update languages
+      tags:
+      - languages
+  /api/v1/languages/condition:
+    post:
+      consumes:
+      - application/json
+      description: get languages by condition
+      parameters:
+      - description: query condition
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Conditions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetLanguagesByConditionReply'
+      security:
+      - BearerAuth: []
+      summary: get languages by condition
+      tags:
+      - languages
+  /api/v1/languages/delete/ids:
+    post:
+      consumes:
+      - application/json
+      description: delete languagess by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.DeleteLanguagessByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteLanguagessByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: delete languagess
+      tags:
+      - languages
+  /api/v1/languages/list:
+    get:
+      consumes:
+      - application/json
+      description: list of languagess by last id and limit
+      parameters:
+      - default: 0
+        description: last id, default is MaxInt32
+        in: query
+        name: lastID
+        required: true
+        type: integer
+      - default: 10
+        description: number per page
+        in: query
+        name: limit
+        type: integer
+      - default: -id
+        description: 'sort by column name of table, and the '
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListLanguagessReply'
+      security:
+      - BearerAuth: []
+      summary: list of languagess by last id and limit
+      tags:
+      - languages
+    post:
+      consumes:
+      - application/json
+      description: list of languagess by paging and conditions
+      parameters:
+      - description: query parameters
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Params'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListLanguagessReply'
+      security:
+      - BearerAuth: []
+      summary: list of languagess by query parameters
+      tags:
+      - languages
+  /api/v1/languages/list/ids:
+    post:
+      consumes:
+      - application/json
+      description: list of languagess by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.ListLanguagessByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListLanguagessByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: list of languagess by batch id
+      tags:
+      - languages
+  /api/v1/users:
+    post:
+      consumes:
+      - application/json
+      description: submit information to create users
+      parameters:
+      - description: users information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateUsersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.CreateUsersReply'
+      security:
+      - BearerAuth: []
+      summary: create users
+      tags:
+      - users
+  /api/v1/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete users by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteUsersByIDReply'
+      security:
+      - BearerAuth: []
+      summary: delete users
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: get users detail by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetUsersByIDReply'
+      security:
+      - BearerAuth: []
+      summary: get users detail
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: update users information by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: users information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateUsersByIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.UpdateUsersByIDReply'
+      security:
+      - BearerAuth: []
+      summary: update users
+      tags:
+      - users
+  /api/v1/users/condition:
+    post:
+      consumes:
+      - application/json
+      description: get users by condition
+      parameters:
+      - description: query condition
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Conditions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetUsersByConditionReply'
+      security:
+      - BearerAuth: []
+      summary: get users by condition
+      tags:
+      - users
+  /api/v1/users/delete/ids:
+    post:
+      consumes:
+      - application/json
+      description: delete userss by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.DeleteUserssByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteUserssByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: delete userss
+      tags:
+      - users
+  /api/v1/users/list:
+    get:
+      consumes:
+      - application/json
+      description: list of userss by last id and limit
+      parameters:
+      - default: 0
+        description: last id, default is MaxInt32
+        in: query
+        name: lastID
+        required: true
+        type: integer
+      - default: 10
+        description: number per page
+        in: query
+        name: limit
+        type: integer
+      - default: -id
+        description: 'sort by column name of table, and the '
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListUserssReply'
+      security:
+      - BearerAuth: []
+      summary: list of userss by last id and limit
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: list of userss by paging and conditions
+      parameters:
+      - description: query parameters
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Params'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListUserssReply'
+      security:
+      - BearerAuth: []
+      summary: list of userss by query parameters
+      tags:
+      - users
+  /api/v1/users/list/ids:
+    post:
+      consumes:
+      - application/json
+      description: list of userss by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.ListUserssByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListUserssByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: list of userss by batch id
+      tags:
+      - users
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Type Bearer your-jwt-token to Value
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
