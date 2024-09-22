@@ -771,7 +771,7 @@ definitions:
 host: localhost:8080
 info:
   contact: {}
-  description: http server api docs
+  description: Type Bearer your-jwt-token to Value
   title: lingua_exchange api docs
   version: "2.0"
 paths:
@@ -1684,7 +1684,6 @@ schemes:
 - https
 securityDefinitions:
   BearerAuth:
-    description: Type Bearer your-jwt-token to Value
     in: header
     name: Authorization
     type: apiKey

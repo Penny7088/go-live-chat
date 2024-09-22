@@ -10,6 +10,13 @@ var _ time.Time
 
 // Tip: suggested filling in the binding rules https://github.com/go-playground/validator in request struct fields tag.
 
+type LoginRequest struct {
+	IdToken     string `json:"idToken" binding:"required"`
+	Platform    string `json:"platform" binding:"required"`
+	DeviceType  string `json:"deviceType" binding:"required"`
+	DeviceToken string `json:"deviceToken" binding:"required"`
+}
+
 // CreateUsersRequest request params
 type CreateUsersRequest struct {
 	Email              string    `json:"email" binding:""`
@@ -75,6 +82,15 @@ type UsersObjDetail struct {
 	EmailVerified      int       `json:"emailVerified"`
 	VerificationToken  string    `json:"verificationToken"`
 	TokenExpiration    time.Time `json:"tokenExpiration"`
+}
+
+// LoginReply only for api docs
+type LoginReply struct {
+	Code int    `json:"code"` // return code
+	Msg  string `json:"msg"`  // return information description
+	Data struct {
+		ID uint64 `json:"id"` // id
+	} `json:"data"` // return data
 }
 
 // CreateUsersReply only for api docs

@@ -194,8 +194,9 @@ CREATE TABLE push_notification_log (
 CREATE TABLE user_devices (
                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
                               user_id BIGINT NOT NULL,
-                              device_token VARCHAR(255) NOT NULL,
+                              device_token VARCHAR(255) NOT NULL UNIQUE,
                               device_type ENUM('iOS', 'Android', 'Web') NOT NULL,
+                              ip_address VARCHAR(255)  NOT NULL,
                               last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                               INDEX (user_id),
                               FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

@@ -1,22 +1,21 @@
 package handler
 
 import (
+	"context"
 	"errors"
-	"math"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-
 	"github.com/zhufuyi/sponge/pkg/gin/middleware"
 	"github.com/zhufuyi/sponge/pkg/gin/response"
 	"github.com/zhufuyi/sponge/pkg/logger"
 	"github.com/zhufuyi/sponge/pkg/utils"
-
+	"google.golang.org/api/idtoken"
 	"lingua_exchange/internal/cache"
 	"lingua_exchange/internal/dao"
 	"lingua_exchange/internal/ecode"
 	"lingua_exchange/internal/model"
 	"lingua_exchange/internal/types"
+	"math"
 )
 
 var _ UsersHandler = (*usersHandler)(nil)
@@ -33,6 +32,7 @@ type UsersHandler interface {
 	GetByCondition(c *gin.Context)
 	ListByIDs(c *gin.Context)
 	ListByLastID(c *gin.Context)
+	Login(c *gin.Context)
 }
 
 type usersHandler struct {
@@ -46,6 +46,42 @@ func NewUsersHandler() UsersHandler {
 			model.GetDB(),
 			cache.NewUsersCache(model.GetCacheType()),
 		),
+	}
+}
+
+// Login
+// @Summary login users
+// @Description submit information to create users
+// @Tags users
+// @accept json
+// @Produce json
+// @Param data body types.LoginRequest true "users information"
+// @Success 200 {object} types.LoginReply{}
+// @Router /api/v1/login [post]
+// @Security BearerAuth
+func (h *usersHandler) Login(c *gin.Context) {
+	form := &types.LoginRequest{}
+	err := c.ShouldBindJSON(form)
+	if err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+	}
+	if "google" == form.Platform {
+		tokenInfo, err := idtoken.Validate(context.Background(), form.IdToken, "")
+		if err != nil {
+			logger.Error("Google ID Token validation failed: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+			response.Error(c, ecode.ErrInvalidGoogleIdToken)
+			return
+		}
+		/// 插入user表基础信息
+		clientIP := c.ClientIP()
+		name, _ := tokenInfo.Claims["name"].(string)
+		email, _ := tokenInfo.Claims["email"].(string)
+		picture, _ := tokenInfo.Claims["picture"].(string)
+		sub, _ := tokenInfo.Claims["sub"].(string)
+		emailVerified, _ := tokenInfo.Claims["email_verified"].(bool)
+		/// 插入 第三方表的基础信息
+		///插入用户设备表信息
 	}
 }
 

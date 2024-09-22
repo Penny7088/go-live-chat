@@ -5,7 +5,7 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "http server api docs",
+        "description": "Type Bearer your-jwt-token to Value",
         "title": "lingua_exchange api docs",
         "contact": {},
         "version": "2.0"
@@ -2589,7 +2589,6 @@
     },
     "securityDefinitions": {
         "BearerAuth": {
-            "description": "Type Bearer your-jwt-token to Value",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

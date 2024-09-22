@@ -17,10 +17,11 @@ var (
 	ErrGetByIDUsers    = errcode.NewError(usersBaseCode+4, "failed to get "+usersName+" details")
 	ErrListUsers       = errcode.NewError(usersBaseCode+5, "failed to list of "+usersName)
 
-	ErrDeleteByIDsUsers    = errcode.NewError(usersBaseCode+6, "failed to delete by batch ids "+usersName)
-	ErrGetByConditionUsers = errcode.NewError(usersBaseCode+7, "failed to get "+usersName+" details by conditions")
-	ErrListByIDsUsers      = errcode.NewError(usersBaseCode+8, "failed to list by batch ids "+usersName)
-	ErrListByLastIDUsers   = errcode.NewError(usersBaseCode+9, "failed to list by last id "+usersName)
+	ErrDeleteByIDsUsers     = errcode.NewError(usersBaseCode+6, "failed to delete by batch ids "+usersName)
+	ErrGetByConditionUsers  = errcode.NewError(usersBaseCode+7, "failed to get "+usersName+" details by conditions")
+	ErrListByIDsUsers       = errcode.NewError(usersBaseCode+8, "failed to list by batch ids "+usersName)
+	ErrListByLastIDUsers    = errcode.NewError(usersBaseCode+9, "failed to list by last id "+usersName)
+	ErrInvalidGoogleIdToken = errcode.NewError(usersBaseCode+10, "invalid Google ID Token")
 
 	// error codes are globally unique, adding 1 to the previous error code
 )
