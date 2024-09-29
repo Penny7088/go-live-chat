@@ -865,9 +865,8 @@ definitions:
       data:
         description: return data
         properties:
-          id:
-            description: id
-            type: integer
+          users:
+            $ref: '#/definitions/types.UsersObjDetail'
         type: object
       msg:
         description: return information description
@@ -877,15 +876,12 @@ definitions:
     properties:
       deviceToken:
         type: string
-      deviceType:
-        type: string
       idToken:
         type: string
       platform:
         type: string
     required:
     - deviceToken
-    - deviceType
     - idToken
     - platform
     type: object
@@ -1119,6 +1115,8 @@ definitions:
         type: integer
       interests:
         type: string
+      isNewUser:
+        type: boolean
       languageLevel:
         type: string
       lastLogin:

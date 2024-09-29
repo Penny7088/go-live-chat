@@ -3490,9 +3490,8 @@ const docTemplate = `{
                     "description": "return data",
                     "type": "object",
                     "properties": {
-                        "id": {
-                            "description": "id",
-                            "type": "integer"
+                        "users": {
+                            "$ref": "#/definitions/types.UsersObjDetail"
                         }
                     }
                 },
@@ -3506,15 +3505,11 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "deviceToken",
-                "deviceType",
                 "idToken",
                 "platform"
             ],
             "properties": {
                 "deviceToken": {
-                    "type": "string"
-                },
-                "deviceType": {
                     "type": "string"
                 },
                 "idToken": {
@@ -3864,6 +3859,9 @@ const docTemplate = `{
                 },
                 "interests": {
                     "type": "string"
+                },
+                "isNewUser": {
+                    "type": "boolean"
                 },
                 "languageLevel": {
                     "type": "string"

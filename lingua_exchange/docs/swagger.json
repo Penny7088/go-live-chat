@@ -3486,9 +3486,8 @@
                     "description": "return data",
                     "type": "object",
                     "properties": {
-                        "id": {
-                            "description": "id",
-                            "type": "integer"
+                        "users": {
+                            "$ref": "#/definitions/types.UsersObjDetail"
                         }
                     }
                 },
@@ -3502,15 +3501,11 @@
             "type": "object",
             "required": [
                 "deviceToken",
-                "deviceType",
                 "idToken",
                 "platform"
             ],
             "properties": {
                 "deviceToken": {
-                    "type": "string"
-                },
-                "deviceType": {
                     "type": "string"
                 },
                 "idToken": {
@@ -3860,6 +3855,9 @@
                 },
                 "interests": {
                     "type": "string"
+                },
+                "isNewUser": {
+                    "type": "boolean"
                 },
                 "languageLevel": {
                     "type": "string"

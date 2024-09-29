@@ -13,7 +13,6 @@ var _ time.Time
 type LoginRequest struct {
 	IdToken     string `json:"idToken" binding:"required"`
 	Platform    string `json:"platform" binding:"required"`
-	DeviceType  string `json:"deviceType" binding:"required"`
 	DeviceToken string `json:"deviceToken" binding:"required"`
 }
 
