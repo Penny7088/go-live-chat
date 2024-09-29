@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -17,6 +18,10 @@ const (
 	usersCachePrefixKey = "users:"
 	// UsersExpireTime expire time
 	UsersExpireTime = 5 * time.Minute
+	// cache prefix key, must end with a colon
+	userTokenCachePrefixKey = "user:token:"
+	// UserTokenExpireTime expire time
+	UserTokenExpireTime = 24 * 7 * time.Hour /// 7天过期时间
 )
 
 var _ UsersCache = (*usersCache)(nil)
@@ -24,6 +29,7 @@ var _ UsersCache = (*usersCache)(nil)
 // UsersCache cache interface
 type UsersCache interface {
 	Set(ctx context.Context, id uint64, data *model.Users, duration time.Duration) error
+	SetUserToken(ctx context.Context, id uint64, token string, duration time.Duration) error
 	Get(ctx context.Context, id uint64) (*model.Users, error)
 	MultiGet(ctx context.Context, ids []uint64) (map[uint64]*model.Users, error)
 	MultiSet(ctx context.Context, data []*model.Users, duration time.Duration) error
@@ -34,6 +40,15 @@ type UsersCache interface {
 // usersCache define a cache struct
 type usersCache struct {
 	cache cache.Cache
+}
+
+func GetUserTokenCacheKey(id uint64) string {
+	return fmt.Sprintf("%s%v", userTokenCachePrefixKey, id)
+}
+
+func (c *usersCache) SetUserToken(ctx context.Context, id uint64, token string, duration time.Duration) error {
+	cacheKey := GetUserTokenCacheKey(id)
+	return c.cache.Set(ctx, cacheKey, &token, duration)
 }
 
 // NewUsersCache new a cache

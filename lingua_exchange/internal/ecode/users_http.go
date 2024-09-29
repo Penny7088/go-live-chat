@@ -22,6 +22,9 @@ var (
 	ErrListByIDsUsers       = errcode.NewError(usersBaseCode+8, "failed to list by batch ids "+usersName)
 	ErrListByLastIDUsers    = errcode.NewError(usersBaseCode+9, "failed to list by last id "+usersName)
 	ErrInvalidGoogleIdToken = errcode.NewError(usersBaseCode+10, "invalid Google ID Token")
+	ErrUserAlreadyExists    = errcode.NewError(usersBaseCode+11, "User Already Exists")
+	ErrUnsupportedPlatform  = errcode.NewError(usersBaseCode+12, "Unsupported platform")
+	ErrToken                = errcode.NewError(usersBaseCode+13, "gen Token error")
 
 	// error codes are globally unique, adding 1 to the previous error code
 )

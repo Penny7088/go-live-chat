@@ -2,6 +2,8 @@
 package ecode
 
 import (
+	"errors"
+	"github.com/go-sql-driver/mysql"
 	"github.com/zhufuyi/sponge/pkg/errcode"
 )
 
@@ -40,3 +42,11 @@ var SkipResponse = errcode.SkipResponse
 
 // GetErrorCode get error code from error
 var GetErrorCode = errcode.GetErrorCode
+
+func IsUniqueConstraintError(err error) bool {
+	var mysqlErr *mysql.MySQLError
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+		return true
+	}
+	return false
+}

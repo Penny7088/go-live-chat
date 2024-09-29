@@ -149,7 +149,7 @@ CREATE TABLE voice_chat_rooms (
 CREATE TABLE third_party_auth (
                                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                   user_id BIGINT NOT NULL,
-                                  provider ENUM('google', 'facebook', 'apple') NOT NULL,
+                                  provider VARCHAR(50) NOT NULL,
                                   provider_user_id VARCHAR(255) NOT NULL,
                                   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

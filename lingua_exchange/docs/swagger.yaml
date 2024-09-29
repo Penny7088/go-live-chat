@@ -114,6 +114,60 @@ definitions:
       nativeName:
         type: string
     type: object
+  types.CreateThirdPartyAuthReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          id:
+            description: id
+            type: integer
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.CreateThirdPartyAuthRequest:
+    properties:
+      provider:
+        type: string
+      providerUserID:
+        type: string
+      userID:
+        type: integer
+    type: object
+  types.CreateUserDevicesReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          id:
+            description: id
+            type: integer
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.CreateUserDevicesRequest:
+    properties:
+      deviceToken:
+        type: string
+      deviceType:
+        type: string
+      iPAddress:
+        type: string
+      lastActive:
+        type: string
+      userID:
+        type: integer
+    type: object
   types.CreateUsersReply:
     properties:
       code:
@@ -260,6 +314,68 @@ definitions:
         minItems: 1
         type: array
     type: object
+  types.DeleteThirdPartyAuthByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteThirdPartyAuthsByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteThirdPartyAuthsByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.DeleteUserDevicesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteUserDevicessByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteUserDevicessByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
   types.DeleteUsersByIDReply:
     properties:
       code:
@@ -376,6 +492,66 @@ definitions:
         properties:
           languages:
             $ref: '#/definitions/types.LanguagesObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetThirdPartyAuthByConditionReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          thirdPartyAuth:
+            $ref: '#/definitions/types.ThirdPartyAuthObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetThirdPartyAuthByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          thirdPartyAuth:
+            $ref: '#/definitions/types.ThirdPartyAuthObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetUserDevicesByConditionReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userDevices:
+            $ref: '#/definitions/types.UserDevicesObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetUserDevicesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userDevices:
+            $ref: '#/definitions/types.UserDevicesObjDetail'
         type: object
       msg:
         description: return information description
@@ -552,6 +728,92 @@ definitions:
         description: return information description
         type: string
     type: object
+  types.ListThirdPartyAuthsByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          thirdPartyAuths:
+            items:
+              $ref: '#/definitions/types.ThirdPartyAuthObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListThirdPartyAuthsByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.ListThirdPartyAuthsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          thirdPartyAuths:
+            items:
+              $ref: '#/definitions/types.ThirdPartyAuthObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListUserDevicessByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userDevicess:
+            items:
+              $ref: '#/definitions/types.UserDevicesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListUserDevicessByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.ListUserDevicessReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userDevicess:
+            items:
+              $ref: '#/definitions/types.UserDevicesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
   types.ListUserssByIDsReply:
     properties:
       code:
@@ -595,6 +857,38 @@ definitions:
         description: return information description
         type: string
     type: object
+  types.LoginReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          id:
+            description: id
+            type: integer
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.LoginRequest:
+    properties:
+      deviceToken:
+        type: string
+      deviceType:
+        type: string
+      idToken:
+        type: string
+      platform:
+        type: string
+    required:
+    - deviceToken
+    - deviceType
+    - idToken
+    - platform
+    type: object
   types.Params:
     properties:
       columns:
@@ -611,6 +905,18 @@ definitions:
       sort:
         description: sorted fields, multi-column sorting separated by commas
         type: string
+    type: object
+  types.ThirdPartyAuthObjDetail:
+    properties:
+      id:
+        description: convert to uint64 id
+        type: integer
+      provider:
+        type: string
+      providerUserID:
+        type: string
+      userID:
+        type: integer
     type: object
   types.UpdateCountriesByIDReply:
     properties:
@@ -677,6 +983,56 @@ definitions:
       nativeName:
         type: string
     type: object
+  types.UpdateThirdPartyAuthByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.UpdateThirdPartyAuthByIDRequest:
+    properties:
+      id:
+        description: uint64 id
+        type: integer
+      provider:
+        type: string
+      providerUserID:
+        type: string
+      userID:
+        type: integer
+    type: object
+  types.UpdateUserDevicesByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.UpdateUserDevicesByIDRequest:
+    properties:
+      deviceToken:
+        type: string
+      deviceType:
+        type: string
+      iPAddress:
+        type: string
+      id:
+        description: uint64 id
+        type: integer
+      lastActive:
+        type: string
+      userID:
+        type: integer
+    type: object
   types.UpdateUsersByIDReply:
     properties:
       code:
@@ -728,12 +1084,30 @@ definitions:
       verificationToken:
         type: string
     type: object
+  types.UserDevicesObjDetail:
+    properties:
+      deviceToken:
+        type: string
+      deviceType:
+        type: string
+      iPAddress:
+        type: string
+      id:
+        description: convert to uint64 id
+        type: integer
+      lastActive:
+        type: string
+      userID:
+        type: integer
+    type: object
   types.UsersObjDetail:
     properties:
       age:
         type: integer
       countryID:
         type: integer
+      deviceToken:
+        type: string
       email:
         type: string
       emailVerified:
@@ -755,11 +1129,15 @@ definitions:
         type: integer
       passwordHash:
         type: string
+      platform:
+        type: string
       profilePicture:
         type: string
       registrationDate:
         type: string
       status:
+        type: string
+      token:
         type: string
       tokenExpiration:
         type: string
@@ -1453,6 +1831,482 @@ paths:
       summary: list of languagess by batch id
       tags:
       - languages
+  /api/v1/login:
+    post:
+      consumes:
+      - application/json
+      description: submit information to create users
+      parameters:
+      - description: users information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.LoginReply'
+      security:
+      - BearerAuth: []
+      summary: login users
+      tags:
+      - users
+  /api/v1/thirdPartyAuth:
+    post:
+      consumes:
+      - application/json
+      description: submit information to create thirdPartyAuth
+      parameters:
+      - description: thirdPartyAuth information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateThirdPartyAuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.CreateThirdPartyAuthReply'
+      security:
+      - BearerAuth: []
+      summary: create thirdPartyAuth
+      tags:
+      - thirdPartyAuth
+  /api/v1/thirdPartyAuth/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete thirdPartyAuth by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteThirdPartyAuthByIDReply'
+      security:
+      - BearerAuth: []
+      summary: delete thirdPartyAuth
+      tags:
+      - thirdPartyAuth
+    get:
+      consumes:
+      - application/json
+      description: get thirdPartyAuth detail by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetThirdPartyAuthByIDReply'
+      security:
+      - BearerAuth: []
+      summary: get thirdPartyAuth detail
+      tags:
+      - thirdPartyAuth
+    put:
+      consumes:
+      - application/json
+      description: update thirdPartyAuth information by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: thirdPartyAuth information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateThirdPartyAuthByIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.UpdateThirdPartyAuthByIDReply'
+      security:
+      - BearerAuth: []
+      summary: update thirdPartyAuth
+      tags:
+      - thirdPartyAuth
+  /api/v1/thirdPartyAuth/condition:
+    post:
+      consumes:
+      - application/json
+      description: get thirdPartyAuth by condition
+      parameters:
+      - description: query condition
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Conditions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetThirdPartyAuthByConditionReply'
+      security:
+      - BearerAuth: []
+      summary: get thirdPartyAuth by condition
+      tags:
+      - thirdPartyAuth
+  /api/v1/thirdPartyAuth/delete/ids:
+    post:
+      consumes:
+      - application/json
+      description: delete thirdPartyAuths by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.DeleteThirdPartyAuthsByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteThirdPartyAuthsByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: delete thirdPartyAuths
+      tags:
+      - thirdPartyAuth
+  /api/v1/thirdPartyAuth/list:
+    get:
+      consumes:
+      - application/json
+      description: list of thirdPartyAuths by last id and limit
+      parameters:
+      - default: 0
+        description: last id, default is MaxInt32
+        in: query
+        name: lastID
+        required: true
+        type: integer
+      - default: 10
+        description: number per page
+        in: query
+        name: limit
+        type: integer
+      - default: -id
+        description: 'sort by column name of table, and the '
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListThirdPartyAuthsReply'
+      security:
+      - BearerAuth: []
+      summary: list of thirdPartyAuths by last id and limit
+      tags:
+      - thirdPartyAuth
+    post:
+      consumes:
+      - application/json
+      description: list of thirdPartyAuths by paging and conditions
+      parameters:
+      - description: query parameters
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Params'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListThirdPartyAuthsReply'
+      security:
+      - BearerAuth: []
+      summary: list of thirdPartyAuths by query parameters
+      tags:
+      - thirdPartyAuth
+  /api/v1/thirdPartyAuth/list/ids:
+    post:
+      consumes:
+      - application/json
+      description: list of thirdPartyAuths by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.ListThirdPartyAuthsByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListThirdPartyAuthsByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: list of thirdPartyAuths by batch id
+      tags:
+      - thirdPartyAuth
+  /api/v1/userDevices:
+    post:
+      consumes:
+      - application/json
+      description: submit information to create userDevices
+      parameters:
+      - description: userDevices information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateUserDevicesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.CreateUserDevicesReply'
+      security:
+      - BearerAuth: []
+      summary: create userDevices
+      tags:
+      - userDevices
+  /api/v1/userDevices/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete userDevices by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteUserDevicesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: delete userDevices
+      tags:
+      - userDevices
+    get:
+      consumes:
+      - application/json
+      description: get userDevices detail by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetUserDevicesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: get userDevices detail
+      tags:
+      - userDevices
+    put:
+      consumes:
+      - application/json
+      description: update userDevices information by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: userDevices information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateUserDevicesByIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.UpdateUserDevicesByIDReply'
+      security:
+      - BearerAuth: []
+      summary: update userDevices
+      tags:
+      - userDevices
+  /api/v1/userDevices/condition:
+    post:
+      consumes:
+      - application/json
+      description: get userDevices by condition
+      parameters:
+      - description: query condition
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Conditions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetUserDevicesByConditionReply'
+      security:
+      - BearerAuth: []
+      summary: get userDevices by condition
+      tags:
+      - userDevices
+  /api/v1/userDevices/delete/ids:
+    post:
+      consumes:
+      - application/json
+      description: delete userDevicess by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.DeleteUserDevicessByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteUserDevicessByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: delete userDevicess
+      tags:
+      - userDevices
+  /api/v1/userDevices/list:
+    get:
+      consumes:
+      - application/json
+      description: list of userDevicess by last id and limit
+      parameters:
+      - default: 0
+        description: last id, default is MaxInt32
+        in: query
+        name: lastID
+        required: true
+        type: integer
+      - default: 10
+        description: number per page
+        in: query
+        name: limit
+        type: integer
+      - default: -id
+        description: 'sort by column name of table, and the '
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListUserDevicessReply'
+      security:
+      - BearerAuth: []
+      summary: list of userDevicess by last id and limit
+      tags:
+      - userDevices
+    post:
+      consumes:
+      - application/json
+      description: list of userDevicess by paging and conditions
+      parameters:
+      - description: query parameters
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Params'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListUserDevicessReply'
+      security:
+      - BearerAuth: []
+      summary: list of userDevicess by query parameters
+      tags:
+      - userDevices
+  /api/v1/userDevices/list/ids:
+    post:
+      consumes:
+      - application/json
+      description: list of userDevicess by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.ListUserDevicessByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListUserDevicessByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: list of userDevicess by batch id
+      tags:
+      - userDevices
   /api/v1/users:
     post:
       consumes:

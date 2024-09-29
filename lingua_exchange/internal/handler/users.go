@@ -1,15 +1,17 @@
 package handler
 
 import (
+	"cloud.google.com/go/auth/credentials/idtoken"
 	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/zhufuyi/sponge/pkg/gin/middleware"
 	"github.com/zhufuyi/sponge/pkg/gin/response"
+	"github.com/zhufuyi/sponge/pkg/jwt"
 	"github.com/zhufuyi/sponge/pkg/logger"
 	"github.com/zhufuyi/sponge/pkg/utils"
-	"google.golang.org/api/idtoken"
+	"gorm.io/gorm"
 	"lingua_exchange/internal/cache"
 	"lingua_exchange/internal/dao"
 	"lingua_exchange/internal/ecode"
@@ -32,11 +34,14 @@ type UsersHandler interface {
 	GetByCondition(c *gin.Context)
 	ListByIDs(c *gin.Context)
 	ListByLastID(c *gin.Context)
-	Login(c *gin.Context)
+	LoginOrRegister(c *gin.Context)
 }
 
 type usersHandler struct {
-	iDao dao.UsersDao
+	iDao      dao.UsersDao
+	thirdDao  dao.ThirdPartyAuthDao
+	deviceDao dao.UserDevicesDao
+	userCache cache.UsersCache
 }
 
 // NewUsersHandler creating the handler interface
@@ -46,10 +51,13 @@ func NewUsersHandler() UsersHandler {
 			model.GetDB(),
 			cache.NewUsersCache(model.GetCacheType()),
 		),
+		thirdDao:  dao.NewThirdPartyAuthDao(model.GetDB(), cache.NewThirdPartyAuthCache(model.GetCacheType())),
+		deviceDao: dao.NewUserDevicesDao(model.GetDB(), cache.NewUserDevicesCache(model.GetCacheType())),
+		userCache: cache.NewUsersCache(model.GetCacheType()),
 	}
 }
 
-// Login
+// LoginOrRegister
 // @Summary login users
 // @Description submit information to create users
 // @Tags users
@@ -59,30 +67,180 @@ func NewUsersHandler() UsersHandler {
 // @Success 200 {object} types.LoginReply{}
 // @Router /api/v1/login [post]
 // @Security BearerAuth
-func (h *usersHandler) Login(c *gin.Context) {
+func (h *usersHandler) LoginOrRegister(c *gin.Context) {
 	form := &types.LoginRequest{}
 	err := c.ShouldBindJSON(form)
 	if err != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
+		return
 	}
-	if "google" == form.Platform {
-		tokenInfo, err := idtoken.Validate(context.Background(), form.IdToken, "")
-		if err != nil {
-			logger.Error("Google ID Token validation failed: ", logger.Err(err), middleware.GCtxRequestIDField(c))
-			response.Error(c, ecode.ErrInvalidGoogleIdToken)
-			return
+
+	switch form.Platform {
+	case "google":
+		if err := h.handleGoogleLogin(c, form); err != nil {
+			h.handleError(c, ecode.ErrInvalidGoogleIdToken.ToHTTPCode(), err)
 		}
-		/// 插入user表基础信息
-		clientIP := c.ClientIP()
-		name, _ := tokenInfo.Claims["name"].(string)
-		email, _ := tokenInfo.Claims["email"].(string)
-		picture, _ := tokenInfo.Claims["picture"].(string)
-		sub, _ := tokenInfo.Claims["sub"].(string)
-		emailVerified, _ := tokenInfo.Claims["email_verified"].(bool)
-		/// 插入 第三方表的基础信息
-		///插入用户设备表信息
+	default:
+		response.Error(c, ecode.ErrUnsupportedPlatform)
+		return
 	}
+
+}
+
+func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginRequest) error {
+	// 验证 Google ID Token
+	tokenInfo, err := idtoken.Validate(context.Background(), form.IdToken, "")
+	if err != nil {
+		return err
+	}
+
+	clientIP := c.ClientIP()
+	name, _ := tokenInfo.Claims["name"].(string)
+	email, _ := tokenInfo.Claims["email"].(string)
+	picture, _ := tokenInfo.Claims["picture"].(string)
+	emailVerified, _ := tokenInfo.Claims["email_verified"].(bool)
+
+	emailStatus := 0
+	if emailVerified {
+		emailStatus = 1
+	}
+
+	user := &model.Users{
+		Email:          email,
+		Username:       name,
+		ProfilePicture: picture,
+		EmailVerified:  emailStatus,
+	}
+
+	ctx := middleware.WrapCtx(c)
+	db := model.GetDB()
+
+	tx := db.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error("Transaction panic recovered: ", logger.Any("error", r))
+			tx.Rollback()
+		}
+	}()
+
+	user, err = h.iDao.GetByEmailTx(ctx, tx, user)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 用户不存在，创建新用户
+			_, err := h.iDao.CreateByTx(ctx, tx, user)
+			if err != nil {
+				if ecode.IsUniqueConstraintError(err) {
+					tx.Rollback()
+					response.Output(c, ecode.ErrUserAlreadyExists.ToHTTPCode())
+					return nil
+				}
+				tx.Rollback()
+				return err
+			}
+		} else {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// 插入第三方认证信息
+	if err := h.insertThirdPartyAuth(ctx, tx, user, form); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 插入设备信息
+	if err := h.insertUserDevice(ctx, tx, user, form, clientIP); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 提交事务
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	// 生成 Token 和缓存
+	token, err := h.generateAndCacheToken(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	// 成功响应
+	data := &types.UsersObjDetail{
+		ID:             user.ID,
+		Email:          user.Email,
+		ProfilePicture: user.ProfilePicture,
+		EmailVerified:  emailStatus,
+		Platform:       form.Platform,
+		DeviceToken:    form.DeviceToken,
+		Token:          token,
+		Username:       user.Username,
+	}
+	err = copier.Copy(data, user)
+	if err != nil {
+		response.Error(c, ecode.ErrGetByIDUsers)
+		return nil
+	}
+	response.Success(c, gin.H{"userInfo": data})
+
+	return nil
+}
+
+func (h *usersHandler) handleError(c *gin.Context, code int, err error) {
+	logger.Error("Error occurred", logger.Err(err), middleware.GCtxRequestIDField(c))
+	response.Output(c, code)
+}
+
+func (h *usersHandler) generateAndCacheToken(ctx context.Context, user *model.Users) (string, error) {
+	token, err := jwt.GenerateToken(utils.Uint64ToStr(user.ID))
+	if err != nil {
+		return "", err
+	}
+
+	err = h.userCache.SetUserToken(ctx, user.ID, token, cache.UserTokenExpireTime)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func (h *usersHandler) insertThirdPartyAuth(ctx context.Context, tx *gorm.DB, user *model.Users, form *types.LoginRequest) error {
+	thirdPartyAuth, err := h.thirdDao.GetByID(ctx, user.ID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		thirdPartyAuth = &model.ThirdPartyAuth{
+			UserID:         int64(user.ID),
+			ProviderUserID: form.IdToken,
+			Provider:       form.Platform,
+		}
+		_, err := h.thirdDao.CreateByTx(ctx, tx, thirdPartyAuth)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *usersHandler) insertUserDevice(ctx context.Context, tx *gorm.DB, user *model.Users, form *types.LoginRequest, clientIP string) error {
+	device := &model.UserDevices{
+		UserID:      int64(user.ID),
+		DeviceToken: form.DeviceToken,
+		DeviceType:  form.Platform,
+		IPAddress:   clientIP,
+	}
+	_, err := h.deviceDao.FirstOrCreateByTx(ctx, tx, device)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Create a record

@@ -82,6 +82,9 @@ type UsersObjDetail struct {
 	EmailVerified      int       `json:"emailVerified"`
 	VerificationToken  string    `json:"verificationToken"`
 	TokenExpiration    time.Time `json:"tokenExpiration"`
+	Platform           string    `json:"platform"`
+	DeviceToken        string    `json:"deviceToken"`
+	Token              string    `json:"token"`
 }
 
 // LoginReply only for api docs
@@ -89,7 +92,7 @@ type LoginReply struct {
 	Code int    `json:"code"` // return code
 	Msg  string `json:"msg"`  // return information description
 	Data struct {
-		ID uint64 `json:"id"` // id
+		Users UsersObjDetail `json:"users"`
 	} `json:"data"` // return data
 }
 
