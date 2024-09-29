@@ -85,6 +85,7 @@ type UsersObjDetail struct {
 	Platform           string    `json:"platform"`
 	DeviceToken        string    `json:"deviceToken"`
 	Token              string    `json:"token"`
+	IsNewUser          bool      `json:"isNewUser"`
 }
 
 // LoginReply only for api docs

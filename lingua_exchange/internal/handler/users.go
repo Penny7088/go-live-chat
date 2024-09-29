@@ -17,10 +17,16 @@ import (
 	"lingua_exchange/internal/ecode"
 	"lingua_exchange/internal/model"
 	"lingua_exchange/internal/types"
+	"lingua_exchange/tools"
 	"math"
+	"time"
 )
 
 var _ UsersHandler = (*usersHandler)(nil)
+
+const (
+	GooglePlatform = "google"
+)
 
 // UsersHandler defining the handler interface
 type UsersHandler interface {
@@ -77,7 +83,7 @@ func (h *usersHandler) LoginOrRegister(c *gin.Context) {
 	}
 
 	switch form.Platform {
-	case "google":
+	case GooglePlatform:
 		if err := h.handleGoogleLogin(c, form); err != nil {
 			h.handleError(c, ecode.ErrInvalidGoogleIdToken.ToHTTPCode(), err)
 		}
@@ -128,10 +134,12 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 		}
 	}()
 
+	newUser := false
 	user, err = h.iDao.GetByEmailTx(ctx, tx, user)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// 用户不存在，创建新用户
+			newUser = true
 			_, err := h.iDao.CreateByTx(ctx, tx, user)
 			if err != nil {
 				if ecode.IsUniqueConstraintError(err) {
@@ -155,7 +163,8 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 	}
 
 	// 插入设备信息
-	if err := h.insertUserDevice(ctx, tx, user, form, clientIP); err != nil {
+	device, err := h.insertUserDevice(ctx, tx, user, form, clientIP)
+	if err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -173,14 +182,16 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 
 	// 成功响应
 	data := &types.UsersObjDetail{
-		ID:             user.ID,
-		Email:          user.Email,
-		ProfilePicture: user.ProfilePicture,
-		EmailVerified:  emailStatus,
-		Platform:       form.Platform,
-		DeviceToken:    form.DeviceToken,
-		Token:          token,
-		Username:       user.Username,
+		ID:               user.ID,
+		Email:            user.Email,
+		ProfilePicture:   user.ProfilePicture,
+		EmailVerified:    emailStatus,
+		Platform:         form.Platform,
+		DeviceToken:      device.DeviceToken,
+		Token:            token,
+		Username:         user.Username,
+		RegistrationDate: time.Now(),
+		IsNewUser:        newUser,
 	}
 	err = copier.Copy(data, user)
 	if err != nil {
@@ -229,18 +240,21 @@ func (h *usersHandler) insertThirdPartyAuth(ctx context.Context, tx *gorm.DB, us
 	return nil
 }
 
-func (h *usersHandler) insertUserDevice(ctx context.Context, tx *gorm.DB, user *model.Users, form *types.LoginRequest, clientIP string) error {
+func (h *usersHandler) insertUserDevice(ctx context.Context, tx *gorm.DB, user *model.Users, form *types.LoginRequest, clientIP string) (*model.UserDevices, error) {
+	token := form.DeviceToken
+	deviceToken := tools.GenerateDeviceToken(token)
+
 	device := &model.UserDevices{
 		UserID:      int64(user.ID),
-		DeviceToken: form.DeviceToken,
+		DeviceToken: deviceToken,
 		DeviceType:  form.Platform,
 		IPAddress:   clientIP,
 	}
-	_, err := h.deviceDao.FirstOrCreateByTx(ctx, tx, device)
+	userDevices, err := h.deviceDao.FirstOrCreateByTx(ctx, tx, device)
 	if err != nil {
-		return err
+		return userDevices, err
 	}
-	return nil
+	return userDevices, nil
 }
 
 // Create a record
