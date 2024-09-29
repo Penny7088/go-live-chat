@@ -1151,30 +1151,6 @@ info:
   title: lingua_exchange api docs
   version: "2.0"
 paths:
-  /api/v1/auth:
-    post:
-      consumes:
-      - application/json
-      description: submit information to create users
-      parameters:
-      - description: users information
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/types.LoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.LoginReply'
-      security:
-      - BearerAuth: []
-      summary: login users
-      tags:
-      - users
   /api/v1/countries:
     post:
       consumes:
@@ -2400,6 +2376,30 @@ paths:
       security:
       - BearerAuth: []
       summary: update users
+      tags:
+      - users
+  /api/v1/users/auth:
+    post:
+      consumes:
+      - application/json
+      description: submit information to create users
+      parameters:
+      - description: users information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.LoginReply'
+      security:
+      - BearerAuth: []
+      summary: login users
       tags:
       - users
   /api/v1/users/condition:

@@ -71,7 +71,7 @@ func NewUsersHandler() UsersHandler {
 // @Produce json
 // @Param data body types.LoginRequest true "users information"
 // @Success 200 {object} types.LoginReply{}
-// @Router /api/v1/auth [post]
+// @Router /api/v1/users/auth [post]
 // @Security BearerAuth
 func (h *usersHandler) LoginOrRegister(c *gin.Context) {
 	form := &types.LoginRequest{}
