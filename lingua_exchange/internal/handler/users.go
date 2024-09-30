@@ -122,55 +122,45 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 	ctx := middleware.WrapCtx(c)
 	db := model.GetDB()
 
-	tx := db.Begin()
-	if tx.Error != nil {
-		return tx.Error
-	}
-
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Error("Transaction panic recovered: ", logger.Any("error", r))
-			tx.Rollback()
-		}
-	}()
-
 	newUser := false
-	user, err = h.iDao.GetByEmailTx(ctx, tx, user)
-	if err != nil {
+	var device *model.UserDevices
+	err = db.Transaction(func(tx *gorm.DB) error {
+		user, err = h.iDao.GetByEmailTx(ctx, tx, user)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// 用户不存在，创建新用户
 			newUser = true
 			_, err := h.iDao.CreateByTx(ctx, tx, user)
 			if err != nil {
 				if ecode.IsUniqueConstraintError(err) {
-					tx.Rollback()
 					response.Output(c, ecode.ErrUserAlreadyExists.ToHTTPCode())
 					return nil
 				}
-				tx.Rollback()
 				return err
 			}
-		} else {
-			tx.Rollback()
+		} else if err != nil {
 			return err
 		}
-	}
 
-	// 插入第三方认证信息
-	if err := h.insertThirdPartyAuth(ctx, tx, user, form); err != nil {
-		tx.Rollback()
-		return err
-	}
+		// 插入第三方认证信息
+		if err := h.insertThirdPartyAuth(ctx, tx, user, form); err != nil {
+			return err
+		}
 
-	// 插入设备信息
-	device, err := h.insertUserDevice(ctx, tx, user, form, clientIP)
+		// 插入设备信息
+		_, err := h.insertUserDevice(ctx, tx, user, form, clientIP)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	// 提交事务
-	if err := tx.Commit().Error; err != nil {
+	if nil == device {
+		response.Error(c, ecode.ErrDeviceNotFound)
 		return err
 	}
 
@@ -193,8 +183,7 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 		RegistrationDate: time.Now(),
 		IsNewUser:        newUser,
 	}
-	err = copier.Copy(data, user)
-	if err != nil {
+	if err := copier.Copy(data, user); err != nil {
 		response.Error(c, ecode.ErrGetByIDUsers)
 		return nil
 	}

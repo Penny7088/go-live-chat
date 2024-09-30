@@ -21,6 +21,7 @@ var (
 	ErrGetByConditionUserDevices = errcode.NewError(userDevicesBaseCode+7, "failed to get "+userDevicesName+" details by conditions")
 	ErrListByIDsUserDevices      = errcode.NewError(userDevicesBaseCode+8, "failed to list by batch ids "+userDevicesName)
 	ErrListByLastIDUserDevices   = errcode.NewError(userDevicesBaseCode+9, "failed to list by last id "+userDevicesName)
+	ErrDeviceNotFound            = errcode.NewError(userDevicesBaseCode+10, "Err Device Not Found "+userDevicesName)
 
 	// error codes are globally unique, adding 1 to the previous error code
 )
