@@ -198,6 +198,7 @@ func (h *usersHandler) handleError(c *gin.Context, code int, err error) {
 }
 
 func (h *usersHandler) generateAndCacheToken(ctx context.Context, user *model.Users) (string, error) {
+
 	token, err := jwt.GenerateToken(utils.Uint64ToStr(user.ID))
 	if err != nil {
 		return "", err
