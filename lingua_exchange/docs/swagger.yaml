@@ -599,6 +599,23 @@ definitions:
       nativeName:
         type: string
     type: object
+  types.ListCountriesReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          countriess:
+            items:
+              $ref: '#/definitions/types.CountriesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
   types.ListCountriessByIDsReply:
     properties:
       code:
@@ -624,23 +641,6 @@ definitions:
           type: integer
         minItems: 1
         type: array
-    type: object
-  types.ListCountriessReply:
-    properties:
-      code:
-        description: return code
-        type: integer
-      data:
-        description: return data
-        properties:
-          countriess:
-            items:
-              $ref: '#/definitions/types.CountriesObjDetail'
-            type: array
-        type: object
-      msg:
-        description: return information description
-        type: string
     type: object
   types.ListCountryLanguagessByIDsReply:
     properties:
@@ -1147,7 +1147,7 @@ definitions:
 host: localhost:8080
 info:
   contact: {}
-  description: Type Bearer your-jwt-token to Value
+  description: http server api docs
   title: lingua_exchange api docs
   version: "2.0"
 paths:
@@ -1324,7 +1324,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.ListCountriessReply'
+            $ref: '#/definitions/types.ListCountriesReply'
       security:
       - BearerAuth: []
       summary: list of countriess by last id and limit
@@ -1347,7 +1347,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.ListCountriessReply'
+            $ref: '#/definitions/types.ListCountriesReply'
       security:
       - BearerAuth: []
       summary: list of countriess by query parameters
@@ -2536,6 +2536,7 @@ schemes:
 - https
 securityDefinitions:
   BearerAuth:
+    description: Type Bearer your-jwt-token to Value
     in: header
     name: Authorization
     type: apiKey

@@ -18,6 +18,9 @@ CREATE TABLE users (
                        email_verified BOOLEAN DEFAULT FALSE,
                        verification_token VARCHAR(255),
                        token_expiration TIMESTAMP,
+                       created_at datetime     null,
+                       updated_at datetime     null,
+                       deleted_at datetime     null,
                        FOREIGN KEY (native_language_id) REFERENCES languages(id) ON DELETE SET NULL,
                        FOREIGN KEY (learning_language_id) REFERENCES languages(id) ON DELETE SET NULL,
                        FOREIGN KEY (country_id) REFERENCES countries(id) ON DELETE SET NULL
@@ -71,14 +74,20 @@ CREATE TABLE languages (
                            id BIGINT AUTO_INCREMENT PRIMARY KEY,
                            name VARCHAR(100) NOT NULL,
                            native_name VARCHAR(100) NOT NULL,
-                           iso_code VARCHAR(10) UNIQUE NOT NULL
+                           iso_code VARCHAR(10) UNIQUE NOT NULL,
+                           created_at datetime     null,
+                           updated_at datetime     null,
+                           deleted_at datetime     null
 );
 
 -- 国家表 (countries)
 CREATE TABLE countries (
                            id BIGINT AUTO_INCREMENT PRIMARY KEY,
                            name VARCHAR(100) NOT NULL,
-                           iso_code VARCHAR(10) UNIQUE NOT NULL
+                           iso_code VARCHAR(10) UNIQUE NOT NULL,
+                           created_at datetime     null,
+                           updated_at datetime     null,
+                           deleted_at datetime     null
 );
 
 -- 国家语言关联表 (country_languages)
@@ -86,6 +95,9 @@ CREATE TABLE country_languages (
                                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                    country_id BIGINT NOT NULL,
                                    language_id BIGINT NOT NULL,
+                                   created_at datetime     null,
+                                   updated_at datetime     null,
+                                   deleted_at datetime     null,
                                    FOREIGN KEY (country_id) REFERENCES countries(id) ON DELETE CASCADE,
                                    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE
 );
@@ -151,6 +163,9 @@ CREATE TABLE third_party_auth (
                                   user_id BIGINT NOT NULL,
                                   provider VARCHAR(50) NOT NULL,
                                   provider_user_id VARCHAR(255) NOT NULL,
+                                  created_at datetime     null,
+                                  updated_at datetime     null,
+                                  deleted_at datetime     null,
                                   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -197,6 +212,9 @@ CREATE TABLE user_devices (
                               device_token VARCHAR(255) NOT NULL UNIQUE,
                               device_type ENUM('iOS', 'Android', 'Web') NOT NULL,
                               ip_address VARCHAR(255)  NOT NULL,
+                              created_at datetime     null,
+                              updated_at datetime     null,
+                              deleted_at datetime     null,
                               last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                               INDEX (user_id),
                               FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

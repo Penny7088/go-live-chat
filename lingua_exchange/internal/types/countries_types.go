@@ -70,12 +70,12 @@ type ListCountriessRequest struct {
 	query.Params
 }
 
-// ListCountriessReply only for api docs
-type ListCountriessReply struct {
+// ListCountriesReply only for api docs
+type ListCountriesReply struct {
 	Code int    `json:"code"` // return code
 	Msg  string `json:"msg"`  // return information description
 	Data struct {
-		Countriess []CountriesObjDetail `json:"countriess"`
+		Countries []CountriesObjDetail `json:"countriess"`
 	} `json:"data"` // return data
 }
 

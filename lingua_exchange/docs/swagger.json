@@ -5,7 +5,7 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "Type Bearer your-jwt-token to Value",
+        "description": "http server api docs",
         "title": "lingua_exchange api docs",
         "contact": {},
         "version": "2.0"
@@ -175,7 +175,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.ListCountriessReply"
+                            "$ref": "#/definitions/types.ListCountriesReply"
                         }
                     }
                 }
@@ -212,7 +212,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.ListCountriessReply"
+                            "$ref": "#/definitions/types.ListCountriesReply"
                         }
                     }
                 }
@@ -3097,6 +3097,31 @@
                 }
             }
         },
+        "types.ListCountriesReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data",
+                    "type": "object",
+                    "properties": {
+                        "countriess": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.CountriesObjDetail"
+                            }
+                        }
+                    }
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
         "types.ListCountriessByIDsReply": {
             "type": "object",
             "properties": {
@@ -3132,31 +3157,6 @@
                     "items": {
                         "type": "integer"
                     }
-                }
-            }
-        },
-        "types.ListCountriessReply": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "return code",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "return data",
-                    "type": "object",
-                    "properties": {
-                        "countriess": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/types.CountriesObjDetail"
-                            }
-                        }
-                    }
-                },
-                "msg": {
-                    "description": "return information description",
-                    "type": "string"
                 }
             }
         },
@@ -3903,6 +3903,7 @@
     },
     "securityDefinitions": {
         "BearerAuth": {
+            "description": "Type Bearer your-jwt-token to Value",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
