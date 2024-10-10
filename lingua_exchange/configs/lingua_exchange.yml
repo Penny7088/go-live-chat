@@ -9,7 +9,7 @@ app:
   enableStat: true               # whether to turn on printing statistics, true:enable, false:disable
   enableMetrics: true            # whether to turn on indicator collection, true:enable, false:disable
   enableHTTPProfile: false       # whether to turn on performance analysis, true:enable, false:disable
-  enableLimit: false             # whether to turn on rate limiting (adaptive), true:on, false:off
+  enableLimit: true             # whether to turn on rate limiting (adaptive), true:on, false:off
   enableCircuitBreaker: false    # whether to turn on circuit breaker(adaptive), true:on, false:off
   enableTrace: false             # whether to turn on trace, true:enable, false:disable, if true jaeger configuration must be set
   tracingSamplingRate: 1.0       # tracing sampling rate, between 0 and 1, 0 means no sampling, 1 means sampling all links
@@ -20,9 +20,11 @@ app:
 # http server settings
 http:
   port: 8080                # listen port
-  timeout: 0                # request timeout, unit(second), if 0 means not set, if greater than 0 means set timeout, if enableHTTPProfile is true, it needs to set 0 or greater than 60s
-
-
+  timeout: 5               # request timeout, unit(second), if 0 means not set, if greater than 0 means set timeout, if enableHTTPProfile is true, it needs to set 0 or greater than 60s
+# websocket port
+server:
+  websocket: 9504
+  tcp: 9505
 
 # logger settings
 logger:
