@@ -24,11 +24,17 @@ func Get() *Config {
 	return config
 }
 
+// ServerId 服务运行ID
+func (c *Config) ServerId() string {
+	return c.Sid
+}
+
 func Set(conf *Config) {
 	config = conf
 }
 
 type Config struct {
+	Sid      string   // 服务运行ID
 	App      App      `yaml:"app" json:"app"`
 	Consul   Consul   `yaml:"consul" json:"consul"`
 	Database Database `yaml:"database" json:"database"`

@@ -21,6 +21,11 @@ const (
 	_MsgEventAck = "ack"
 )
 
+var (
+	sid   string = "sid"
+	event string = "event"
+)
+
 // IClient  抽象接口类
 type IClient interface {
 	Cid() int64                       // 客户端ID
@@ -268,7 +273,7 @@ func (c *Client) handleMessage(data []byte) {
 
 	event, err := c.validate(data)
 	if err != nil {
-		log.Printf("[ERROR] validate err: %s \n", err.Error())
+		logger.Error("[ERROR] validate err: %s \n", logger.Err(err))
 		return
 	}
 
@@ -277,7 +282,7 @@ func (c *Client) handleMessage(data []byte) {
 		_ = c.Write(&ClientResponse{Event: _MsgEventPong})
 	case _MsgEventPong:
 	case _MsgEventAck:
-		val, err := sonic.Get(data, "sid")
+		val, err := sonic.Get(data, sid)
 		if err == nil {
 			ackId, _ := val.String()
 			if len(ackId) > 0 {
@@ -295,7 +300,7 @@ func (c *Client) validate(data []byte) (string, error) {
 		return "", fmt.Errorf("invalid json")
 	}
 
-	value, err := sonic.Get(data, "event")
+	value, err := sonic.Get(data, event)
 	if err != nil {
 		return "", err
 	}

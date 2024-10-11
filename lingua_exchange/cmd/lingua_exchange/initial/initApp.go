@@ -6,7 +6,10 @@ package initial
 import (
 	"flag"
 	"fmt"
+	"lingua_exchange/pkg/encrypt"
+	"lingua_exchange/pkg/strutil"
 	"strconv"
+	"time"
 
 	"github.com/jinzhu/copier"
 
@@ -129,4 +132,7 @@ func initConfig() {
 	if version != "" {
 		config.Get().App.Version = version
 	}
+
+	config.Get().Sid = encrypt.Md5(fmt.Sprintf("%d%s", time.Now().UnixNano(), strutil.Random(6)))
+
 }
