@@ -3,7 +3,7 @@ package ecode
 import "github.com/zhufuyi/sponge/pkg/errcode"
 
 var (
-	chatNo       = 100
+	chatNo       = 80
 	chatName     = "chatName"
 	chatBaseCode = errcode.HCode(chatNo)
 

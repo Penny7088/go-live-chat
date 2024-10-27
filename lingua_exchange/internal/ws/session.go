@@ -1,68 +1,83 @@
 package ws
 
-import (
-	"context"
-	"golang.org/x/sync/errgroup"
-	"sync"
-	"time"
-)
-
-// Session 客户端管理实例
-var Session *session
-
-var once sync.Once
-
-// session 渠道客户端
-type session struct {
-	Chat         *Channel // 聊天分组
-	Notification *Channel // 推送分组
-
-	channels map[string]*Channel
-	// 可自行注册其它渠道...
+// Message 表示客户端交互的消息体
+// 包含事件名称和消息内容
+type Message struct {
+	Event   string `json:"event"`   // 事件名称，例如 "user_joined"
+	Content any    `json:"content"` // 消息内容，可以是任意类型
 }
 
-func (s *session) Channel(name string) (*Channel, bool) {
-	val, ok := s.channels[name]
-	return val, ok
-}
-
-func Initialize(ctx context.Context, eg *errgroup.Group, fn func(name string)) {
-	once.Do(func() {
-		InitAck()
-		initialize(ctx, eg, fn)
-	})
-}
-
-func initialize(ctx context.Context, eg *errgroup.Group, fn func(name string)) {
-	Session = &session{
-		Chat:         NewChannel("chat", make(chan *SenderContent, 5<<20)),
-		Notification: NewChannel("notification", make(chan *SenderContent, 100)),
-		channels:     map[string]*Channel{},
+// NewMessage 创建一个新的消息实例
+// event: 事件名称
+// content: 消息内容
+func NewMessage(event string, content any) *Message {
+	return &Message{
+		Event:   event,
+		Content: content,
 	}
+}
 
-	Session.channels["chat"] = Session.Chat
-	Session.channels["notification"] = Session.Notification
+// SenderContent 用于推送的消息内容
+type SenderContent struct {
+	IsAck     bool     // 是否需要消息确认 (ACK)
+	broadcast bool     // 是否是广播消息
+	exclude   []int64  // 排除的用户 ID 列表（预留字段，可扩展过滤机制）
+	receives  []int64  // 接收消息的用户 ID 列表
+	message   *Message // 消息体，包含事件和内容
+}
 
-	// 延时启动守护协程
-	time.AfterFunc(3*time.Second, func() {
-		eg.Go(func() error {
-			defer fn("health exit")
-			return health.Start(ctx)
-		})
+// NewSenderContent 创建并返回 SenderContent 的实例
+func NewSenderContent() *SenderContent {
+	// 预先分配切片容量，减少后续 append 调用时的内存重新分配
+	return &SenderContent{
+		exclude:  make([]int64, 0, 10), // 初始容量为 10
+		receives: make([]int64, 0, 10),
+	}
+}
 
-		eg.Go(func() error {
-			defer fn("ack exit")
-			return ack.Start(ctx)
-		})
+// SetAck 设置是否需要 ACK 确认
+// value: 是否需要消息确认
+// 支持链式调用
+func (s *SenderContent) SetAck(value bool) *SenderContent {
+	s.IsAck = value
+	return s
+}
 
-		eg.Go(func() error {
-			defer fn("chat exit")
-			return Session.Chat.Start(ctx)
-		})
+// SetBroadcast 设置消息为广播类型
+// value: 是否广播
+// 支持链式调用
+func (s *SenderContent) SetBroadcast(value bool) *SenderContent {
+	s.broadcast = value
+	return s
+}
 
-		eg.Go(func() error {
-			defer fn("example exit")
-			return Session.Notification.Start(ctx)
-		})
-	})
+// SetMessage 设置消息内容
+// event: 事件名称
+// content: 消息内容
+// 支持链式调用
+func (s *SenderContent) SetMessage(event string, content any) *SenderContent {
+	s.message = NewMessage(event, content)
+	return s
+}
+
+// SetReceive 添加接收消息的客户端 ID 列表
+// cid: 接收消息的客户端 ID
+// 支持链式调用
+func (s *SenderContent) SetReceive(cid ...int64) *SenderContent {
+	s.receives = append(s.receives, cid...)
+	return s
+}
+
+// SetExclude 设置不接收广播消息的客户端 ID 列表
+// cid: 需要排除的客户端 ID
+// 支持链式调用
+func (s *SenderContent) SetExclude(cid ...int64) *SenderContent {
+	s.exclude = append(s.exclude, cid...)
+	return s
+}
+
+// IsBroadcast 判断当前消息是否是广播类型
+// 返回 true 表示是广播消息，false 表示非广播消息
+func (s *SenderContent) IsBroadcast() bool {
+	return s.broadcast
 }
