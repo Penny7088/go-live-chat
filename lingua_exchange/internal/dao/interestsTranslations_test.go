@@ -15,8 +15,8 @@ import (
 	"lingua_exchange/internal/model"
 )
 
-func newCountryLanguagesDao() *gotest.Dao {
-	testData := &model.CountryLanguages{}
+func newInterestsTranslationsDao() *gotest.Dao {
+	testData := &model.InterestsTranslations{}
 	testData.ID = 1
 	// you can set the other fields of testData here, such as:
 	//testData.CreatedAt = time.Now()
@@ -25,22 +25,22 @@ func newCountryLanguagesDao() *gotest.Dao {
 	// init mock cache
 	//c := gotest.NewCache(map[string]interface{}{"no cache": testData}) // to test mysql, disable caching
 	c := gotest.NewCache(map[string]interface{}{utils.Uint64ToStr(testData.ID): testData})
-	c.ICache = cache.NewCountryLanguagesCache(&model.CacheType{
+	c.ICache = cache.NewInterestsTranslationsCache(&model.CacheType{
 		CType: "redis",
 		Rdb:   c.RedisClient,
 	})
 
 	// init mock dao
 	d := gotest.NewDao(c, testData)
-	d.IDao = NewCountryLanguagesDao(d.DB, c.ICache.(cache.CountryLanguagesCache))
+	d.IDao = NewInterestsTranslationsDao(d.DB, c.ICache.(cache.InterestsTranslationsCache))
 
 	return d
 }
 
-func Test_countryLanguagesDao_Create(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_Create(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	d.SQLMock.ExpectBegin()
 	d.SQLMock.ExpectExec("INSERT INTO .*").
@@ -48,16 +48,16 @@ func Test_countryLanguagesDao_Create(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	d.SQLMock.ExpectCommit()
 
-	err := d.IDao.(CountryLanguagesDao).Create(d.Ctx, testData)
+	err := d.IDao.(InterestsTranslationsDao).Create(d.Ctx, testData)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func Test_countryLanguagesDao_DeleteByID(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_DeleteByID(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 	expectedSQLForDeletion := "UPDATE .*"
 
 	d.SQLMock.ExpectBegin()
@@ -66,20 +66,20 @@ func Test_countryLanguagesDao_DeleteByID(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(int64(testData.ID), 1))
 	d.SQLMock.ExpectCommit()
 
-	err := d.IDao.(CountryLanguagesDao).DeleteByID(d.Ctx, testData.ID)
+	err := d.IDao.(InterestsTranslationsDao).DeleteByID(d.Ctx, testData.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// zero id error
-	err = d.IDao.(CountryLanguagesDao).DeleteByID(d.Ctx, 0)
+	err = d.IDao.(InterestsTranslationsDao).DeleteByID(d.Ctx, 0)
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesDao_UpdateByID(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_UpdateByID(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	d.SQLMock.ExpectBegin()
 	d.SQLMock.ExpectExec("UPDATE .*").
@@ -87,21 +87,21 @@ func Test_countryLanguagesDao_UpdateByID(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	d.SQLMock.ExpectCommit()
 
-	err := d.IDao.(CountryLanguagesDao).UpdateByID(d.Ctx, testData)
+	err := d.IDao.(InterestsTranslationsDao).UpdateByID(d.Ctx, testData)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// zero id error
-	err = d.IDao.(CountryLanguagesDao).UpdateByID(d.Ctx, &model.CountryLanguages{})
+	err = d.IDao.(InterestsTranslationsDao).UpdateByID(d.Ctx, &model.InterestsTranslations{})
 	assert.Error(t, err)
 
 }
 
-func Test_countryLanguagesDao_GetByID(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_GetByID(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	// column names and corresponding data
 	rows := sqlmock.NewRows([]string{"id"}).
@@ -111,7 +111,7 @@ func Test_countryLanguagesDao_GetByID(t *testing.T) {
 		WithArgs(testData.ID).
 		WillReturnRows(rows)
 
-	_, err := d.IDao.(CountryLanguagesDao).GetByID(d.Ctx, testData.ID)
+	_, err := d.IDao.(InterestsTranslationsDao).GetByID(d.Ctx, testData.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,27 +125,27 @@ func Test_countryLanguagesDao_GetByID(t *testing.T) {
 	d.SQLMock.ExpectQuery("SELECT .*").
 		WithArgs(2).
 		WillReturnRows(rows)
-	_, err = d.IDao.(CountryLanguagesDao).GetByID(d.Ctx, 2)
+	_, err = d.IDao.(InterestsTranslationsDao).GetByID(d.Ctx, 2)
 	assert.Error(t, err)
 
 	d.SQLMock.ExpectQuery("SELECT .*").
 		WithArgs(3, 4).
 		WillReturnRows(rows)
-	_, err = d.IDao.(CountryLanguagesDao).GetByID(d.Ctx, 4)
+	_, err = d.IDao.(InterestsTranslationsDao).GetByID(d.Ctx, 4)
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesDao_GetByColumns(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_GetByColumns(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).
 		AddRow(testData.ID, testData.CreatedAt, testData.UpdatedAt)
 
 	d.SQLMock.ExpectQuery("SELECT .*").WillReturnRows(rows)
 
-	_, _, err := d.IDao.(CountryLanguagesDao).GetByColumns(d.Ctx, &query.Params{
+	_, _, err := d.IDao.(InterestsTranslationsDao).GetByColumns(d.Ctx, &query.Params{
 		Page:  0,
 		Limit: 10,
 		Sort:  "ignore count", // ignore test count(*)
@@ -160,7 +160,7 @@ func Test_countryLanguagesDao_GetByColumns(t *testing.T) {
 	}
 
 	// err test
-	_, _, err = d.IDao.(CountryLanguagesDao).GetByColumns(d.Ctx, &query.Params{
+	_, _, err = d.IDao.(InterestsTranslationsDao).GetByColumns(d.Ctx, &query.Params{
 		Page:  0,
 		Limit: 10,
 		Columns: []query.Column{
@@ -174,15 +174,15 @@ func Test_countryLanguagesDao_GetByColumns(t *testing.T) {
 	assert.Error(t, err)
 
 	// error test
-	dao := &countryLanguagesDao{}
+	dao := &interestsTranslationsDao{}
 	_, _, err = dao.GetByColumns(context.Background(), &query.Params{Columns: []query.Column{{}}})
 	t.Log(err)
 }
 
-func Test_countryLanguagesDao_DeleteByIDs(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_DeleteByIDs(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	d.SQLMock.ExpectBegin()
 	d.SQLMock.ExpectExec("UPDATE .*").
@@ -190,20 +190,20 @@ func Test_countryLanguagesDao_DeleteByIDs(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(int64(testData.ID), 1))
 	d.SQLMock.ExpectCommit()
 
-	err := d.IDao.(CountryLanguagesDao).DeleteByID(d.Ctx, testData.ID)
+	err := d.IDao.(InterestsTranslationsDao).DeleteByID(d.Ctx, testData.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// zero id error
-	err = d.IDao.(CountryLanguagesDao).DeleteByIDs(d.Ctx, []uint64{0})
+	err = d.IDao.(InterestsTranslationsDao).DeleteByIDs(d.Ctx, []uint64{0})
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesDao_GetByCondition(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_GetByCondition(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	// column names and corresponding data
 	rows := sqlmock.NewRows([]string{"id"}).
@@ -213,7 +213,7 @@ func Test_countryLanguagesDao_GetByCondition(t *testing.T) {
 		WithArgs(testData.ID).
 		WillReturnRows(rows)
 
-	_, err := d.IDao.(CountryLanguagesDao).GetByCondition(d.Ctx, &query.Conditions{
+	_, err := d.IDao.(InterestsTranslationsDao).GetByCondition(d.Ctx, &query.Conditions{
 		Columns: []query.Column{
 			{
 				Name:  "id",
@@ -234,7 +234,7 @@ func Test_countryLanguagesDao_GetByCondition(t *testing.T) {
 	d.SQLMock.ExpectQuery("SELECT .*").
 		WithArgs(2).
 		WillReturnRows(rows)
-	_, err = d.IDao.(CountryLanguagesDao).GetByCondition(d.Ctx, &query.Conditions{
+	_, err = d.IDao.(InterestsTranslationsDao).GetByCondition(d.Ctx, &query.Conditions{
 		Columns: []query.Column{
 			{
 				Name:  "id",
@@ -245,10 +245,10 @@ func Test_countryLanguagesDao_GetByCondition(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesDao_GetByIDs(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_GetByIDs(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).
 		AddRow(testData.ID, testData.CreatedAt, testData.UpdatedAt)
@@ -257,12 +257,12 @@ func Test_countryLanguagesDao_GetByIDs(t *testing.T) {
 		WithArgs(testData.ID).
 		WillReturnRows(rows)
 
-	_, err := d.IDao.(CountryLanguagesDao).GetByIDs(d.Ctx, []uint64{testData.ID})
+	_, err := d.IDao.(InterestsTranslationsDao).GetByIDs(d.Ctx, []uint64{testData.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = d.IDao.(CountryLanguagesDao).GetByIDs(d.Ctx, []uint64{111})
+	_, err = d.IDao.(InterestsTranslationsDao).GetByIDs(d.Ctx, []uint64{111})
 	assert.Error(t, err)
 
 	err = d.SQLMock.ExpectationsWereMet()
@@ -271,17 +271,17 @@ func Test_countryLanguagesDao_GetByIDs(t *testing.T) {
 	}
 }
 
-func Test_countryLanguagesDao_GetByLastID(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_GetByLastID(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).
 		AddRow(testData.ID, testData.CreatedAt, testData.UpdatedAt)
 
 	d.SQLMock.ExpectQuery("SELECT .*").WillReturnRows(rows)
 
-	_, err := d.IDao.(CountryLanguagesDao).GetByLastID(d.Ctx, 0, 10, "")
+	_, err := d.IDao.(InterestsTranslationsDao).GetByLastID(d.Ctx, 0, 10, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,14 +292,14 @@ func Test_countryLanguagesDao_GetByLastID(t *testing.T) {
 	}
 
 	// err test
-	_, err = d.IDao.(CountryLanguagesDao).GetByLastID(d.Ctx, 0, 10, "unknown-column")
+	_, err = d.IDao.(InterestsTranslationsDao).GetByLastID(d.Ctx, 0, 10, "unknown-column")
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesDao_CreateByTx(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_CreateByTx(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	d.SQLMock.ExpectBegin()
 	d.SQLMock.ExpectExec("INSERT INTO .*").
@@ -307,16 +307,16 @@ func Test_countryLanguagesDao_CreateByTx(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	d.SQLMock.ExpectCommit()
 
-	_, err := d.IDao.(CountryLanguagesDao).CreateByTx(d.Ctx, d.DB, testData)
+	_, err := d.IDao.(InterestsTranslationsDao).CreateByTx(d.Ctx, d.DB, testData)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func Test_countryLanguagesDao_DeleteByTx(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_DeleteByTx(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 	expectedSQLForDeletion := "UPDATE .*"
 
 	d.SQLMock.ExpectBegin()
@@ -325,16 +325,16 @@ func Test_countryLanguagesDao_DeleteByTx(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(int64(testData.ID), 1))
 	d.SQLMock.ExpectCommit()
 
-	err := d.IDao.(CountryLanguagesDao).DeleteByTx(d.Ctx, d.DB, testData.ID)
+	err := d.IDao.(InterestsTranslationsDao).DeleteByTx(d.Ctx, d.DB, testData.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func Test_countryLanguagesDao_UpdateByTx(t *testing.T) {
-	d := newCountryLanguagesDao()
+func Test_interestsTranslationsDao_UpdateByTx(t *testing.T) {
+	d := newInterestsTranslationsDao()
 	defer d.Close()
-	testData := d.TestData.(*model.CountryLanguages)
+	testData := d.TestData.(*model.InterestsTranslations)
 
 	d.SQLMock.ExpectBegin()
 	d.SQLMock.ExpectExec("UPDATE .*").
@@ -342,7 +342,7 @@ func Test_countryLanguagesDao_UpdateByTx(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	d.SQLMock.ExpectCommit()
 
-	err := d.IDao.(CountryLanguagesDao).UpdateByTx(d.Ctx, d.DB, testData)
+	err := d.IDao.(InterestsTranslationsDao).UpdateByTx(d.Ctx, d.DB, testData)
 	if err != nil {
 		t.Fatal(err)
 	}

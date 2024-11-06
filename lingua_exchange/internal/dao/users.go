@@ -124,9 +124,6 @@ func (d *usersDao) updateDataByID(ctx context.Context, db *gorm.DB, table *model
 	if table.Gender != "" {
 		update["gender"] = table.Gender
 	}
-	if table.Interests != "" {
-		update["interests"] = table.Interests
-	}
 	if table.CountryID != 0 {
 		update["country_id"] = table.CountryID
 	}

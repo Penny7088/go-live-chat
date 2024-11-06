@@ -20,8 +20,8 @@ import (
 	"lingua_exchange/internal/types"
 )
 
-func newCountryLanguagesHandler() *gotest.Handler {
-	testData := &model.CountryLanguages{}
+func newInterestsTranslationsHandler() *gotest.Handler {
+	testData := &model.InterestsTranslations{}
 	testData.ID = 1
 	// you can set the other fields of testData here, such as:
 	//testData.CreatedAt = time.Now()
@@ -29,73 +29,67 @@ func newCountryLanguagesHandler() *gotest.Handler {
 
 	// init mock cache
 	c := gotest.NewCache(map[string]interface{}{utils.Uint64ToStr(testData.ID): testData})
-	c.ICache = cache.NewCountryLanguagesCache(&model.CacheType{
+	c.ICache = cache.NewInterestsTranslationsCache(&model.CacheType{
 		CType: "redis",
 		Rdb:   c.RedisClient,
 	})
 
 	// init mock dao
 	d := gotest.NewDao(c, testData)
-	d.IDao = dao.NewCountryLanguagesDao(d.DB, c.ICache.(cache.CountryLanguagesCache))
+	d.IDao = dao.NewInterestsTranslationsDao(d.DB, c.ICache.(cache.InterestsTranslationsCache))
 
 	// init mock handler
 	h := gotest.NewHandler(d, testData)
-	h.IHandler = &countryLanguagesHandler{iDao: d.IDao.(dao.CountryLanguagesDao)}
-	iHandler := h.IHandler.(CountryLanguagesHandler)
+	h.IHandler = &interestsHandler{iDao: d.IDao.(dao.InterestsTranslationsDao)}
+	iHandler := h.IHandler.(InterestsHandler)
 
 	testFns := []gotest.RouterInfo{
 		{
 			FuncName:    "Create",
 			Method:      http.MethodPost,
-			Path:        "/countryLanguages",
+			Path:        "/interestsTranslations",
 			HandlerFunc: iHandler.Create,
 		},
 		{
 			FuncName:    "DeleteByID",
 			Method:      http.MethodDelete,
-			Path:        "/countryLanguages/:id",
+			Path:        "/interestsTranslations/:id",
 			HandlerFunc: iHandler.DeleteByID,
-		},
-		{
-			FuncName:    "UpdateByID",
-			Method:      http.MethodPut,
-			Path:        "/countryLanguages/:id",
-			HandlerFunc: iHandler.UpdateByID,
 		},
 		{
 			FuncName:    "GetByID",
 			Method:      http.MethodGet,
-			Path:        "/countryLanguages/:id",
+			Path:        "/interestsTranslations/:id",
 			HandlerFunc: iHandler.GetByID,
 		},
 		{
 			FuncName:    "List",
 			Method:      http.MethodPost,
-			Path:        "/countryLanguages/list",
+			Path:        "/interestsTranslations/list",
 			HandlerFunc: iHandler.List,
 		},
 		{
 			FuncName:    "DeleteByIDs",
 			Method:      http.MethodPost,
-			Path:        "/countryLanguages/delete/ids",
+			Path:        "/interestsTranslations/delete/ids",
 			HandlerFunc: iHandler.DeleteByIDs,
 		},
 		{
 			FuncName:    "GetByCondition",
 			Method:      http.MethodPost,
-			Path:        "/countryLanguages/condition",
+			Path:        "/interestsTranslations/condition",
 			HandlerFunc: iHandler.GetByCondition,
 		},
 		{
 			FuncName:    "ListByIDs",
 			Method:      http.MethodPost,
-			Path:        "/countryLanguages/list/ids",
+			Path:        "/interestsTranslations/list/ids",
 			HandlerFunc: iHandler.ListByIDs,
 		},
 		{
 			FuncName:    "ListByLastID",
 			Method:      http.MethodGet,
-			Path:        "/countryLanguages/list",
+			Path:        "/interestsTranslations/list",
 			HandlerFunc: iHandler.ListByLastID,
 		},
 	}
@@ -106,11 +100,11 @@ func newCountryLanguagesHandler() *gotest.Handler {
 	return h
 }
 
-func Test_countryLanguagesHandler_Create(t *testing.T) {
-	h := newCountryLanguagesHandler()
+func Test_interestsTranslationsHandler_Create(t *testing.T) {
+	h := newInterestsTranslationsHandler()
 	defer h.Close()
-	testData := &types.CreateCountryLanguagesRequest{}
-	_ = copier.Copy(testData, h.TestData.(*model.CountryLanguages))
+	testData := &types.CreateInterestsTranslationsRequest{}
+	_ = copier.Copy(testData, h.TestData.(*model.InterestsTranslations))
 
 	h.MockDao.SQLMock.ExpectBegin()
 	args := h.MockDao.GetAnyArgs(h.TestData)
@@ -129,10 +123,10 @@ func Test_countryLanguagesHandler_Create(t *testing.T) {
 
 }
 
-func Test_countryLanguagesHandler_DeleteByID(t *testing.T) {
-	h := newCountryLanguagesHandler()
+func Test_interestsTranslationsHandler_DeleteByID(t *testing.T) {
+	h := newInterestsTranslationsHandler()
 	defer h.Close()
-	testData := h.TestData.(*model.CountryLanguages)
+	testData := h.TestData.(*model.InterestsTranslations)
 	expectedSQLForDeletion := "UPDATE .*"
 	expectedArgsForDeletionTime := h.MockDao.AnyTime
 
@@ -160,40 +154,10 @@ func Test_countryLanguagesHandler_DeleteByID(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesHandler_UpdateByID(t *testing.T) {
-	h := newCountryLanguagesHandler()
+func Test_interestsTranslationsHandler_GetByID(t *testing.T) {
+	h := newInterestsTranslationsHandler()
 	defer h.Close()
-	testData := &types.UpdateCountryLanguagesByIDRequest{}
-	_ = copier.Copy(testData, h.TestData.(*model.CountryLanguages))
-
-	h.MockDao.SQLMock.ExpectBegin()
-	h.MockDao.SQLMock.ExpectExec("UPDATE .*").
-		WithArgs(h.MockDao.AnyTime, testData.ID). // adjusted for the amount of test data
-		WillReturnResult(sqlmock.NewResult(int64(testData.ID), 1))
-	h.MockDao.SQLMock.ExpectCommit()
-
-	result := &httpcli.StdResult{}
-	err := httpcli.Put(result, h.GetRequestURL("UpdateByID", testData.ID), testData)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result.Code != 0 {
-		t.Fatalf("%+v", result)
-	}
-
-	// zero id error test
-	err = httpcli.Put(result, h.GetRequestURL("UpdateByID", 0), testData)
-	assert.NoError(t, err)
-
-	// update error test
-	err = httpcli.Put(result, h.GetRequestURL("UpdateByID", 111), testData)
-	assert.Error(t, err)
-}
-
-func Test_countryLanguagesHandler_GetByID(t *testing.T) {
-	h := newCountryLanguagesHandler()
-	defer h.Close()
-	testData := h.TestData.(*model.CountryLanguages)
+	testData := h.TestData.(*model.InterestsTranslations)
 
 	// column names and corresponding data
 	rows := sqlmock.NewRows([]string{"id"}).
@@ -221,10 +185,10 @@ func Test_countryLanguagesHandler_GetByID(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesHandler_List(t *testing.T) {
-	h := newCountryLanguagesHandler()
+func Test_interestsTranslationsHandler_List(t *testing.T) {
+	h := newInterestsTranslationsHandler()
 	defer h.Close()
-	testData := h.TestData.(*model.CountryLanguages)
+	testData := h.TestData.(*model.InterestsTranslations)
 
 	// column names and corresponding data
 	rows := sqlmock.NewRows([]string{"id"}).
@@ -233,7 +197,7 @@ func Test_countryLanguagesHandler_List(t *testing.T) {
 	h.MockDao.SQLMock.ExpectQuery("SELECT .*").WillReturnRows(rows)
 
 	result := &httpcli.StdResult{}
-	err := httpcli.Post(result, h.GetRequestURL("List"), &types.ListCountryLanguagessRequest{query.Params{
+	err := httpcli.Post(result, h.GetRequestURL("List"), &types.ListInterestsTranslationssRequest{query.Params{
 		Page:  0,
 		Limit: 10,
 		Sort:  "ignore count", // ignore test count
@@ -250,7 +214,7 @@ func Test_countryLanguagesHandler_List(t *testing.T) {
 	assert.NoError(t, err)
 
 	// get error test
-	err = httpcli.Post(result, h.GetRequestURL("List"), &types.ListCountryLanguagessRequest{query.Params{
+	err = httpcli.Post(result, h.GetRequestURL("List"), &types.ListInterestsTranslationssRequest{query.Params{
 		Page:  0,
 		Limit: 10,
 		Sort:  "unknown-column",
@@ -258,10 +222,10 @@ func Test_countryLanguagesHandler_List(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesHandler_DeleteByIDs(t *testing.T) {
-	h := newCountryLanguagesHandler()
+func Test_interestsTranslationsHandler_DeleteByIDs(t *testing.T) {
+	h := newInterestsTranslationsHandler()
 	defer h.Close()
-	testData := h.TestData.(*model.CountryLanguages)
+	testData := h.TestData.(*model.InterestsTranslations)
 
 	h.MockDao.SQLMock.ExpectBegin()
 	h.MockDao.SQLMock.ExpectExec("UPDATE .*").
@@ -270,7 +234,7 @@ func Test_countryLanguagesHandler_DeleteByIDs(t *testing.T) {
 	h.MockDao.SQLMock.ExpectCommit()
 
 	result := &httpcli.StdResult{}
-	err := httpcli.Post(result, h.GetRequestURL("DeleteByIDs"), &types.DeleteCountryLanguagessByIDsRequest{IDs: []uint64{testData.ID}})
+	err := httpcli.Post(result, h.GetRequestURL("DeleteByIDs"), &types.DeleteInterestsTranslationssByIDsRequest{IDs: []uint64{testData.ID}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,14 +247,14 @@ func Test_countryLanguagesHandler_DeleteByIDs(t *testing.T) {
 	assert.NoError(t, err)
 
 	// get error test
-	err = httpcli.Post(result, h.GetRequestURL("DeleteByIDs"), &types.DeleteCountryLanguagessByIDsRequest{IDs: []uint64{111}})
+	err = httpcli.Post(result, h.GetRequestURL("DeleteByIDs"), &types.DeleteInterestsTranslationssByIDsRequest{IDs: []uint64{111}})
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesHandler_GetByCondition(t *testing.T) {
-	h := newCountryLanguagesHandler()
+func Test_interestsTranslationsHandler_GetByCondition(t *testing.T) {
+	h := newInterestsTranslationsHandler()
 	defer h.Close()
-	testData := h.TestData.(*model.CountryLanguages)
+	testData := h.TestData.(*model.InterestsTranslations)
 
 	// column names and corresponding data
 	rows := sqlmock.NewRows([]string{"id"}).
@@ -299,7 +263,7 @@ func Test_countryLanguagesHandler_GetByCondition(t *testing.T) {
 	h.MockDao.SQLMock.ExpectQuery("SELECT .*").WillReturnRows(rows)
 
 	result := &httpcli.StdResult{}
-	err := httpcli.Post(result, h.GetRequestURL("GetByCondition"), &types.GetCountryLanguagesByConditionRequest{
+	err := httpcli.Post(result, h.GetRequestURL("GetByCondition"), &types.GetInterestsTranslationsByConditionRequest{
 		query.Conditions{
 			Columns: []query.Column{
 				{
@@ -321,7 +285,7 @@ func Test_countryLanguagesHandler_GetByCondition(t *testing.T) {
 	assert.NoError(t, err)
 
 	// get error test
-	err = httpcli.Post(result, h.GetRequestURL("GetByCondition"), &types.GetCountryLanguagesByConditionRequest{
+	err = httpcli.Post(result, h.GetRequestURL("GetByCondition"), &types.GetInterestsTranslationsByConditionRequest{
 		query.Conditions{
 			Columns: []query.Column{
 				{
@@ -334,10 +298,10 @@ func Test_countryLanguagesHandler_GetByCondition(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesHandler_ListByIDs(t *testing.T) {
-	h := newCountryLanguagesHandler()
+func Test_interestsTranslationsHandler_ListByIDs(t *testing.T) {
+	h := newInterestsTranslationsHandler()
 	defer h.Close()
-	testData := h.TestData.(*model.CountryLanguages)
+	testData := h.TestData.(*model.InterestsTranslations)
 
 	// column names and corresponding data
 	rows := sqlmock.NewRows([]string{"id"}).
@@ -346,7 +310,7 @@ func Test_countryLanguagesHandler_ListByIDs(t *testing.T) {
 	h.MockDao.SQLMock.ExpectQuery("SELECT .*").WillReturnRows(rows)
 
 	result := &httpcli.StdResult{}
-	err := httpcli.Post(result, h.GetRequestURL("ListByIDs"), &types.ListCountryLanguagessByIDsRequest{IDs: []uint64{testData.ID}})
+	err := httpcli.Post(result, h.GetRequestURL("ListByIDs"), &types.ListInterestsTranslationssByIDsRequest{IDs: []uint64{testData.ID}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -358,14 +322,14 @@ func Test_countryLanguagesHandler_ListByIDs(t *testing.T) {
 	_ = httpcli.Post(result, h.GetRequestURL("ListByIDs"), nil)
 
 	// get error test
-	err = httpcli.Post(result, h.GetRequestURL("ListByIDs"), &types.ListCountryLanguagessByIDsRequest{IDs: []uint64{111}})
+	err = httpcli.Post(result, h.GetRequestURL("ListByIDs"), &types.ListInterestsTranslationssByIDsRequest{IDs: []uint64{111}})
 	assert.Error(t, err)
 }
 
-func Test_countryLanguagesHandler_ListByLastID(t *testing.T) {
-	h := newCountryLanguagesHandler()
+func Test_interestsTranslationsHandler_ListByLastID(t *testing.T) {
+	h := newInterestsTranslationsHandler()
 	defer h.Close()
-	testData := h.TestData.(*model.CountryLanguages)
+	testData := h.TestData.(*model.InterestsTranslations)
 
 	// column names and corresponding data
 	rows := sqlmock.NewRows([]string{"id"}).
@@ -387,9 +351,9 @@ func Test_countryLanguagesHandler_ListByLastID(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestNewCountryLanguagesHandler(t *testing.T) {
+func TestNewInterestsTranslationsHandler(t *testing.T) {
 	defer func() {
 		recover()
 	}()
-	_ = NewCountryLanguagesHandler()
+	_ = NewInterestsHandler()
 }

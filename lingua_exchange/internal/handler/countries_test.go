@@ -133,11 +133,12 @@ func Test_countriesHandler_DeleteByID(t *testing.T) {
 	h := newCountriesHandler()
 	defer h.Close()
 	testData := h.TestData.(*model.Countries)
-	expectedSQLForDeletion := "DELETE .*"
+	expectedSQLForDeletion := "UPDATE .*"
+	expectedArgsForDeletionTime := h.MockDao.AnyTime
 
 	h.MockDao.SQLMock.ExpectBegin()
 	h.MockDao.SQLMock.ExpectExec(expectedSQLForDeletion).
-		WithArgs(testData.ID). // adjusted for the amount of test data
+		WithArgs(expectedArgsForDeletionTime, testData.ID). // adjusted for the amount of test data
 		WillReturnResult(sqlmock.NewResult(int64(testData.ID), 1))
 	h.MockDao.SQLMock.ExpectCommit()
 

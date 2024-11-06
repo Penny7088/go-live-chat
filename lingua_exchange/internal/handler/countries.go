@@ -209,7 +209,7 @@ func (h *countriesHandler) GetByID(c *gin.Context) {
 // @accept json
 // @Produce json
 // @Param data body types.Params true "query parameters"
-// @Success 200 {object} types.ListCountriesReply{}
+// @Success 200 {object} types.ListCountriessReply{}
 // @Router /api/v1/countries/list [post]
 // @Security BearerAuth
 func (h *countriesHandler) List(c *gin.Context) {
@@ -373,7 +373,7 @@ func (h *countriesHandler) ListByIDs(c *gin.Context) {
 // @Param lastID query int true "last id, default is MaxInt32" default(0)
 // @Param limit query int false "number per page" default(10)
 // @Param sort query string false "sort by column name of table, and the "-" sign before column name indicates reverse order" default(-id)
-// @Success 200 {object} types.ListCountriesReply{}
+// @Success 200 {object} types.ListCountriessReply{}
 // @Router /api/v1/countries/list [get]
 // @Security BearerAuth
 func (h *countriesHandler) ListByLastID(c *gin.Context) {

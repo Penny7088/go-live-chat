@@ -17,7 +17,6 @@ type Users struct {
 	LanguageLevel      string    `gorm:"column:language_level;type:varchar(50)" json:"languageLevel"`
 	Age                int       `gorm:"column:age;type:int(11)" json:"age"`
 	Gender             string    `gorm:"column:gender;type:enum('male','female','other')" json:"gender"`
-	Interests          string    `gorm:"column:interests;type:text" json:"interests"`
 	CountryID          int64     `gorm:"column:country_id;type:bigint(20)" json:"countryID"`
 	RegistrationDate   time.Time `gorm:"column:registration_date;type:timestamp;default:CURRENT_TIMESTAMP" json:"registrationDate"`
 	LastLogin          time.Time `gorm:"column:last_login;type:timestamp" json:"lastLogin"`

@@ -10,8 +10,7 @@ import (
 
 	"github.com/zhufuyi/sponge/pkg/app"
 	"github.com/zhufuyi/sponge/pkg/servicerd/registry"
-
-	"lingua_exchange/internal/routers"
+	routers "lingua_exchange/internal/routers"
 )
 
 var _ app.IServer = (*httpServer)(nil)
@@ -69,7 +68,6 @@ func NewHTTPServer(addr string, opts ...HTTPOption) app.IServer {
 	} else {
 		gin.SetMode(gin.DebugMode)
 	}
-
 	router := routers.NewRouter()
 	server := &http.Server{
 		Addr:    addr,

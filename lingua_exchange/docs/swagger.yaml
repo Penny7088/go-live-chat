@@ -25,6 +25,8 @@ definitions:
     type: object
   types.CountriesObjDetail:
     properties:
+      createdAt:
+        type: string
       id:
         description: convert to uint64 id
         type: integer
@@ -32,16 +34,14 @@ definitions:
         type: string
       name:
         type: string
-    type: object
-  types.CountryLanguagesObjDetail:
-    properties:
-      countryID:
+      phoneCode:
+        description: 国家号前缀
         type: integer
-      id:
-        description: convert to uint64 id
-        type: integer
-      languageID:
-        type: integer
+      updatedAt:
+        type: string
+      visitName:
+        description: 方便阅读的字段
+        type: string
     type: object
   types.CreateCountriesReply:
     properties:
@@ -65,8 +65,14 @@ definitions:
         type: string
       name:
         type: string
+      phoneCode:
+        description: 国家号前缀
+        type: integer
+      visitName:
+        description: 方便阅读的字段
+        type: string
     type: object
-  types.CreateCountryLanguagesReply:
+  types.CreateInterestsReply:
     properties:
       code:
         description: return code
@@ -82,12 +88,12 @@ definitions:
         description: return information description
         type: string
     type: object
-  types.CreateCountryLanguagesRequest:
+  types.CreateInterestsRequest:
     properties:
-      countryID:
+      tagID:
         type: integer
-      languageID:
-        type: integer
+      tagName:
+        type: string
     type: object
   types.CreateLanguagesReply:
     properties:
@@ -252,7 +258,7 @@ definitions:
         minItems: 1
         type: array
     type: object
-  types.DeleteCountryLanguagesByIDReply:
+  types.DeleteInterestsByIDReply:
     properties:
       code:
         description: return code
@@ -263,7 +269,7 @@ definitions:
         description: return information description
         type: string
     type: object
-  types.DeleteCountryLanguagessByIDsReply:
+  types.DeleteInterestssByIDsReply:
     properties:
       code:
         description: return code
@@ -274,7 +280,7 @@ definitions:
         description: return information description
         type: string
     type: object
-  types.DeleteCountryLanguagessByIDsRequest:
+  types.DeleteInterestssByIDsRequest:
     properties:
       ids:
         description: id list
@@ -437,7 +443,7 @@ definitions:
         description: return information description
         type: string
     type: object
-  types.GetCountryLanguagesByConditionReply:
+  types.GetInterestsByConditionReply:
     properties:
       code:
         description: return code
@@ -445,14 +451,14 @@ definitions:
       data:
         description: return data
         properties:
-          countryLanguages:
-            $ref: '#/definitions/types.CountryLanguagesObjDetail'
+          interests:
+            $ref: '#/definitions/types.InterestsObjDetail'
         type: object
       msg:
         description: return information description
         type: string
     type: object
-  types.GetCountryLanguagesByIDReply:
+  types.GetInterestsByIDReply:
     properties:
       code:
         description: return code
@@ -460,8 +466,23 @@ definitions:
       data:
         description: return data
         properties:
-          countryLanguages:
-            $ref: '#/definitions/types.CountryLanguagesObjDetail'
+          interests:
+            $ref: '#/definitions/types.InterestsObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetInterestsByLanguageReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          interests:
+            $ref: '#/definitions/types.InterestTranslationDetail'
         type: object
       msg:
         description: return information description
@@ -587,6 +608,24 @@ definitions:
         description: return information description
         type: string
     type: object
+  types.InterestTranslationDetail:
+    properties:
+      tagID:
+        type: integer
+      translatedName:
+        type: string
+    type: object
+  types.InterestsObjDetail:
+    properties:
+      createdAt:
+        type: string
+      tagID:
+        type: integer
+      tagName:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   types.LanguagesObjDetail:
     properties:
       id:
@@ -597,23 +636,6 @@ definitions:
       name:
         type: string
       nativeName:
-        type: string
-    type: object
-  types.ListCountriesReply:
-    properties:
-      code:
-        description: return code
-        type: integer
-      data:
-        description: return data
-        properties:
-          countriess:
-            items:
-              $ref: '#/definitions/types.CountriesObjDetail'
-            type: array
-        type: object
-      msg:
-        description: return information description
         type: string
     type: object
   types.ListCountriessByIDsReply:
@@ -642,7 +664,7 @@ definitions:
         minItems: 1
         type: array
     type: object
-  types.ListCountryLanguagessByIDsReply:
+  types.ListCountriessReply:
     properties:
       code:
         description: return code
@@ -650,16 +672,33 @@ definitions:
       data:
         description: return data
         properties:
-          countryLanguagess:
+          countriess:
             items:
-              $ref: '#/definitions/types.CountryLanguagesObjDetail'
+              $ref: '#/definitions/types.CountriesObjDetail'
             type: array
         type: object
       msg:
         description: return information description
         type: string
     type: object
-  types.ListCountryLanguagessByIDsRequest:
+  types.ListInterestssByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          interestss:
+            items:
+              $ref: '#/definitions/types.InterestsObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListInterestssByIDsRequest:
     properties:
       ids:
         description: id list
@@ -668,7 +707,7 @@ definitions:
         minItems: 1
         type: array
     type: object
-  types.ListCountryLanguagessReply:
+  types.ListInterestssReply:
     properties:
       code:
         description: return code
@@ -676,9 +715,9 @@ definitions:
       data:
         description: return data
         properties:
-          countryLanguagess:
+          interestss:
             items:
-              $ref: '#/definitions/types.CountryLanguagesObjDetail'
+              $ref: '#/definitions/types.InterestsObjDetail'
             type: array
         type: object
       msg:
@@ -934,8 +973,14 @@ definitions:
         type: string
       name:
         type: string
+      phoneCode:
+        description: 国家号前缀
+        type: integer
+      visitName:
+        description: 方便阅读的字段
+        type: string
     type: object
-  types.UpdateCountryLanguagesByIDReply:
+  types.UpdateInterestsByIDReply:
     properties:
       code:
         description: return code
@@ -946,15 +991,12 @@ definitions:
         description: return information description
         type: string
     type: object
-  types.UpdateCountryLanguagesByIDRequest:
+  types.UpdateInterestsByIDRequest:
     properties:
-      countryID:
+      tagID:
         type: integer
-      id:
-        description: uint64 id
-        type: integer
-      languageID:
-        type: integer
+      tagName:
+        type: string
     type: object
   types.UpdateLanguagesByIDReply:
     properties:
@@ -1324,7 +1366,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.ListCountriesReply'
+            $ref: '#/definitions/types.ListCountriessReply'
       security:
       - BearerAuth: []
       summary: list of countriess by last id and limit
@@ -1347,7 +1389,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.ListCountriesReply'
+            $ref: '#/definitions/types.ListCountriessReply'
       security:
       - BearerAuth: []
       summary: list of countriess by query parameters
@@ -1377,35 +1419,35 @@ paths:
       summary: list of countriess by batch id
       tags:
       - countries
-  /api/v1/countryLanguages:
+  /api/v1/interests:
     post:
       consumes:
       - application/json
-      description: submit information to create countryLanguages
+      description: submit information to create interests
       parameters:
-      - description: countryLanguages information
+      - description: interests information
         in: body
         name: data
         required: true
         schema:
-          $ref: '#/definitions/types.CreateCountryLanguagesRequest'
+          $ref: '#/definitions/types.CreateInterestsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.CreateCountryLanguagesReply'
+            $ref: '#/definitions/types.CreateInterestsReply'
       security:
       - BearerAuth: []
-      summary: create countryLanguages
+      summary: create interests
       tags:
-      - countryLanguages
-  /api/v1/countryLanguages/{id}:
+      - interests
+  /api/v1/interests/{id}:
     delete:
       consumes:
       - application/json
-      description: delete countryLanguages by id
+      description: delete interests by id
       parameters:
       - description: id
         in: path
@@ -1418,16 +1460,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.DeleteCountryLanguagesByIDReply'
+            $ref: '#/definitions/types.DeleteInterestsByIDReply'
       security:
       - BearerAuth: []
-      summary: delete countryLanguages
+      summary: delete interests
       tags:
-      - countryLanguages
+      - interests
     get:
       consumes:
       - application/json
-      description: get countryLanguages detail by id
+      description: get interests detail by id
       parameters:
       - description: id
         in: path
@@ -1440,45 +1482,68 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.GetCountryLanguagesByIDReply'
+            $ref: '#/definitions/types.GetInterestsByIDReply'
       security:
       - BearerAuth: []
-      summary: get countryLanguages detail
+      summary: get interests detail
       tags:
-      - countryLanguages
+      - interests
     put:
       consumes:
       - application/json
-      description: update countryLanguages information by id
+      description: update interests information by id
       parameters:
       - description: id
         in: path
         name: id
         required: true
         type: string
-      - description: countryLanguages information
+      - description: interests information
         in: body
         name: data
         required: true
         schema:
-          $ref: '#/definitions/types.UpdateCountryLanguagesByIDRequest'
+          $ref: '#/definitions/types.UpdateInterestsByIDRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.UpdateCountryLanguagesByIDReply'
+            $ref: '#/definitions/types.UpdateInterestsByIDReply'
       security:
       - BearerAuth: []
-      summary: update countryLanguages
+      summary: update interests
       tags:
-      - countryLanguages
-  /api/v1/countryLanguages/condition:
+      - interests
+  /api/v1/interests/allList/{language_code}:
+    get:
+      consumes:
+      - application/json
+      description: obtain all interests tags
+      parameters:
+      - description: language_code
+        in: path
+        name: language_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetInterestsByLanguageReply'
+      security:
+      - BearerAuth: []
+      summary: create interestsTranslations
+      tags:
+      - interests
+  /api/v1/interests/condition:
     post:
       consumes:
       - application/json
-      description: get countryLanguages by condition
+      description: get interests by condition
       parameters:
       - description: query condition
         in: body
@@ -1492,41 +1557,41 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.GetCountryLanguagesByConditionReply'
+            $ref: '#/definitions/types.GetInterestsByConditionReply'
       security:
       - BearerAuth: []
-      summary: get countryLanguages by condition
+      summary: get interests by condition
       tags:
-      - countryLanguages
-  /api/v1/countryLanguages/delete/ids:
+      - interests
+  /api/v1/interests/delete/ids:
     post:
       consumes:
       - application/json
-      description: delete countryLanguagess by batch id
+      description: delete interestss by batch id
       parameters:
       - description: id array
         in: body
         name: data
         required: true
         schema:
-          $ref: '#/definitions/types.DeleteCountryLanguagessByIDsRequest'
+          $ref: '#/definitions/types.DeleteInterestssByIDsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.DeleteCountryLanguagessByIDsReply'
+            $ref: '#/definitions/types.DeleteInterestssByIDsReply'
       security:
       - BearerAuth: []
-      summary: delete countryLanguagess
+      summary: delete interestss
       tags:
-      - countryLanguages
-  /api/v1/countryLanguages/list:
+      - interests
+  /api/v1/interests/list:
     get:
       consumes:
       - application/json
-      description: list of countryLanguagess by last id and limit
+      description: list of interestss by last id and limit
       parameters:
       - default: 0
         description: last id, default is MaxInt32
@@ -1550,16 +1615,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.ListCountryLanguagessReply'
+            $ref: '#/definitions/types.ListInterestssReply'
       security:
       - BearerAuth: []
-      summary: list of countryLanguagess by last id and limit
+      summary: list of interestss by last id and limit
       tags:
-      - countryLanguages
+      - interests
     post:
       consumes:
       - application/json
-      description: list of countryLanguagess by paging and conditions
+      description: list of interestss by paging and conditions
       parameters:
       - description: query parameters
         in: body
@@ -1573,36 +1638,36 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.ListCountryLanguagessReply'
+            $ref: '#/definitions/types.ListInterestssReply'
       security:
       - BearerAuth: []
-      summary: list of countryLanguagess by query parameters
+      summary: list of interestss by query parameters
       tags:
-      - countryLanguages
-  /api/v1/countryLanguages/list/ids:
+      - interests
+  /api/v1/interests/list/ids:
     post:
       consumes:
       - application/json
-      description: list of countryLanguagess by batch id
+      description: list of interestss by batch id
       parameters:
       - description: id array
         in: body
         name: data
         required: true
         schema:
-          $ref: '#/definitions/types.ListCountryLanguagessByIDsRequest'
+          $ref: '#/definitions/types.ListInterestssByIDsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.ListCountryLanguagessByIDsReply'
+            $ref: '#/definitions/types.ListInterestssByIDsReply'
       security:
       - BearerAuth: []
-      summary: list of countryLanguagess by batch id
+      summary: list of interestss by batch id
       tags:
-      - countryLanguages
+      - interests
   /api/v1/languages:
     post:
       consumes:

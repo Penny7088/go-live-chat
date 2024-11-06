@@ -1,6 +1,6 @@
 // Package routers is a package dedicated to registering routes, and supports both
 // manual route registration and automatic route registration.
-package routers
+package handler
 
 import (
 	"net/http"

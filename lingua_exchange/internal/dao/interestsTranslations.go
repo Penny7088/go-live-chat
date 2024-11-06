@@ -17,45 +17,45 @@ import (
 	"lingua_exchange/internal/model"
 )
 
-var _ CountriesDao = (*countriesDao)(nil)
+var _ InterestsTranslationsDao = (*interestsTranslationsDao)(nil)
 
-// CountriesDao defining the dao interface
-type CountriesDao interface {
-	Create(ctx context.Context, table *model.Countries) error
+// InterestsTranslationsDao defining the dao interface
+type InterestsTranslationsDao interface {
+	Create(ctx context.Context, table *model.InterestsTranslations) error
 	DeleteByID(ctx context.Context, id uint64) error
-	UpdateByID(ctx context.Context, table *model.Countries) error
-	GetByID(ctx context.Context, id uint64) (*model.Countries, error)
-	GetByColumns(ctx context.Context, params *query.Params) ([]*model.Countries, int64, error)
+	UpdateByID(ctx context.Context, table *model.InterestsTranslations) error
+	GetByID(ctx context.Context, id uint64) (*model.InterestsTranslations, error)
+	GetByColumns(ctx context.Context, params *query.Params) ([]*model.InterestsTranslations, int64, error)
 
 	DeleteByIDs(ctx context.Context, ids []uint64) error
-	GetByCondition(ctx context.Context, condition *query.Conditions) (*model.Countries, error)
-	GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.Countries, error)
-	GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.Countries, error)
+	GetByCondition(ctx context.Context, condition *query.Conditions) (*model.InterestsTranslations, error)
+	GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.InterestsTranslations, error)
+	GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.InterestsTranslations, error)
 
-	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Countries) (uint64, error)
+	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.InterestsTranslations) (uint64, error)
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
-	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.Countries) error
+	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.InterestsTranslations) error
 }
 
-type countriesDao struct {
+type interestsTranslationsDao struct {
 	db    *gorm.DB
-	cache cache.CountriesCache // if nil, the cache is not used.
-	sfg   *singleflight.Group  // if cache is nil, the sfg is not used.
+	cache cache.InterestsTranslationsCache // if nil, the cache is not used.
+	sfg   *singleflight.Group              // if cache is nil, the sfg is not used.
 }
 
-// NewCountriesDao creating the dao interface
-func NewCountriesDao(db *gorm.DB, xCache cache.CountriesCache) CountriesDao {
+// NewInterestsTranslationsDao creating the dao interface
+func NewInterestsTranslationsDao(db *gorm.DB, xCache cache.InterestsTranslationsCache) InterestsTranslationsDao {
 	if xCache == nil {
-		return &countriesDao{db: db}
+		return &interestsTranslationsDao{db: db}
 	}
-	return &countriesDao{
+	return &interestsTranslationsDao{
 		db:    db,
 		cache: xCache,
 		sfg:   new(singleflight.Group),
 	}
 }
 
-func (d *countriesDao) deleteCache(ctx context.Context, id uint64) error {
+func (d *interestsTranslationsDao) deleteCache(ctx context.Context, id uint64) error {
 	if d.cache != nil {
 		return d.cache.Del(ctx, id)
 	}
@@ -63,13 +63,13 @@ func (d *countriesDao) deleteCache(ctx context.Context, id uint64) error {
 }
 
 // Create a record, insert the record and the id value is written back to the table
-func (d *countriesDao) Create(ctx context.Context, table *model.Countries) error {
+func (d *interestsTranslationsDao) Create(ctx context.Context, table *model.InterestsTranslations) error {
 	return d.db.WithContext(ctx).Create(table).Error
 }
 
 // DeleteByID delete a record by id
-func (d *countriesDao) DeleteByID(ctx context.Context, id uint64) error {
-	err := d.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Countries{}).Error
+func (d *interestsTranslationsDao) DeleteByID(ctx context.Context, id uint64) error {
+	err := d.db.WithContext(ctx).Where("id = ?", id).Delete(&model.InterestsTranslations{}).Error
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (d *countriesDao) DeleteByID(ctx context.Context, id uint64) error {
 }
 
 // UpdateByID update a record by id
-func (d *countriesDao) UpdateByID(ctx context.Context, table *model.Countries) error {
+func (d *interestsTranslationsDao) UpdateByID(ctx context.Context, table *model.InterestsTranslations) error {
 	err := d.updateDataByID(ctx, d.db, table)
 
 	// delete cache
@@ -90,34 +90,34 @@ func (d *countriesDao) UpdateByID(ctx context.Context, table *model.Countries) e
 	return err
 }
 
-func (d *countriesDao) updateDataByID(ctx context.Context, db *gorm.DB, table *model.Countries) error {
+func (d *interestsTranslationsDao) updateDataByID(ctx context.Context, db *gorm.DB, table *model.InterestsTranslations) error {
 	if table.ID < 1 {
 		return errors.New("id cannot be 0")
 	}
 
 	update := map[string]interface{}{}
 
-	if table.Name != "" {
-		update["name"] = table.Name
+	if table.TranslationID != 0 {
+		update["translation_id"] = table.TranslationID
 	}
-	if table.IsoCode != "" {
-		update["iso_code"] = table.IsoCode
+	if table.TagID != 0 {
+		update["tag_id"] = table.TagID
 	}
-	if table.VisitName != "" {
-		update["visit_name"] = table.VisitName
+	if table.LanguageCode != "" {
+		update["language_code"] = table.LanguageCode
 	}
-	if table.PhoneCode != 0 {
-		update["phone_code"] = table.PhoneCode
+	if table.TranslatedName != "" {
+		update["translated_name"] = table.TranslatedName
 	}
 
 	return db.WithContext(ctx).Model(table).Updates(update).Error
 }
 
 // GetByID get a record by id
-func (d *countriesDao) GetByID(ctx context.Context, id uint64) (*model.Countries, error) {
+func (d *interestsTranslationsDao) GetByID(ctx context.Context, id uint64) (*model.InterestsTranslations, error) {
 	// no cache
 	if d.cache == nil {
-		record := &model.Countries{}
+		record := &model.InterestsTranslations{}
 		err := d.db.WithContext(ctx).Where("id = ?", id).First(record).Error
 		return record, err
 	}
@@ -131,7 +131,7 @@ func (d *countriesDao) GetByID(ctx context.Context, id uint64) (*model.Countries
 	if errors.Is(err, model.ErrCacheNotFound) {
 		// for the same id, prevent high concurrent simultaneous access to database
 		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { //nolint
-			table := &model.Countries{}
+			table := &model.InterestsTranslations{}
 			err = d.db.WithContext(ctx).Where("id = ?", id).First(table).Error
 			if err != nil {
 				// if data is empty, set not found cache to prevent cache penetration, default expiration time 10 minutes
@@ -145,7 +145,7 @@ func (d *countriesDao) GetByID(ctx context.Context, id uint64) (*model.Countries
 				return nil, err
 			}
 			// set cache
-			err = d.cache.Set(ctx, id, table, cache.CountriesExpireTime)
+			err = d.cache.Set(ctx, id, table, cache.InterestsTranslationsExpireTime)
 			if err != nil {
 				return nil, fmt.Errorf("cache.Set error: %v, id=%d", err, id)
 			}
@@ -154,7 +154,7 @@ func (d *countriesDao) GetByID(ctx context.Context, id uint64) (*model.Countries
 		if err != nil {
 			return nil, err
 		}
-		table, ok := val.(*model.Countries)
+		table, ok := val.(*model.InterestsTranslations)
 		if !ok {
 			return nil, model.ErrRecordNotFound
 		}
@@ -200,7 +200,7 @@ func (d *countriesDao) GetByID(ctx context.Context, id uint64) (*model.Countries
 //			Value: "male",
 //		},
 //	}
-func (d *countriesDao) GetByColumns(ctx context.Context, params *query.Params) ([]*model.Countries, int64, error) {
+func (d *interestsTranslationsDao) GetByColumns(ctx context.Context, params *query.Params) ([]*model.InterestsTranslations, int64, error) {
 	queryStr, args, err := params.ConvertToGormConditions()
 	if err != nil {
 		return nil, 0, errors.New("query params error: " + err.Error())
@@ -208,7 +208,7 @@ func (d *countriesDao) GetByColumns(ctx context.Context, params *query.Params) (
 
 	var total int64
 	if params.Sort != "ignore count" { // determine if count is required
-		err = d.db.WithContext(ctx).Model(&model.Countries{}).Select([]string{"id"}).Where(queryStr, args...).Count(&total).Error
+		err = d.db.WithContext(ctx).Model(&model.InterestsTranslations{}).Select([]string{"id"}).Where(queryStr, args...).Count(&total).Error
 		if err != nil {
 			return nil, 0, err
 		}
@@ -217,7 +217,7 @@ func (d *countriesDao) GetByColumns(ctx context.Context, params *query.Params) (
 		}
 	}
 
-	records := []*model.Countries{}
+	records := []*model.InterestsTranslations{}
 	order, limit, offset := params.ConvertToPage()
 	err = d.db.WithContext(ctx).Order(order).Limit(limit).Offset(offset).Where(queryStr, args...).Find(&records).Error
 	if err != nil {
@@ -228,8 +228,8 @@ func (d *countriesDao) GetByColumns(ctx context.Context, params *query.Params) (
 }
 
 // DeleteByIDs delete records by batch id
-func (d *countriesDao) DeleteByIDs(ctx context.Context, ids []uint64) error {
-	err := d.db.WithContext(ctx).Where("id IN (?)", ids).Delete(&model.Countries{}).Error
+func (d *interestsTranslationsDao) DeleteByIDs(ctx context.Context, ids []uint64) error {
+	err := d.db.WithContext(ctx).Where("id IN (?)", ids).Delete(&model.InterestsTranslations{}).Error
 	if err != nil {
 		return err
 	}
@@ -263,13 +263,13 @@ func (d *countriesDao) DeleteByIDs(ctx context.Context, ids []uint64) error {
 //			Value: "male",
 //		},
 //	}
-func (d *countriesDao) GetByCondition(ctx context.Context, c *query.Conditions) (*model.Countries, error) {
+func (d *interestsTranslationsDao) GetByCondition(ctx context.Context, c *query.Conditions) (*model.InterestsTranslations, error) {
 	queryStr, args, err := c.ConvertToGorm()
 	if err != nil {
 		return nil, err
 	}
 
-	table := &model.Countries{}
+	table := &model.InterestsTranslations{}
 	err = d.db.WithContext(ctx).Where(queryStr, args...).First(table).Error
 	if err != nil {
 		return nil, err
@@ -279,15 +279,15 @@ func (d *countriesDao) GetByCondition(ctx context.Context, c *query.Conditions) 
 }
 
 // GetByIDs get records by batch id
-func (d *countriesDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.Countries, error) {
+func (d *interestsTranslationsDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.InterestsTranslations, error) {
 	// no cache
 	if d.cache == nil {
-		var records []*model.Countries
+		var records []*model.InterestsTranslations
 		err := d.db.WithContext(ctx).Where("id IN (?)", ids).Find(&records).Error
 		if err != nil {
 			return nil, err
 		}
-		itemMap := make(map[uint64]*model.Countries)
+		itemMap := make(map[uint64]*model.InterestsTranslations)
 		for _, record := range records {
 			itemMap[record.ID] = record
 		}
@@ -322,7 +322,7 @@ func (d *countriesDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*
 		}
 
 		if len(realMissedIDs) > 0 {
-			var missedData []*model.Countries
+			var missedData []*model.InterestsTranslations
 			err = d.db.WithContext(ctx).Where("id IN (?)", realMissedIDs).Find(&missedData).Error
 			if err != nil {
 				return nil, err
@@ -332,7 +332,7 @@ func (d *countriesDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*
 				for _, data := range missedData {
 					itemMap[data.ID] = data
 				}
-				err = d.cache.MultiSet(ctx, missedData, cache.CountriesExpireTime)
+				err = d.cache.MultiSet(ctx, missedData, cache.InterestsTranslationsExpireTime)
 				if err != nil {
 					return nil, err
 				}
@@ -348,10 +348,10 @@ func (d *countriesDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*
 }
 
 // GetByLastID get paging records by last id and limit
-func (d *countriesDao) GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.Countries, error) {
+func (d *interestsTranslationsDao) GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.InterestsTranslations, error) {
 	page := query.NewPage(0, limit, sort)
 
-	records := []*model.Countries{}
+	records := []*model.InterestsTranslations{}
 	err := d.db.WithContext(ctx).Order(page.Sort()).Limit(page.Limit()).Where("id < ?", lastID).Find(&records).Error
 	if err != nil {
 		return nil, err
@@ -360,17 +360,17 @@ func (d *countriesDao) GetByLastID(ctx context.Context, lastID uint64, limit int
 }
 
 // CreateByTx create a record in the database using the provided transaction
-func (d *countriesDao) CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Countries) (uint64, error) {
+func (d *interestsTranslationsDao) CreateByTx(ctx context.Context, tx *gorm.DB, table *model.InterestsTranslations) (uint64, error) {
 	err := tx.WithContext(ctx).Create(table).Error
 	return table.ID, err
 }
 
 // DeleteByTx delete a record by id in the database using the provided transaction
-func (d *countriesDao) DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error {
+func (d *interestsTranslationsDao) DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error {
 	update := map[string]interface{}{
 		"deleted_at": time.Now(),
 	}
-	err := tx.WithContext(ctx).Model(&model.Countries{}).Where("id = ?", id).Updates(update).Error
+	err := tx.WithContext(ctx).Model(&model.InterestsTranslations{}).Where("id = ?", id).Updates(update).Error
 	if err != nil {
 		return err
 	}
@@ -382,7 +382,7 @@ func (d *countriesDao) DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) e
 }
 
 // UpdateByTx update a record by id in the database using the provided transaction
-func (d *countriesDao) UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.Countries) error {
+func (d *interestsTranslationsDao) UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.InterestsTranslations) error {
 	err := d.updateDataByID(ctx, tx, table)
 
 	// delete cache

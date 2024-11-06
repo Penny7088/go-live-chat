@@ -179,7 +179,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.ListCountriesReply"
+                            "$ref": "#/definitions/types.ListCountriessReply"
                         }
                     }
                 }
@@ -216,7 +216,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.ListCountriesReply"
+                            "$ref": "#/definitions/types.ListCountriessReply"
                         }
                     }
                 }
@@ -377,14 +377,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/countryLanguages": {
+        "/api/v1/interests": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "submit information to create countryLanguages",
+                "description": "submit information to create interests",
                 "consumes": [
                     "application/json"
                 ],
@@ -392,17 +392,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "countryLanguages"
+                    "interests"
                 ],
-                "summary": "create countryLanguages",
+                "summary": "create interests",
                 "parameters": [
                     {
-                        "description": "countryLanguages information",
+                        "description": "interests information",
                         "name": "data",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.CreateCountryLanguagesRequest"
+                            "$ref": "#/definitions/types.CreateInterestsRequest"
                         }
                     }
                 ],
@@ -410,20 +410,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.CreateCountryLanguagesReply"
+                            "$ref": "#/definitions/types.CreateInterestsReply"
                         }
                     }
                 }
             }
         },
-        "/api/v1/countryLanguages/condition": {
-            "post": {
+        "/api/v1/interests/allList/{language_code}": {
+            "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "get countryLanguages by condition",
+                "description": "obtain all interests tags",
                 "consumes": [
                     "application/json"
                 ],
@@ -431,9 +431,46 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "countryLanguages"
+                    "interests"
                 ],
-                "summary": "get countryLanguages by condition",
+                "summary": "create interestsTranslations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "language_code",
+                        "name": "language_code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.GetInterestsByLanguageReply"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/interests/condition": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "get interests by condition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "interests"
+                ],
+                "summary": "get interests by condition",
                 "parameters": [
                     {
                         "description": "query condition",
@@ -449,20 +486,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.GetCountryLanguagesByConditionReply"
+                            "$ref": "#/definitions/types.GetInterestsByConditionReply"
                         }
                     }
                 }
             }
         },
-        "/api/v1/countryLanguages/delete/ids": {
+        "/api/v1/interests/delete/ids": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "delete countryLanguagess by batch id",
+                "description": "delete interestss by batch id",
                 "consumes": [
                     "application/json"
                 ],
@@ -470,9 +507,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "countryLanguages"
+                    "interests"
                 ],
-                "summary": "delete countryLanguagess",
+                "summary": "delete interestss",
                 "parameters": [
                     {
                         "description": "id array",
@@ -480,7 +517,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.DeleteCountryLanguagessByIDsRequest"
+                            "$ref": "#/definitions/types.DeleteInterestssByIDsRequest"
                         }
                     }
                 ],
@@ -488,20 +525,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.DeleteCountryLanguagessByIDsReply"
+                            "$ref": "#/definitions/types.DeleteInterestssByIDsReply"
                         }
                     }
                 }
             }
         },
-        "/api/v1/countryLanguages/list": {
+        "/api/v1/interests/list": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "list of countryLanguagess by last id and limit",
+                "description": "list of interestss by last id and limit",
                 "consumes": [
                     "application/json"
                 ],
@@ -509,9 +546,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "countryLanguages"
+                    "interests"
                 ],
-                "summary": "list of countryLanguagess by last id and limit",
+                "summary": "list of interestss by last id and limit",
                 "parameters": [
                     {
                         "type": "integer",
@@ -540,7 +577,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.ListCountryLanguagessReply"
+                            "$ref": "#/definitions/types.ListInterestssReply"
                         }
                     }
                 }
@@ -551,7 +588,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "list of countryLanguagess by paging and conditions",
+                "description": "list of interestss by paging and conditions",
                 "consumes": [
                     "application/json"
                 ],
@@ -559,9 +596,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "countryLanguages"
+                    "interests"
                 ],
-                "summary": "list of countryLanguagess by query parameters",
+                "summary": "list of interestss by query parameters",
                 "parameters": [
                     {
                         "description": "query parameters",
@@ -577,20 +614,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.ListCountryLanguagessReply"
+                            "$ref": "#/definitions/types.ListInterestssReply"
                         }
                     }
                 }
             }
         },
-        "/api/v1/countryLanguages/list/ids": {
+        "/api/v1/interests/list/ids": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "list of countryLanguagess by batch id",
+                "description": "list of interestss by batch id",
                 "consumes": [
                     "application/json"
                 ],
@@ -598,9 +635,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "countryLanguages"
+                    "interests"
                 ],
-                "summary": "list of countryLanguagess by batch id",
+                "summary": "list of interestss by batch id",
                 "parameters": [
                     {
                         "description": "id array",
@@ -608,7 +645,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.ListCountryLanguagessByIDsRequest"
+                            "$ref": "#/definitions/types.ListInterestssByIDsRequest"
                         }
                     }
                 ],
@@ -616,20 +653,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.ListCountryLanguagessByIDsReply"
+                            "$ref": "#/definitions/types.ListInterestssByIDsReply"
                         }
                     }
                 }
             }
         },
-        "/api/v1/countryLanguages/{id}": {
+        "/api/v1/interests/{id}": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "get countryLanguages detail by id",
+                "description": "get interests detail by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -637,9 +674,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "countryLanguages"
+                    "interests"
                 ],
-                "summary": "get countryLanguages detail",
+                "summary": "get interests detail",
                 "parameters": [
                     {
                         "type": "string",
@@ -653,7 +690,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.GetCountryLanguagesByIDReply"
+                            "$ref": "#/definitions/types.GetInterestsByIDReply"
                         }
                     }
                 }
@@ -664,7 +701,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "update countryLanguages information by id",
+                "description": "update interests information by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -672,9 +709,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "countryLanguages"
+                    "interests"
                 ],
-                "summary": "update countryLanguages",
+                "summary": "update interests",
                 "parameters": [
                     {
                         "type": "string",
@@ -684,12 +721,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "countryLanguages information",
+                        "description": "interests information",
                         "name": "data",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.UpdateCountryLanguagesByIDRequest"
+                            "$ref": "#/definitions/types.UpdateInterestsByIDRequest"
                         }
                     }
                 ],
@@ -697,7 +734,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.UpdateCountryLanguagesByIDReply"
+                            "$ref": "#/definitions/types.UpdateInterestsByIDReply"
                         }
                     }
                 }
@@ -708,7 +745,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "delete countryLanguages by id",
+                "description": "delete interests by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -716,9 +753,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "countryLanguages"
+                    "interests"
                 ],
-                "summary": "delete countryLanguages",
+                "summary": "delete interests",
                 "parameters": [
                     {
                         "type": "string",
@@ -732,7 +769,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.DeleteCountryLanguagesByIDReply"
+                            "$ref": "#/definitions/types.DeleteInterestsByIDReply"
                         }
                     }
                 }
@@ -2258,6 +2295,9 @@ const docTemplate = `{
         "types.CountriesObjDetail": {
             "type": "object",
             "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
                 "id": {
                     "description": "convert to uint64 id",
                     "type": "integer"
@@ -2267,21 +2307,17 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                }
-            }
-        },
-        "types.CountryLanguagesObjDetail": {
-            "type": "object",
-            "properties": {
-                "countryID": {
+                },
+                "phoneCode": {
+                    "description": "国家号前缀",
                     "type": "integer"
                 },
-                "id": {
-                    "description": "convert to uint64 id",
-                    "type": "integer"
+                "updatedAt": {
+                    "type": "string"
                 },
-                "languageID": {
-                    "type": "integer"
+                "visitName": {
+                    "description": "方便阅读的字段",
+                    "type": "string"
                 }
             }
         },
@@ -2316,10 +2352,18 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "phoneCode": {
+                    "description": "国家号前缀",
+                    "type": "integer"
+                },
+                "visitName": {
+                    "description": "方便阅读的字段",
+                    "type": "string"
                 }
             }
         },
-        "types.CreateCountryLanguagesReply": {
+        "types.CreateInterestsReply": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2342,14 +2386,14 @@ const docTemplate = `{
                 }
             }
         },
-        "types.CreateCountryLanguagesRequest": {
+        "types.CreateInterestsRequest": {
             "type": "object",
             "properties": {
-                "countryID": {
+                "tagID": {
                     "type": "integer"
                 },
-                "languageID": {
-                    "type": "integer"
+                "tagName": {
+                    "type": "string"
                 }
             }
         },
@@ -2594,7 +2638,7 @@ const docTemplate = `{
                 }
             }
         },
-        "types.DeleteCountryLanguagesByIDReply": {
+        "types.DeleteInterestsByIDReply": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2610,7 +2654,7 @@ const docTemplate = `{
                 }
             }
         },
-        "types.DeleteCountryLanguagessByIDsReply": {
+        "types.DeleteInterestssByIDsReply": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2626,7 +2670,7 @@ const docTemplate = `{
                 }
             }
         },
-        "types.DeleteCountryLanguagessByIDsRequest": {
+        "types.DeleteInterestssByIDsRequest": {
             "type": "object",
             "properties": {
                 "ids": {
@@ -2863,7 +2907,7 @@ const docTemplate = `{
                 }
             }
         },
-        "types.GetCountryLanguagesByConditionReply": {
+        "types.GetInterestsByConditionReply": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2874,8 +2918,8 @@ const docTemplate = `{
                     "description": "return data",
                     "type": "object",
                     "properties": {
-                        "countryLanguages": {
-                            "$ref": "#/definitions/types.CountryLanguagesObjDetail"
+                        "interests": {
+                            "$ref": "#/definitions/types.InterestsObjDetail"
                         }
                     }
                 },
@@ -2885,7 +2929,7 @@ const docTemplate = `{
                 }
             }
         },
-        "types.GetCountryLanguagesByIDReply": {
+        "types.GetInterestsByIDReply": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2896,8 +2940,30 @@ const docTemplate = `{
                     "description": "return data",
                     "type": "object",
                     "properties": {
-                        "countryLanguages": {
-                            "$ref": "#/definitions/types.CountryLanguagesObjDetail"
+                        "interests": {
+                            "$ref": "#/definitions/types.InterestsObjDetail"
+                        }
+                    }
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.GetInterestsByLanguageReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data",
+                    "type": "object",
+                    "properties": {
+                        "interests": {
+                            "$ref": "#/definitions/types.InterestTranslationDetail"
                         }
                     }
                 },
@@ -3083,6 +3149,34 @@ const docTemplate = `{
                 }
             }
         },
+        "types.InterestTranslationDetail": {
+            "type": "object",
+            "properties": {
+                "tagID": {
+                    "type": "integer"
+                },
+                "translatedName": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.InterestsObjDetail": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "tagID": {
+                    "type": "integer"
+                },
+                "tagName": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "types.LanguagesObjDetail": {
             "type": "object",
             "properties": {
@@ -3097,31 +3191,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "nativeName": {
-                    "type": "string"
-                }
-            }
-        },
-        "types.ListCountriesReply": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "return code",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "return data",
-                    "type": "object",
-                    "properties": {
-                        "countriess": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/types.CountriesObjDetail"
-                            }
-                        }
-                    }
-                },
-                "msg": {
-                    "description": "return information description",
                     "type": "string"
                 }
             }
@@ -3164,7 +3233,7 @@ const docTemplate = `{
                 }
             }
         },
-        "types.ListCountryLanguagessByIDsReply": {
+        "types.ListCountriessReply": {
             "type": "object",
             "properties": {
                 "code": {
@@ -3175,10 +3244,10 @@ const docTemplate = `{
                     "description": "return data",
                     "type": "object",
                     "properties": {
-                        "countryLanguagess": {
+                        "countriess": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/types.CountryLanguagesObjDetail"
+                                "$ref": "#/definitions/types.CountriesObjDetail"
                             }
                         }
                     }
@@ -3189,7 +3258,32 @@ const docTemplate = `{
                 }
             }
         },
-        "types.ListCountryLanguagessByIDsRequest": {
+        "types.ListInterestssByIDsReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data",
+                    "type": "object",
+                    "properties": {
+                        "interestss": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.InterestsObjDetail"
+                            }
+                        }
+                    }
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.ListInterestssByIDsRequest": {
             "type": "object",
             "properties": {
                 "ids": {
@@ -3202,7 +3296,7 @@ const docTemplate = `{
                 }
             }
         },
-        "types.ListCountryLanguagessReply": {
+        "types.ListInterestssReply": {
             "type": "object",
             "properties": {
                 "code": {
@@ -3213,10 +3307,10 @@ const docTemplate = `{
                     "description": "return data",
                     "type": "object",
                     "properties": {
-                        "countryLanguagess": {
+                        "interestss": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/types.CountryLanguagesObjDetail"
+                                "$ref": "#/definitions/types.InterestsObjDetail"
                             }
                         }
                     }
@@ -3590,10 +3684,18 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "phoneCode": {
+                    "description": "国家号前缀",
+                    "type": "integer"
+                },
+                "visitName": {
+                    "description": "方便阅读的字段",
+                    "type": "string"
                 }
             }
         },
-        "types.UpdateCountryLanguagesByIDReply": {
+        "types.UpdateInterestsByIDReply": {
             "type": "object",
             "properties": {
                 "code": {
@@ -3609,18 +3711,14 @@ const docTemplate = `{
                 }
             }
         },
-        "types.UpdateCountryLanguagesByIDRequest": {
+        "types.UpdateInterestsByIDRequest": {
             "type": "object",
             "properties": {
-                "countryID": {
+                "tagID": {
                     "type": "integer"
                 },
-                "id": {
-                    "description": "uint64 id",
-                    "type": "integer"
-                },
-                "languageID": {
-                    "type": "integer"
+                "tagName": {
+                    "type": "string"
                 }
             }
         },
