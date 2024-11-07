@@ -93,8 +93,8 @@ func (h *interestsHandler) AllList(c *gin.Context) {
 		response.Error(c, ecode.ErrListByLastIDInterests)
 		return
 	}
-
-	err = h.cache.SetFromLanguageCodeAllInterestsCache(c, languageCode, interests, time.Hour*24*30)
+	var pInterests *[]*model.InterestsTranslations = &interests
+	err = h.cache.SetFromLanguageCodeAllInterestsCache(c, languageCode, pInterests, time.Hour*24*30)
 	if err != nil {
 		logger.Warn("GetByLanguage set cache err: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 	}

@@ -30,7 +30,7 @@ type InterestsCache interface {
 	Del(ctx context.Context, id uint64) error
 	SetCacheWithNotFound(ctx context.Context, id uint64) error
 	GetFromLanguageCodeAllInterestsCache(ctx context.Context, languageCode string) ([]*model.InterestsTranslations, error)
-	SetFromLanguageCodeAllInterestsCache(ctx context.Context, languageCode string, data []*model.InterestsTranslations, duration time.Duration) error
+	SetFromLanguageCodeAllInterestsCache(ctx context.Context, languageCode string, data *[]*model.InterestsTranslations, duration time.Duration) error
 }
 
 // interestsCache define a cache struct
@@ -79,7 +79,7 @@ func (c *interestsCache) GetFromLanguageCodeAllInterestsCache(ctx context.Contex
 	return interests, nil
 }
 
-func (c *interestsCache) SetFromLanguageCodeAllInterestsCache(ctx context.Context, languageCode string, data []*model.InterestsTranslations, duration time.Duration) error {
+func (c *interestsCache) SetFromLanguageCodeAllInterestsCache(ctx context.Context, languageCode string, data *[]*model.InterestsTranslations, duration time.Duration) error {
 	if data == nil || languageCode == "" {
 		return nil
 	}
