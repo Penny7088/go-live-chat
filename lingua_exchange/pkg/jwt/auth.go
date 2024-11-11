@@ -3,6 +3,9 @@ package jwt
 import (
 	"context"
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/zhufuyi/sponge/pkg/gin/middleware"
@@ -10,14 +13,16 @@ import (
 	"github.com/zhufuyi/sponge/pkg/logger"
 	"github.com/zhufuyi/sponge/pkg/utils"
 	"lingua_exchange/internal/model"
-	"time"
 )
 
 var (
-	UserTokenExpireTime = 24 * time.Hour /// 1天过期时间
+	UserTokenExpireTime = 24 * time.Hour // / 1天过期时间
 
 	// cache prefix key, must end with a colon
 	tokenCachePrefixKey = "access_token:"
+	tokenUserKey        = "user_id:"
+	authorizationKey    = "Authorization"
+	refreshTokenKey     = "Refresh-Token"
 )
 
 func GenerateTokens(userID uint64) (string, string, error) {
@@ -54,9 +59,9 @@ func storeAccessTokenInRedis(token string, userID uint64, exp int64) error {
 
 // ValidateAndRefreshTokens Token验证并无感刷新
 func ValidateAndRefreshTokens(c *gin.Context) {
-	accessToken := c.GetHeader("Authorization")
+	accessToken := c.GetHeader(authorizationKey)
 	if accessToken == "" {
-		c.JSON(401, gin.H{"error": "authorization token required"})
+		c.JSON(401, gin.H{"error": "authorizationKey token required"})
 		c.Abort()
 		return
 	}
@@ -64,13 +69,13 @@ func ValidateAndRefreshTokens(c *gin.Context) {
 	// 尝试验证Access Token
 	userID, err := validateToken(accessToken, c)
 	if err == nil {
-		c.Set("user_id", userID)
+		c.Set(tokenUserKey, userID)
 		c.Next()
 		return
 	}
 
 	// 若Access Token过期则检查Refresh Token
-	refreshToken := c.GetHeader("Refresh-Token")
+	refreshToken := c.GetHeader(refreshTokenKey)
 	if refreshToken == "" {
 		c.JSON(401, gin.H{"error": "refresh token required"})
 		c.Abort()
@@ -84,16 +89,17 @@ func ValidateAndRefreshTokens(c *gin.Context) {
 		return
 	}
 
+	parseUint, err := strconv.ParseUint(userID, 10, 64)
 	// Access Token无效，刷新Access Token
-	newAccessToken, _, err := GenerateTokens(string(userID))
+	newAccessToken, _, err := GenerateTokens(parseUint)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "could not generate new access token"})
 		c.Abort()
 		return
 	}
 
-	c.Header("Authorization", newAccessToken)
-	c.Set("user_id", userID)
+	c.Header(authorizationKey, newAccessToken)
+	c.Set(tokenUserKey, userID)
 	c.Next()
 }
 

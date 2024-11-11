@@ -84,6 +84,7 @@ type UsersObjDetail struct {
 	Platform           string    `json:"platform"`
 	DeviceToken        string    `json:"deviceToken"`
 	Token              string    `json:"token"`
+	RefreshToken       string    `json:"refreshToken"`
 	IsNewUser          bool      `json:"isNewUser"`
 }
 

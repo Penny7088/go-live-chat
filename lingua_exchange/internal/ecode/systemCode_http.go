@@ -3,6 +3,7 @@ package ecode
 
 import (
 	"errors"
+
 	"github.com/go-sql-driver/mysql"
 	"github.com/zhufuyi/sponge/pkg/errcode"
 )

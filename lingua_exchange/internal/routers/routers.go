@@ -19,13 +19,13 @@ import (
 	"github.com/zhufuyi/sponge/pkg/gin/validator"
 	"github.com/zhufuyi/sponge/pkg/jwt"
 	"github.com/zhufuyi/sponge/pkg/logger"
-
 	"lingua_exchange/docs"
 	"lingua_exchange/internal/config"
+	verify "lingua_exchange/pkg/jwt"
 )
 
 var (
-	apiV1RouterFns []func(r *gin.RouterGroup) // group router functions
+	apiV1RouterFns []func(r *gin.RouterGroup) // group router functions  验证
 	// if you have other group routes you can define them here
 	// example:
 	//     apiV2RouterFns []func(r *gin.RouterGroup)
@@ -55,15 +55,15 @@ func NewRouter() *gin.Engine {
 
 	// init jwt middleware
 	jwt.Init(
-		jwt.WithExpire(time.Hour*24*7),
-		jwt.WithSigningKey("live_lingua_"),
+		jwt.WithExpire(verify.UserTokenExpireTime),
+		jwt.WithSigningKey("live_lingua:"),
 		jwt.WithSigningMethod(jwt.HS384),
 	)
 
 	// metrics middleware
 	if config.Get().App.EnableMetrics {
 		r.Use(metrics.Metrics(r,
-			//metrics.WithMetricsPath("/metrics"),                // default is /metrics
+			// metrics.WithMetricsPath("/metrics"),                // default is /metrics
 			metrics.WithIgnoreStatusCodes(http.StatusNotFound), // ignore 404 status codes
 		))
 	}

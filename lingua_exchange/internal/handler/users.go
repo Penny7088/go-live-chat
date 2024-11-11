@@ -1,14 +1,16 @@
 package handler
 
 import (
-	"cloud.google.com/go/auth/credentials/idtoken"
 	"context"
 	"errors"
+	"math"
+	"time"
+
+	"cloud.google.com/go/auth/credentials/idtoken"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/zhufuyi/sponge/pkg/gin/middleware"
 	"github.com/zhufuyi/sponge/pkg/gin/response"
-	"github.com/zhufuyi/sponge/pkg/jwt"
 	"github.com/zhufuyi/sponge/pkg/logger"
 	"github.com/zhufuyi/sponge/pkg/utils"
 	"gorm.io/gorm"
@@ -17,9 +19,8 @@ import (
 	"lingua_exchange/internal/ecode"
 	"lingua_exchange/internal/model"
 	"lingua_exchange/internal/types"
+	"lingua_exchange/pkg/jwt"
 	"lingua_exchange/tools"
-	"math"
-	"time"
 )
 
 var _ UsersHandler = (*usersHandler)(nil)
@@ -165,7 +166,7 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 	}
 
 	// 生成 Token 和缓存
-	token, err := h.generateAndCacheToken(ctx, user)
+	token, refreshToken, err := h.generateAndCacheToken(user)
 	if err != nil {
 		return err
 	}
@@ -179,6 +180,7 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 		Platform:         form.Platform,
 		DeviceToken:      device.DeviceToken,
 		Token:            token,
+		RefreshToken:     refreshToken,
 		Username:         user.Username,
 		RegistrationDate: time.Now(),
 		IsNewUser:        newUser,
@@ -197,19 +199,15 @@ func (h *usersHandler) handleError(c *gin.Context, code int, err error) {
 	response.Output(c, code)
 }
 
-func (h *usersHandler) generateAndCacheToken(ctx context.Context, user *model.Users) (string, error) {
+func (h *usersHandler) generateAndCacheToken(user *model.Users) (string, string, error) {
 
-	token, err := jwt.GenerateToken(utils.Uint64ToStr(user.ID))
+	token, refreshToken, err := jwt.GenerateTokens(user.ID)
+
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	err = h.userCache.SetUserToken(ctx, user.ID, token, cache.UserTokenExpireTime)
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
+	return token, refreshToken, nil
 }
 
 func (h *usersHandler) insertThirdPartyAuth(ctx context.Context, tx *gorm.DB, user *model.Users, form *types.LoginRequest) error {
