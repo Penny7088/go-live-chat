@@ -93,7 +93,7 @@ type LoginReply struct {
 	Code int    `json:"code"` // return code
 	Msg  string `json:"msg"`  // return information description
 	Data struct {
-		Users UsersObjDetail `json:"users"`
+		User UsersObjDetail `json:"user"`
 	} `json:"data"` // return data
 }
 

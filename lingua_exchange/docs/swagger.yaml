@@ -904,7 +904,7 @@ definitions:
       data:
         description: return data
         properties:
-          users:
+          user:
             $ref: '#/definitions/types.UsersObjDetail'
         type: object
       msg:
@@ -1172,6 +1172,8 @@ definitions:
       platform:
         type: string
       profilePicture:
+        type: string
+      refreshToken:
         type: string
       registrationDate:
         type: string

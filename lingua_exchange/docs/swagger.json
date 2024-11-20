@@ -3580,7 +3580,7 @@
                     "description": "return data",
                     "type": "object",
                     "properties": {
-                        "users": {
+                        "user": {
                             "$ref": "#/definitions/types.UsersObjDetail"
                         }
                     }
@@ -3976,6 +3976,9 @@
                     "type": "string"
                 },
                 "profilePicture": {
+                    "type": "string"
+                },
+                "refreshToken": {
                     "type": "string"
                 },
                 "registrationDate": {

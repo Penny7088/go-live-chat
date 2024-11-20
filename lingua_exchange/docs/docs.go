@@ -3584,7 +3584,7 @@ const docTemplate = `{
                     "description": "return data",
                     "type": "object",
                     "properties": {
-                        "users": {
+                        "user": {
                             "$ref": "#/definitions/types.UsersObjDetail"
                         }
                     }
@@ -3980,6 +3980,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "profilePicture": {
+                    "type": "string"
+                },
+                "refreshToken": {
                     "type": "string"
                 },
                 "registrationDate": {
