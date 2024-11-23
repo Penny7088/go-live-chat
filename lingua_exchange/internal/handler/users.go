@@ -19,6 +19,7 @@ import (
 	"lingua_exchange/internal/ecode"
 	"lingua_exchange/internal/model"
 	"lingua_exchange/internal/types"
+	"lingua_exchange/pkg/encrypt"
 	"lingua_exchange/pkg/jwt"
 	"lingua_exchange/tools"
 )
@@ -104,7 +105,7 @@ func (h *usersHandler) LoginFromEmail(c *gin.Context) {
 		return
 	}
 
-	if users.PasswordHash != form.Password {
+	if !encrypt.VerifyPassword(users.PasswordHash, form.Password) {
 		logger.Warn("password error: ", middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.ErrPassword)
 		return
