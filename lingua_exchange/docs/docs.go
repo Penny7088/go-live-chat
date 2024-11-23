@@ -377,6 +377,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/globalConfig/LoginMethod": {
+            "get": {
+                "description": "Get different login methods based on the user's IP",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "loginMethods"
+                ],
+                "summary": "get user login method",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.LoginMethodReply"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/interests": {
             "post": {
                 "security": [
@@ -3563,6 +3586,38 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/types.UsersObjDetail"
+                            }
+                        }
+                    }
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.LoginMethodDetailReply": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.LoginMethodReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "loginMethods": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.LoginMethodDetailReply"
                             }
                         }
                     }

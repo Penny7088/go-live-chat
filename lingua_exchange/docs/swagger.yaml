@@ -896,6 +896,27 @@ definitions:
         description: return information description
         type: string
     type: object
+  types.LoginMethodDetailReply:
+    properties:
+      name:
+        type: string
+    type: object
+  types.LoginMethodReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        properties:
+          loginMethods:
+            items:
+              $ref: '#/definitions/types.LoginMethodDetailReply'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
   types.LoginReply:
     properties:
       code:
@@ -1421,6 +1442,21 @@ paths:
       summary: list of countriess by batch id
       tags:
       - countries
+  /api/v1/globalConfig/LoginMethod:
+    get:
+      consumes:
+      - application/json
+      description: Get different login methods based on the user's IP
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.LoginMethodReply'
+      summary: get user login method
+      tags:
+      - loginMethods
   /api/v1/interests:
     post:
       consumes:
