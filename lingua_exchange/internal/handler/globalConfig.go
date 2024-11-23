@@ -24,7 +24,7 @@ func NewGlobalConfigHandler() GlobalConfigHandler {
 // LoginMethod  obtain login method
 // @Summary get user login method
 // @Description  Get different login methods based on the user's IP
-// @Tags    loginMethods
+// @Tags    globalConfig
 // @accept  json
 // @Produce json
 // @Success 200 {object} types.LoginMethodReply{}
