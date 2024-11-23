@@ -25,6 +25,8 @@ var (
 	ErrUserAlreadyExists    = errcode.NewError(usersBaseCode+11, "User Already Exists")
 	ErrUnsupportedPlatform  = errcode.NewError(usersBaseCode+12, "Unsupported platform")
 	ErrToken                = errcode.NewError(usersBaseCode+13, "gen Token error")
+	ErrEmailNotFound        = errcode.NewError(usersBaseCode+14, "email not found")
+	ErrPassword             = errcode.NewError(usersBaseCode+15, "password error")
 
 	// error codes are globally unique, adding 1 to the previous error code
 )

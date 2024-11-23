@@ -16,6 +16,16 @@ type LoginRequest struct {
 	DeviceToken string `json:"deviceToken" binding:"required"`
 }
 
+type LoginFromEmailReq struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type SignUpFromEmailReq struct {
+	Email string `json:"email" binding:"required"`
+	Code  string `json:"code" binding:"required"`
+}
+
 // CreateUsersRequest request params
 type CreateUsersRequest struct {
 	Email              string    `json:"email" binding:""`

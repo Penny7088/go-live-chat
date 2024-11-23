@@ -42,6 +42,8 @@ type UsersHandler interface {
 	ListByIDs(c *gin.Context)
 	ListByLastID(c *gin.Context)
 	LoginOrRegister(c *gin.Context)
+	LoginFromEmail(c *gin.Context)
+	SignUpFromEmail(c *gin.Context)
 }
 
 type usersHandler struct {
@@ -62,6 +64,74 @@ func NewUsersHandler() UsersHandler {
 		deviceDao: dao.NewUserDevicesDao(model.GetDB(), cache.NewUserDevicesCache(model.GetCacheType())),
 		userCache: cache.NewUsersCache(model.GetCacheType()),
 	}
+}
+
+// SignUpFromEmail
+// @Summary login from email
+// @Description  used email login
+// @Tags  login
+// @accept  json
+// @Produce json
+// @Param   data body  types.SignUpFromEmailReq
+// @Success 200 {object} types.LoginReply{}
+// @Router  /api/v1/users/signUpFromEmail
+func (h *usersHandler) SignUpFromEmail(c *gin.Context) {
+	// TODO implement me
+	panic("implement me")
+}
+
+// LoginFromEmail
+// @Summary login from email
+// @Description  used email login
+// @Tags  login
+// @accept  json
+// @Produce json
+// @Param   data body  types.LoginFromEmailReq
+// @Success 200 {object} types.LoginReply{}
+// @Router  /api/v1/users/loginFromEmail
+func (h *usersHandler) LoginFromEmail(c *gin.Context) {
+	form := &types.LoginFromEmailReq{}
+	if err := c.ShouldBind(form); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	ctx := middleware.WrapCtx(c)
+	users, err := h.iDao.GetByEmail(ctx, form.Email)
+	if errors.Is(err, gorm.ErrRecordNotFound) || err != nil {
+		logger.Warn("email error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrEmailNotFound)
+		return
+	}
+
+	if users.PasswordHash != form.Password {
+		logger.Warn("password error: ", middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrPassword)
+		return
+	}
+	token, refreshToken, err := h.generateAndCacheToken(users)
+	if err != nil {
+		logger.Warn("token gen error: ", middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrToken)
+		return
+	}
+
+	data := &types.UsersObjDetail{
+		ID:             users.ID,
+		Email:          users.Email,
+		ProfilePicture: users.ProfilePicture,
+		EmailVerified:  1,
+		Token:          token,
+		RefreshToken:   refreshToken,
+		Username:       users.Username,
+		IsNewUser:      false,
+	}
+	if err := copier.Copy(data, users); err != nil {
+		response.Error(c, ecode.ErrGetByIDUsers)
+		return
+	}
+	response.Success(c, gin.H{"user": data})
+
 }
 
 // LoginOrRegister
@@ -189,7 +259,7 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 		response.Error(c, ecode.ErrGetByIDUsers)
 		return nil
 	}
-	response.Success(c, gin.H{"userInfo": data})
+	response.Success(c, gin.H{"user": data})
 
 	return nil
 }

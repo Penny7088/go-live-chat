@@ -30,7 +30,7 @@ type UsersDao interface {
 	GetByCondition(ctx context.Context, condition *query.Conditions) (*model.Users, error)
 	GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.Users, error)
 	GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.Users, error)
-
+	GetByEmail(ctx context.Context, params string) (*model.Users, error)
 	GetByEmailTx(ctx context.Context, tx *gorm.DB, params *model.Users) (*model.Users, error)
 	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Users) (uint64, error)
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
@@ -166,7 +166,7 @@ func (d *usersDao) GetByID(ctx context.Context, id uint64) (*model.Users, error)
 
 	if errors.Is(err, model.ErrCacheNotFound) {
 		// for the same id, prevent high concurrent simultaneous access to database
-		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { //nolint
+		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { // nolint
 			table := &model.Users{}
 			err = d.db.WithContext(ctx).Where("id = ?", id).First(table).Error
 			if err != nil {
@@ -393,6 +393,15 @@ func (d *usersDao) GetByLastID(ctx context.Context, lastID uint64, limit int, so
 		return nil, err
 	}
 	return records, nil
+}
+
+func (d *usersDao) GetByEmail(ctx context.Context, params string) (*model.Users, error) {
+	user := &model.Users{}
+	err := d.db.WithContext(ctx).Where("email = ?", params).First(user).Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 // GetByEmailTx GetByEmail query by email
