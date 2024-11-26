@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"math"
-	"time"
 
 	"cloud.google.com/go/auth/credentials/idtoken"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
+	"github.com/redis/go-redis/v9"
 	"github.com/zhufuyi/sponge/pkg/gin/middleware"
 	"github.com/zhufuyi/sponge/pkg/gin/response"
 	"github.com/zhufuyi/sponge/pkg/logger"
@@ -45,13 +45,15 @@ type UsersHandler interface {
 	LoginOrRegister(c *gin.Context)
 	LoginFromEmail(c *gin.Context)
 	SignUpFromEmail(c *gin.Context)
+	ResetPassword(c *gin.Context)
 }
 
 type usersHandler struct {
-	iDao      dao.UsersDao
-	thirdDao  dao.ThirdPartyAuthDao
-	deviceDao dao.UserDevicesDao
-	userCache cache.UsersCache
+	iDao              dao.UsersDao
+	thirdDao          dao.ThirdPartyAuthDao
+	deviceDao         dao.UserDevicesDao
+	userCache         cache.UsersCache
+	globalConfigCache cache.GlobalConfigCache
 }
 
 // NewUsersHandler creating the handler interface
@@ -61,24 +63,163 @@ func NewUsersHandler() UsersHandler {
 			model.GetDB(),
 			cache.NewUsersCache(model.GetCacheType()),
 		),
-		thirdDao:  dao.NewThirdPartyAuthDao(model.GetDB(), cache.NewThirdPartyAuthCache(model.GetCacheType())),
-		deviceDao: dao.NewUserDevicesDao(model.GetDB(), cache.NewUserDevicesCache(model.GetCacheType())),
-		userCache: cache.NewUsersCache(model.GetCacheType()),
+		thirdDao:          dao.NewThirdPartyAuthDao(model.GetDB(), cache.NewThirdPartyAuthCache(model.GetCacheType())),
+		deviceDao:         dao.NewUserDevicesDao(model.GetDB(), cache.NewUserDevicesCache(model.GetCacheType())),
+		userCache:         cache.NewUsersCache(model.GetCacheType()),
+		globalConfigCache: cache.NewGlobalConfigCache(model.GetCacheType()),
 	}
+}
+
+// ResetPassword
+// @Summary login from email
+// @Description  used email login
+// @Tags  Login
+// @accept  json
+// @Produce json
+// @Param data body types.ResetPasswordReq true "Reset Password Information"
+// @Success 200 {object} types.ResetPasswordReplay{}
+// @Router  /api/v1/users/resetPassword [post]
+func (h *usersHandler) ResetPassword(c *gin.Context) {
+	form := &types.ResetPasswordReq{}
+	if err := c.ShouldBindJSON(form); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	// 验证验证码
+	if err := h.verifyCode(c, form.Email, form.Code, cache.VCodeForgetType); err != nil {
+		return
+	}
+	// 获取用户信息
+	user, err := h.iDao.GetByEmail(c, form.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.Warn("User not found", middleware.GCtxRequestIDField(c))
+			response.Error(c, ecode.ErrUserNotFound)
+			return
+		}
+		logger.Warn("failed to check user existence", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InternalServerError)
+		return
+	}
+
+	// 更新用户密码
+	user.PasswordHash = encrypt.HashPassword(form.NewPassword)
+	if err := h.iDao.UpdateByID(c, user); err != nil {
+		logger.Warn("failed to update user password", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrUpdateUsers)
+		return
+	}
+
+	response.Success(c)
 }
 
 // SignUpFromEmail
 // @Summary login from email
 // @Description  used email login
-// @Tags  login
+// @Tags  Login
 // @accept  json
 // @Produce json
-// @Param   data body  types.SignUpFromEmailReq
+// @Param req body types.SignUpFromEmailReq true "用户注册请求体"
 // @Success 200 {object} types.LoginReply{}
-// @Router  /api/v1/users/signUpFromEmail
+// @Router  /api/v1/users/signUpFromEmail [post]
 func (h *usersHandler) SignUpFromEmail(c *gin.Context) {
-	// TODO implement me
-	panic("implement me")
+	form := &types.SignUpFromEmailReq{}
+	if err := c.ShouldBind(form); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+
+	// 验证验证码
+	if err := h.verifyCode(c, form.Email, form.Code, cache.VCodeForgetType); err != nil {
+		return
+	}
+
+	// 检查用户是否存在
+	users, err := h.iDao.GetByEmail(c, form.Email)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Warn("failed to check user existence", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrCreateUsers)
+		return
+	}
+
+	// 如果用户已存在，返回错误
+	if users != nil {
+		logger.Warn("User Already Exists", middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrUserAlreadyExists)
+		return
+	}
+
+	// 创建新用户
+	users = &model.Users{
+		Email:        form.Email,
+		PasswordHash: encrypt.HashPassword(form.Password),
+	}
+	if err := h.iDao.Create(c, users); err != nil {
+		logger.Warn("failed to create user", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrCreateUsers)
+		return
+	}
+
+	token, refreshToken, err := h.generateAndCacheToken(users)
+	if err != nil {
+		logger.Warn("token gen error: ", middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrToken)
+		return
+	}
+
+	// 构建用户详细信息响应
+	data := h.buildUserDetailResponse(users, token, refreshToken, true)
+
+	response.Success(c, gin.H{"user": data})
+
+}
+
+// verifyCode 验证验证码
+func (h *usersHandler) verifyCode(c *gin.Context, email string, code string, codeType string) error {
+	codeFromCache, err := h.globalConfigCache.GetVerificationCode(c, email, codeType)
+	if err != nil || errors.Is(err, redis.Nil) {
+		logger.Warn("verification code error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrVerificationCodeExpired)
+		return err
+	}
+
+	if codeFromCache != code {
+		logger.Warn("invalid verification code", middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrVerificationCode)
+		return errors.New("invalid verification code")
+	}
+	return nil
+}
+
+// buildUserDetailResponse  组装用户数据
+func (h *usersHandler) buildUserDetailResponse(users *model.Users, token string, refreshToken string, newUser bool) *types.UsersObjDetail {
+	data := &types.UsersObjDetail{
+		ID:                 users.ID,
+		Email:              users.Email,
+		ProfilePicture:     users.ProfilePicture,
+		EmailVerified:      users.EmailVerified,
+		Token:              token,
+		RefreshToken:       refreshToken,
+		Username:           users.Username,
+		LanguageLevel:      users.LanguageLevel,
+		CountryID:          users.CountryID,
+		NativeLanguageID:   users.NativeLanguageID,
+		LearningLanguageID: users.LearningLanguageID,
+		Age:                users.Age,
+		Gender:             users.Gender,
+		RegistrationDate:   users.RegistrationDate,
+		IsNewUser:          newUser, // 由于此时用户是新注册的，所以直接赋值为 true。
+	}
+
+	// 使用 copier 复制用户信息
+	if err := copier.Copy(data, users); err != nil {
+		logger.Warn("failed to copy user details", logger.Err(err))
+		return nil
+	}
+
+	return data
 }
 
 // LoginFromEmail
@@ -87,9 +228,9 @@ func (h *usersHandler) SignUpFromEmail(c *gin.Context) {
 // @Tags  login
 // @accept  json
 // @Produce json
-// @Param   data body  types.LoginFromEmailReq
+// @Param req body types.LoginFromEmailReq true "用户登录请求体"
 // @Success 200 {object} types.LoginReply{}
-// @Router  /api/v1/users/loginFromEmail
+// @Router  /api/v1/users/loginFromEmail [post]
 func (h *usersHandler) LoginFromEmail(c *gin.Context) {
 	form := &types.LoginFromEmailReq{}
 	if err := c.ShouldBind(form); err != nil {
@@ -117,20 +258,7 @@ func (h *usersHandler) LoginFromEmail(c *gin.Context) {
 		return
 	}
 
-	data := &types.UsersObjDetail{
-		ID:             users.ID,
-		Email:          users.Email,
-		ProfilePicture: users.ProfilePicture,
-		EmailVerified:  1,
-		Token:          token,
-		RefreshToken:   refreshToken,
-		Username:       users.Username,
-		IsNewUser:      false,
-	}
-	if err := copier.Copy(data, users); err != nil {
-		response.Error(c, ecode.ErrGetByIDUsers)
-		return
-	}
+	data := h.buildUserDetailResponse(users, token, refreshToken, false)
 	response.Success(c, gin.H{"user": data})
 
 }
@@ -243,23 +371,7 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 	}
 
 	// 成功响应
-	data := &types.UsersObjDetail{
-		ID:               user.ID,
-		Email:            user.Email,
-		ProfilePicture:   user.ProfilePicture,
-		EmailVerified:    emailStatus,
-		Platform:         form.Platform,
-		DeviceToken:      device.DeviceToken,
-		Token:            token,
-		RefreshToken:     refreshToken,
-		Username:         user.Username,
-		RegistrationDate: time.Now(),
-		IsNewUser:        newUser,
-	}
-	if err := copier.Copy(data, user); err != nil {
-		response.Error(c, ecode.ErrGetByIDUsers)
-		return nil
-	}
+	data := h.buildUserDetailResponse(user, token, refreshToken, newUser)
 	response.Success(c, gin.H{"user": data})
 
 	return nil

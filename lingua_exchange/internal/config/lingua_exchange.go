@@ -24,17 +24,11 @@ func Get() *Config {
 	return config
 }
 
-// ServerId 服务运行ID
-func (c *Config) ServerId() string {
-	return c.Sid
-}
-
 func Set(conf *Config) {
 	config = conf
 }
 
 type Config struct {
-	Sid      string   // 服务运行ID
 	App      App      `yaml:"app" json:"app"`
 	Consul   Consul   `yaml:"consul" json:"consul"`
 	Database Database `yaml:"database" json:"database"`
@@ -45,6 +39,8 @@ type Config struct {
 	NacosRd  NacosRd  `yaml:"nacosRd" json:"nacosRd"`
 	Redis    Redis    `yaml:"redis" json:"redis"`
 	Server   Server   `yaml:"server" json:"server"`
+	SMTP     SMTP     `yaml:"email" json:"email"`
+	Sid      string
 }
 
 type Consul struct {
@@ -100,6 +96,13 @@ type Logger struct {
 	Format string `yaml:"format" json:"format"`
 	IsSave bool   `yaml:"isSave" json:"isSave"`
 	Level  string `yaml:"level" json:"level"`
+}
+
+type SMTP struct {
+	Host     string `yaml:"host" json:"host"`
+	Password string `yaml:"password" json:"password"`
+	Port     int    `yaml:"port" json:"port"`
+	UserName string `yaml:"userName" json:"userName"`
 }
 
 type NacosRd struct {

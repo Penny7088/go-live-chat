@@ -8,4 +8,5 @@ var (
 	globalConfigBaseCode = errcode.HCode(globalConfig)
 
 	ErrIpNotFound = errcode.NewError(globalConfigBaseCode+3, "Client IP Not Found"+globalConfigName)
+	ErrSendCode   = errcode.NewError(globalConfigBaseCode+4, "Verification code send fail"+globalConfigName)
 )

@@ -2,6 +2,8 @@ package strutil
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,4 +35,16 @@ func GenMediaObjectName(ext string, width, height int) string {
 	}
 
 	return fmt.Sprintf("media/%s/%s/%s", mediaType, time.Now().Format("200601"), fileName)
+}
+
+func GetTemplatePath(fileName string) (string, error) {
+	// 获取当前工作目录
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	// 构造相对路径
+	templatePath := filepath.Join(currentDir, "template", fileName)
+	return templatePath, nil
 }

@@ -3,9 +3,10 @@ package ws
 import (
 	"context"
 	"errors"
-	"lingua_exchange/tools/timewheel"
 	"log"
 	"time"
+
+	"lingua_exchange/pkg/timewheel"
 )
 
 var ack *AckBuffer

@@ -1,8 +1,10 @@
 package strutil
 
 import (
+	"bytes"
 	"fmt"
 	"html"
+	"html/template"
 	"regexp"
 	"strings"
 )
@@ -46,4 +48,20 @@ func ParseMarkdownImages(content string) []string {
 	}
 
 	return items
+}
+
+func RenderTemplate(filePath string, code string) (string, error) {
+	// 解析模板文件
+	tmpl, err := template.ParseFiles(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	var body bytes.Buffer
+	// 执行模板，传入验证码作为参数
+	if err := tmpl.Execute(&body, code); err != nil {
+		return "", err
+	}
+
+	return body.String(), nil
 }

@@ -387,7 +387,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "loginMethods"
+                    "globalConfig"
                 ],
                 "summary": "get user login method",
                 "responses": {
@@ -395,6 +395,68 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/types.LoginMethodReply"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/globalConfig/sendResetPasswordCode": {
+            "post": {
+                "description": "发送验证码，重置密码",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "验证码"
+                ],
+                "summary": "发送验证码，重置密码",
+                "parameters": [
+                    {
+                        "description": "Request payload containing email",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.VerificationCodeReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.ResetVerificationCodeRely"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/globalConfig/sendSignUpVerifyCode": {
+            "post": {
+                "description": "发送验证码",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "验证码"
+                ],
+                "summary": "发送注册验证码",
+                "parameters": [
+                    {
+                        "description": "Request payload containing email",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.VerificationCodeReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.SignUpVerificationCodeRely"
                         }
                     }
                 }
@@ -2165,6 +2227,108 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/loginFromEmail": {
+            "post": {
+                "description": "used email login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "login"
+                ],
+                "summary": "login from email",
+                "parameters": [
+                    {
+                        "description": "用户登录请求体",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.LoginFromEmailReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.LoginReply"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/resetPassword": {
+            "post": {
+                "description": "used email login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Login"
+                ],
+                "summary": "login from email",
+                "parameters": [
+                    {
+                        "description": "Reset Password Information",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ResetPasswordReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.ResetPasswordReplay"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/signUpFromEmail": {
+            "post": {
+                "description": "used email login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Login"
+                ],
+                "summary": "login from email",
+                "parameters": [
+                    {
+                        "description": "用户注册请求体",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.SignUpFromEmailReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.LoginReply"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/{id}": {
             "get": {
                 "security": [
@@ -3596,6 +3760,21 @@ const docTemplate = `{
                 }
             }
         },
+        "types.LoginFromEmailReq": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "types.LoginMethodDetailReply": {
             "type": "object",
             "properties": {
@@ -3689,6 +3868,92 @@ const docTemplate = `{
                 },
                 "sort": {
                     "description": "sorted fields, multi-column sorting separated by commas",
+                    "type": "string"
+                }
+            }
+        },
+        "types.ResetPasswordReplay": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data"
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.ResetPasswordReq": {
+            "type": "object",
+            "required": [
+                "code",
+                "email",
+                "newPassword"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "newPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.ResetVerificationCodeRely": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data"
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.SignUpFromEmailReq": {
+            "type": "object",
+            "required": [
+                "code",
+                "email",
+                "password"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.SignUpVerificationCodeRely": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data"
+                },
+                "msg": {
+                    "description": "return information description",
                     "type": "string"
                 }
             }
@@ -4056,6 +4321,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "verificationToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.VerificationCodeReq": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
                     "type": "string"
                 }
             }

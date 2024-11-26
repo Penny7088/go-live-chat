@@ -1,5 +1,5 @@
 # Generate the go struct command: sponge config --server-dir=./serverDir
-
+# update config command -->   make update-config
 # app settings
 app:
   name: "lingua_exchange"      # server name
@@ -90,7 +90,7 @@ nacosRd:
 
 #smpt setting
 smtp:
-  host: "smtp.feishu.cn"
+  host: "email.feishu.cn"
   port: 465
   userName: "service@linguaexchang.com"
   password: "1DIC6JXvoyL0lgov"

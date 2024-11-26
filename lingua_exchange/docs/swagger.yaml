@@ -896,6 +896,16 @@ definitions:
         description: return information description
         type: string
     type: object
+  types.LoginFromEmailReq:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
   types.LoginMethodDetailReply:
     properties:
       name:
@@ -960,6 +970,65 @@ definitions:
         type: integer
       sort:
         description: sorted fields, multi-column sorting separated by commas
+        type: string
+    type: object
+  types.ResetPasswordReplay:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ResetPasswordReq:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      newPassword:
+        type: string
+    required:
+    - code
+    - email
+    - newPassword
+    type: object
+  types.ResetVerificationCodeRely:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.SignUpFromEmailReq:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - code
+    - email
+    - password
+    type: object
+  types.SignUpVerificationCodeRely:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
         type: string
     type: object
   types.ThirdPartyAuthObjDetail:
@@ -1209,6 +1278,13 @@ definitions:
       verificationToken:
         type: string
     type: object
+  types.VerificationCodeReq:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -1456,7 +1532,47 @@ paths:
             $ref: '#/definitions/types.LoginMethodReply'
       summary: get user login method
       tags:
-      - loginMethods
+      - globalConfig
+  /api/v1/globalConfig/sendResetPasswordCode:
+    post:
+      consumes:
+      - application/json
+      description: 发送验证码，重置密码
+      parameters:
+      - description: Request payload containing email
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/types.VerificationCodeReq'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ResetVerificationCodeRely'
+      summary: 发送验证码，重置密码
+      tags:
+      - 验证码
+  /api/v1/globalConfig/sendSignUpVerifyCode:
+    post:
+      consumes:
+      - application/json
+      description: 发送验证码
+      parameters:
+      - description: Request payload containing email
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/types.VerificationCodeReq'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.SignUpVerificationCodeRely'
+      summary: 发送注册验证码
+      tags:
+      - 验证码
   /api/v1/interests:
     post:
       consumes:
@@ -2634,6 +2750,72 @@ paths:
       summary: list of userss by batch id
       tags:
       - users
+  /api/v1/users/loginFromEmail:
+    post:
+      consumes:
+      - application/json
+      description: used email login
+      parameters:
+      - description: 用户登录请求体
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/types.LoginFromEmailReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.LoginReply'
+      summary: login from email
+      tags:
+      - login
+  /api/v1/users/resetPassword:
+    post:
+      consumes:
+      - application/json
+      description: used email login
+      parameters:
+      - description: Reset Password Information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.ResetPasswordReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ResetPasswordReplay'
+      summary: login from email
+      tags:
+      - Login
+  /api/v1/users/signUpFromEmail:
+    post:
+      consumes:
+      - application/json
+      description: used email login
+      parameters:
+      - description: 用户注册请求体
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/types.SignUpFromEmailReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.LoginReply'
+      summary: login from email
+      tags:
+      - Login
 schemes:
 - http
 - https

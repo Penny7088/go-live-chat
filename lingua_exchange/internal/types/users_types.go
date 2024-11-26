@@ -22,8 +22,15 @@ type LoginFromEmailReq struct {
 }
 
 type SignUpFromEmailReq struct {
-	Email string `json:"email" binding:"required"`
-	Code  string `json:"code" binding:"required"`
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Code     string `json:"code" binding:"required"`
+}
+
+type ResetPasswordReq struct {
+	Email       string `json:"email" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required"`
+	Code        string `json:"code" binding:"required"`
 }
 
 // CreateUsersRequest request params
@@ -105,6 +112,11 @@ type LoginReply struct {
 	Data struct {
 		User UsersObjDetail `json:"user"`
 	} `json:"data"` // return data
+}
+
+// ResetPasswordReplay only for api docs
+type ResetPasswordReplay struct {
+	Result
 }
 
 // CreateUsersReply only for api docs
