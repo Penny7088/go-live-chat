@@ -39,7 +39,7 @@ func GenMediaObjectName(ext string, width, height int) string {
 
 func GetTemplatePath(fileName string) (string, error) {
 	// 获取当前工作目录
-	currentDir, err := os.Getwd()
+	currentDir, err := getGoModRoot()
 	if err != nil {
 		return "", err
 	}
@@ -47,4 +47,29 @@ func GetTemplatePath(fileName string) (string, error) {
 	// 构造相对路径
 	templatePath := filepath.Join(currentDir, "template", fileName)
 	return templatePath, nil
+}
+
+func getGoModRoot() (string, error) {
+	// 从当前目录开始，向上查找 go.mod 文件
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		// 查找 go.mod 文件
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir, nil
+		}
+
+		// 如果已经到达根目录，停止查找
+		if dir == filepath.Dir(dir) {
+			break
+		}
+
+		// 向上移动到父目录
+		dir = filepath.Dir(dir)
+	}
+
+	return "", fmt.Errorf("go.mod not found")
 }

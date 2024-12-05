@@ -12,6 +12,7 @@ import (
 	"lingua_exchange/internal/types"
 	"lingua_exchange/pkg/emailtool"
 	"lingua_exchange/pkg/ip"
+	"lingua_exchange/pkg/jwt"
 	"lingua_exchange/pkg/strutil"
 )
 
@@ -37,6 +38,7 @@ func NewGlobalConfigHandler() GlobalConfigHandler {
 // @Tags  验证码
 // @accept      json
 // @Param req body types.VerificationCodeReq true "Request payload containing email"
+// @Param env header string true "dev mode"  current dev mode
 // @Success 200 {object} types.SignUpVerificationCodeRely
 // @Router /api/v1/globalConfig/sendSignUpVerifyCode [post]
 func (g globalConfigHandler) SendSignUpVerifyCode(c *gin.Context) {
@@ -92,11 +94,19 @@ func (g globalConfigHandler) sendVerificationCode(c *gin.Context, codeType strin
 
 	validateCode := strutil.GenValidateCode(6)
 
-	if err := g.sendEmail(req.Email, validateCode, subject, templatePath, c); err != nil {
+	devMode, err := jwt.HeaderDevMode(c)
+	if err != nil {
+		g.handleValidationError(c, err, ecode.InvalidParams)
+		return
+	}
+
+	if err := g.sendEmail(req.Email, validateCode, subject, templatePath, c, devMode); err != nil {
+		g.handleValidationError(c, err, ecode.InvalidParams)
 		return
 	}
 
 	if err := g.storeVerificationCode(c, req.Email, validateCode, codeType); err != nil {
+		g.handleValidationError(c, err, ecode.InvalidParams)
 		return
 	}
 
@@ -110,7 +120,11 @@ func (g globalConfigHandler) handleValidationError(c *gin.Context, err error, er
 }
 
 // sendEmail 发送电子邮件
-func (g globalConfigHandler) sendEmail(email string, code string, subject string, templatePath string, c *gin.Context) error {
+func (g globalConfigHandler) sendEmail(email string, code string, subject string, templatePath string, c *gin.Context, devMode string) error {
+	if devMode == "dev" {
+		return nil
+	}
+
 	if err := emailtool.SendEmail(email, code, subject, templatePath); err != nil {
 		logger.Warn("send Code error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.ErrSendCode)

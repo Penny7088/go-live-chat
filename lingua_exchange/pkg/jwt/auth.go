@@ -24,6 +24,7 @@ var (
 	tokenUserKey        = "user_id:"
 	authorizationKey    = "Authorization"
 	refreshTokenKey     = "Refresh-Token"
+	env                 = "env"
 )
 
 func GenerateTokens(userID uint64) (string, string, error) {
@@ -124,9 +125,21 @@ func validateToken(tokenString string, c *gin.Context) (string, error) {
 	return token.UID, nil
 }
 
-// AuthMiddleware 自动Token验证和无感刷新中间件
+// AuthMiddleware 自动Token验证和无感刷新中间件 开发环境
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ValidateAndRefreshTokens(c)
 	}
+}
+
+func HeaderDevMode(c *gin.Context) (string, error) {
+	env := c.Request.Header.Get(env)
+	if env == "" {
+		return "", errors.New("env cannot be empty")
+	} else if env == "release" {
+		return "release", nil
+	} else {
+		return "dev", nil
+	}
+
 }

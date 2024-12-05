@@ -450,6 +450,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/types.VerificationCodeReq"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "dev mode",
+                        "name": "env",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {

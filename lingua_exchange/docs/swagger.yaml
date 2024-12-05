@@ -1565,6 +1565,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.VerificationCodeReq'
+      - description: dev mode
+        in: header
+        name: env
+        required: true
+        type: string
       responses:
         "200":
           description: OK
