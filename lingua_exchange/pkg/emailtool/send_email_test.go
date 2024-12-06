@@ -15,6 +15,7 @@ func TestSendEmail(t *testing.T) {
 		panic("init config error: " + err.Error())
 	}
 	// templatePath, err := strutil.GetTemplatePath("register.html")
-	assert.Equal(t, nil, SendEmail("89897766@qq.com", "885588", "Your Sign Up code", "register.html"))
+	dialer := CreatDialer()
+	assert.Equal(t, nil, SendEmail(dialer, "89897766@qq.com", "885588", "Your Sign Up code", "register.html"))
 
 }
