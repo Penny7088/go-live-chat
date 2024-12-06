@@ -27,40 +27,6 @@ CREATE TABLE users
     FOREIGN KEY (country_id) REFERENCES countries (id) ON DELETE SET NULL
 );
 
--- 群组聊天表 (group_chats)
-CREATE TABLE group_chats
-(
-    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
-    group_name VARCHAR(255) NOT NULL,
-    created_by BIGINT       NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE CASCADE
-);
-
--- 群组成员表 (group_members)
-CREATE TABLE group_members
-(
-    id        BIGINT AUTO_INCREMENT PRIMARY KEY,
-    group_id  BIGINT NOT NULL,
-    user_id   BIGINT NOT NULL,
-    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_admin  BOOLEAN   DEFAULT FALSE,
-    FOREIGN KEY (group_id) REFERENCES group_chats (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
-
--- 群组消息表 (group_messages)
-CREATE TABLE group_messages
-(
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    group_id     BIGINT                                   NOT NULL,
-    sender_id    BIGINT                                   NOT NULL,
-    message      TEXT                                     NOT NULL,
-    message_type ENUM ('text', 'image', 'audio', 'video') NOT NULL,
-    timestamp    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (group_id) REFERENCES group_chats (id) ON DELETE CASCADE,
-    FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE
-);
 
 -- 邮箱验证表 (email_verifications)
 CREATE TABLE email_verifications
@@ -109,66 +75,6 @@ CREATE TABLE country_languages
     FOREIGN KEY (country_id) REFERENCES countries (id) ON DELETE CASCADE,
     FOREIGN KEY (language_id) REFERENCES languages (id) ON DELETE CASCADE
 );
-
--- 消息表 (messages)
-CREATE TABLE messages
-(
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    sender_id    BIGINT                                   NOT NULL,
-    receiver_id  BIGINT                                   NOT NULL,
-    message      TEXT                                     NOT NULL,
-    message_type ENUM ('text', 'image', 'audio', 'video') NOT NULL,
-    timestamp    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_delivered BOOLEAN   DEFAULT FALSE,
-    is_read      BOOLEAN   DEFAULT FALSE,
-    INDEX (sender_id),
-    INDEX (receiver_id),
-    INDEX (timestamp),
-    FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (receiver_id) REFERENCES users (id) ON DELETE CASCADE
-);
-
--- 用户聊天记录备份表 (user_chat_backup)
-CREATE TABLE user_chat_backup
-(
-    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id         BIGINT                                   NOT NULL,
-    chat_partner_id BIGINT                                   NOT NULL,
-    message         TEXT                                     NOT NULL,
-    message_type    ENUM ('text', 'image', 'audio', 'video') NOT NULL,
-    timestamp       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_restored     BOOLEAN   DEFAULT FALSE,
-    INDEX (user_id),
-    INDEX (chat_partner_id),
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (chat_partner_id) REFERENCES users (id) ON DELETE CASCADE
-);
-
--- 词汇表和笔记 (vocabulary_notes)
-CREATE TABLE vocabulary_notes
-(
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id     BIGINT       NOT NULL,
-    word        VARCHAR(255) NOT NULL,
-    note        TEXT,
-    language_id BIGINT       NOT NULL,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (language_id) REFERENCES languages (id) ON DELETE CASCADE
-);
-
--- 语音房间表 (voice_chat_rooms)
-CREATE TABLE voice_chat_rooms
-(
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    room_name   VARCHAR(255) NOT NULL,
-    language_id BIGINT       NOT NULL,
-    created_by  BIGINT       NOT NULL,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (language_id) REFERENCES languages (id) ON DELETE CASCADE,
-    FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE CASCADE
-);
-
 -- 第三方登录表 (third_party_auth)
 CREATE TABLE third_party_auth
 (
@@ -179,45 +85,6 @@ CREATE TABLE third_party_auth
     created_at       datetime     null,
     updated_at       datetime     null,
     deleted_at       datetime     null,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
-
--- 虚拟货币系统表 (virtual_currency)
-CREATE TABLE virtual_currency
-(
-    id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id             BIGINT NOT NULL,
-    balance             INT       DEFAULT 0,
-    last_transaction_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
-
--- 消息队列表 (message_queue)
-CREATE TABLE message_queue
-(
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    sender_id    BIGINT                                   NOT NULL,
-    receiver_id  BIGINT                                   NOT NULL,
-    message      TEXT                                     NOT NULL,
-    message_type ENUM ('text', 'image', 'audio', 'video') NOT NULL,
-    timestamp    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_sent      BOOLEAN   DEFAULT FALSE,
-    retry_count  INT       DEFAULT 0,
-    INDEX (receiver_id),
-    FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (receiver_id) REFERENCES users (id) ON DELETE CASCADE
-);
-
--- 推送通知日志表 (push_notification_log)
-CREATE TABLE push_notification_log
-(
-    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id           BIGINT                                       NOT NULL,
-    notification_type ENUM ('message', 'friend_request', 'system') NOT NULL,
-    content           TEXT                                         NOT NULL,
-    timestamp         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_clicked        BOOLEAN   DEFAULT FALSE,
-    INDEX (user_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
@@ -236,6 +103,54 @@ CREATE TABLE user_devices
     INDEX (user_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
+
+-- 聊天绘画列表
+CREATE TABLE talk_session
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '聊天列表ID',
+    talk_type   tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '聊天类型[1:私信;2:群聊;]',
+    user_id     BIGINT              NOT NULL DEFAULT '0' COMMENT '用户ID',
+    receiver_id BIGINT unsigned     NOT NULL DEFAULT '0' COMMENT '接收者ID（用户ID 或 群ID）',
+    is_top      tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否置顶[0:否;1:是;]',
+    is_disturb  tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '消息免打扰[0:否;1:是;]',
+    is_delete   tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否删除[0:否;1:是;]',
+    is_robot    tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否机器人[0:否;1:是;]',
+    created_at  datetime            NOT NULL COMMENT '创建时间',
+    updated_at  datetime            NOT NULL COMMENT '更新时间',
+    deleted_at  datetime            NOT NULL COMMENT '删除时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY idx_user_id_receiver_id_talk_type (user_id, receiver_id, talk_type) USING BTREE,
+    KEY idx_created_at (created_at) USING BTREE,
+    KEY idx_updated_at (updated_at) USING BTREE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='会话列表';
+
+
+-- 聊天记录表
+CREATE TABLE talk_records
+(
+    id          BIGINT unsigned NOT NULL AUTO_INCREMENT COMMENT '聊天记录ID',
+    msg_id      varchar(64)         NOT NULL DEFAULT '' COMMENT '消息ID',
+    sequence    int(11)             NOT NULL COMMENT '消息时序ID（消息排序）',
+    talk_type   int(11) unsigned    NOT NULL DEFAULT '1' COMMENT '对话类型[1:私信;2:群聊;]',
+    msg_type    int(11) unsigned    NOT NULL DEFAULT '1' COMMENT '消息类型[1:文本消息;2:文件消息;3:会话消息;4:代码消息;5:投票消息;6:群公告;7:好友申请;8:登录通知;9:入群消息/退群消息;]',
+    user_id     BIGINT unsigned    NOT NULL DEFAULT '0' COMMENT '发送者ID（0:代表系统消息 >0: 用户ID）',
+    receiver_id int(11) unsigned    NOT NULL DEFAULT '0' COMMENT '接收者ID（用户ID 或 群ID）',
+    is_revoke   tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否撤回[0:否;1:是;]',
+    is_mark     tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否重要[0:否;1:是;]',
+    quote_id    varchar(64)         NOT NULL DEFAULT '' COMMENT '引用消息ID',
+    extra       json                NOT NULL COMMENT '消息扩展字段',
+    created_at  datetime            NOT NULL COMMENT '创建时间',
+    updated_at  datetime            NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_msgid (msg_id) USING BTREE,
+    UNIQUE KEY idx_user_id_receiver_id_sequence (user_id, receiver_id, sequence) USING BTREE,
+    KEY idx_receiver_id (receiver_id) USING BTREE,
+    KEY idx_created_at (created_at) USING BTREE,
+    KEY idx_updated_at (updated_at) USING BTREE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='用户聊天记录表';;
+
 
 -- 预插入数据 (languages, countries, country_languages)
 INSERT INTO languages (id, native_name, name, visit_name, iso_code)
