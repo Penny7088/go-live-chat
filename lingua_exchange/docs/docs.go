@@ -377,7 +377,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/globalConfig/LoginMethod": {
+        "/api/v1/globalConfig/loginMethod": {
             "get": {
                 "description": "Get different login methods based on the user's IP",
                 "consumes": [

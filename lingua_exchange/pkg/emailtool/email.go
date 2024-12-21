@@ -16,7 +16,8 @@ func CreatDialer() *gomail.Dialer {
 	return dialer
 }
 
-func SendEmail(dialer *gomail.Dialer, email string, code string, subject string, fileName string) error {
+func SendEmail(email string, code string, subject string, fileName string) error {
+	dialer := CreatDialer()
 	m := gomail.NewMessage()
 	m.SetHeader("From", dialer.Username)
 	m.SetHeader("To", email)

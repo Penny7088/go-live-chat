@@ -60,11 +60,11 @@ func (g globalConfigHandler) SendResetPasswordCode(c *gin.Context) {
 // LoginMethod  obtain login method
 // @Summary get user login method
 // @Description  Get different login methods based on the user's IP
-// @Tags    globalConfig
+// @Tags    globalConfigma
 // @accept  json
 // @Produce json
 // @Success 200 {object} types.LoginMethodReply{}
-// @Router /api/v1/globalConfig/LoginMethod [get]
+// @Router /api/v1/globalConfig/loginMethod [get]
 func (g globalConfigHandler) LoginMethod(c *gin.Context) {
 	clientIP := c.ClientIP()
 	if clientIP == "" {
@@ -72,15 +72,15 @@ func (g globalConfigHandler) LoginMethod(c *gin.Context) {
 		response.Error(c, ecode.ErrIpNotFound)
 	}
 
-	var methods []*types.LoginMethodDetailReply
+	var methods *types.LoginMethodDetailReply
 	if ip.IsIpFromChina(clientIP) {
-		methods = append(methods, queryLoginMethodFromCH())
+		methods = queryLoginMethodFromCH()
 	} else {
-		methods = append(methods, queryLoginMethodFromOther())
+		methods = queryLoginMethodFromCH()
 	}
 
 	response.Success(c, gin.H{
-		"loginMethods": methods,
+		"loginMethod": methods,
 	})
 }
 
@@ -153,6 +153,6 @@ func queryLoginMethodFromCH() *types.LoginMethodDetailReply {
 // need query config
 func queryLoginMethodFromOther() *types.LoginMethodDetailReply {
 	data := &types.LoginMethodDetailReply{}
-	data.Name = "google"
+	data.Name = "social"
 	return data
 }

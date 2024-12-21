@@ -12,7 +12,7 @@ type LoginMethodReply struct {
 	Code int    `json:"code"` // return code
 	Msg  string `json:"msg"`  // return information description
 	Data struct {
-		LoginMethods []LoginMethodDetailReply `json:"loginMethods"`
+		LoginMethods LoginMethodDetailReply `json:"loginMethod"`
 	} `json:"data"`
 }
 
