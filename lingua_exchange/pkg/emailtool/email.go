@@ -1,6 +1,8 @@
 package emailtool
 
 import (
+	"crypto/tls"
+	"github.com/zhufuyi/sponge/pkg/logger"
 	"gopkg.in/gomail.v2"
 	"lingua_exchange/internal/config"
 	"lingua_exchange/pkg/strutil"
@@ -32,8 +34,9 @@ func SendEmail(email string, code string, subject string, fileName string) error
 		return err
 	}
 	m.SetBody("text/html", renderTemplate)
-
+	dialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	if err := dialer.DialAndSend(m); err != nil {
+		logger.Debugf("Failed to send email: %v", err)
 		return err
 	}
 	return nil
