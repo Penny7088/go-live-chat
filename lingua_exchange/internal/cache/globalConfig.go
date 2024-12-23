@@ -13,7 +13,7 @@ import (
 const (
 	globalConfigKey            = "globalConfig:"
 	verificationCode           = "verificationCode:"
-	verificationCodeExpireTime = 60 * time.Second
+	verificationCodeExpireTime = 5 * 60 * time.Second
 	VCodeSignUpType            = "signUp:"
 	VCodeForgetType            = "forget:"
 )
