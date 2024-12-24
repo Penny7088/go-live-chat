@@ -416,6 +416,15 @@ func (d *usersDao) GetByEmailTx(ctx context.Context, tx *gorm.DB, params *model.
 
 // CreateByTx create a record in the database using the provided transaction
 func (d *usersDao) CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Users) (uint64, error) {
+	if tx == nil {
+		return 0, errors.New("transaction is nil")
+	}
+	if table == nil {
+		return 0, errors.New("user model is nil")
+	}
+	if ctx == nil {
+		return 0, errors.New("context is nil")
+	}
 	err := tx.WithContext(ctx).Create(table).Error
 	return table.ID, err
 }

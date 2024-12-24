@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/redis/go-redis/v9"
+	"github.com/zhufuyi/sponge/pkg/errcode"
 	"github.com/zhufuyi/sponge/pkg/gin/middleware"
 	"github.com/zhufuyi/sponge/pkg/gin/response"
 	"github.com/zhufuyi/sponge/pkg/logger"
@@ -132,48 +133,83 @@ func (h *usersHandler) SignUpFromEmail(c *gin.Context) {
 	}
 
 	// 验证验证码
-	if err := h.verifyCode(c, form.Email, form.Code, cache.VCodeForgetType); err != nil {
+	if err := h.verifyCode(c, form.Email, form.Code, cache.VCodeSignUpType); err != nil {
 		return
 	}
 
-	// 检查用户是否存在
-	users, err := h.iDao.GetByEmail(c, form.Email)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		logger.Warn("failed to check user existence", logger.Err(err), middleware.GCtxRequestIDField(c))
-		response.Error(c, ecode.ErrCreateUsers)
+	db := model.GetDB()
+	user := &model.Users{
+		Email:         form.Email,
+		PasswordHash:  encrypt.HashPassword(form.Password),
+		EmailVerified: 1,
+	}
+
+	err2 := db.Transaction(func(tx *gorm.DB) error {
+		// 检查邮箱是否已注册
+		_, err := h.iDao.GetByEmailTx(c, tx, user)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// 邮箱未注册，创建新用户
+				if err := h.createUser(c, tx, user); err != nil {
+					return err
+				}
+			} else {
+				// 处理查询错误
+				return err
+			}
+		} else {
+			return ecode.ErrUserAlreadyExists.Err()
+		}
+
+		// 创建或更新设备信息
+		device := &model.UserDevices{
+			UserID:      int64(user.ID),
+			DeviceToken: jwt.HeaderDeviceToken(c),
+			DeviceType:  jwt.HeaderPlatform(c),
+			IPAddress:   c.ClientIP(),
+		}
+
+		if err := h.createOrUpdateDevice(c, tx, device); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err2 != nil {
+		parseError := errcode.ParseError(err2)
+		h.handleError(c, err2, parseError)
 		return
 	}
 
-	// 如果用户已存在，返回错误
-	if users != nil {
-		logger.Warn("User Already Exists", middleware.GCtxRequestIDField(c))
-		response.Error(c, ecode.ErrUserAlreadyExists)
-		return
-	}
-
-	// 创建新用户
-	users = &model.Users{
-		Email:        form.Email,
-		PasswordHash: encrypt.HashPassword(form.Password),
-	}
-	if err := h.iDao.Create(c, users); err != nil {
-		logger.Warn("failed to create user", logger.Err(err), middleware.GCtxRequestIDField(c))
-		response.Error(c, ecode.ErrCreateUsers)
-		return
-	}
-
-	token, refreshToken, err := h.generateAndCacheToken(users)
-	if err != nil {
-		logger.Warn("token gen error: ", middleware.GCtxRequestIDField(c))
-		response.Error(c, ecode.ErrToken)
-		return
-	}
-
-	// 构建用户详细信息响应
-	data := h.buildUserDetailResponse(users, token, refreshToken, true)
+	// 成功响应
+	data := h.buildUserDetailResponse(user, "", "", true)
 
 	response.Success(c, gin.H{"user": data})
 
+}
+
+// 创建或更新设备的函数
+func (h *usersHandler) createOrUpdateDevice(ctx *gin.Context, tx *gorm.DB, device *model.UserDevices) error {
+	_, err := h.deviceDao.FirstOrCreateByTx(ctx, tx, device)
+	if err != nil {
+		h.handleError(ctx, err, ecode.ErrCreateUserDevices)
+		return err
+	}
+	return nil
+}
+
+// 创建用户的函数
+func (h *usersHandler) createUser(c *gin.Context, tx *gorm.DB, user *model.Users) error {
+	_, err := h.iDao.CreateByTx(c, tx, user)
+	if err != nil {
+		if ecode.IsUniqueConstraintError(err) {
+			h.handleError(c, err, ecode.ErrCreateUsers)
+			return err // 返回错误而不是调用
+		}
+		return err
+	}
+	return nil // 成功创建用户时返回 nil
 }
 
 // verifyCode 验证验证码
@@ -285,7 +321,7 @@ func (h *usersHandler) LoginOrRegister(c *gin.Context) {
 	switch form.Platform {
 	case GooglePlatform:
 		if err := h.handleGoogleLogin(c, form); err != nil {
-			h.handleError(c, ecode.ErrInvalidGoogleIdToken.ToHTTPCode(), err)
+			h.handleError(c, err, ecode.ErrInvalidGoogleIdToken)
 		}
 	default:
 		response.Error(c, ecode.ErrUnsupportedPlatform)
@@ -377,9 +413,9 @@ func (h *usersHandler) handleGoogleLogin(c *gin.Context, form *types.LoginReques
 	return nil
 }
 
-func (h *usersHandler) handleError(c *gin.Context, code int, err error) {
-	logger.Error("Error occurred", logger.Err(err), middleware.GCtxRequestIDField(c))
-	response.Output(c, code)
+func (h *usersHandler) handleError(c *gin.Context, err error, errorCode *errcode.Error) {
+	logger.Info("Error occurred", logger.Err(err), middleware.GCtxRequestIDField(c))
+	response.Error(c, errorCode)
 }
 
 func (h *usersHandler) generateAndCacheToken(user *model.Users) (string, string, error) {

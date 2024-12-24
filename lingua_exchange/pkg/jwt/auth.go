@@ -25,6 +25,8 @@ var (
 	authorizationKey    = "Authorization"
 	refreshTokenKey     = "Refresh-Token"
 	env                 = "env"
+	platform            = "platform"
+	deviceToken         = "deviceToken"
 )
 
 func GenerateTokens(userID uint64) (string, string, error) {
@@ -141,5 +143,22 @@ func HeaderDevMode(c *gin.Context) (string, error) {
 	} else {
 		return "dev", nil
 	}
+}
 
+func HeaderPlatform(c *gin.Context) string {
+	platform := c.Request.Header.Get(platform)
+	if platform == "" {
+		return ""
+	} else {
+		return platform
+	}
+}
+
+func HeaderDeviceToken(c *gin.Context) string {
+	deviceToken := c.Request.Header.Get(deviceToken)
+	if deviceToken == "" {
+		return ""
+	} else {
+		return deviceToken
+	}
 }
