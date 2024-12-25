@@ -387,7 +387,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "globalConfig"
+                    "globalConfigma"
                 ],
                 "summary": "get user login method",
                 "responses": {
@@ -450,13 +450,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/types.VerificationCodeReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "dev mode",
-                        "name": "env",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -508,7 +501,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/interests/allList/{language_code}": {
+        "/api/v1/interests/allList/{languageCode}": {
             "get": {
                 "security": [
                     {
@@ -529,8 +522,29 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "language_code",
-                        "name": "language_code",
+                        "description": "token",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "platform - ios/android",
+                        "name": "platform",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "deviceToken device id",
+                        "name": "deviceToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "languageCode",
+                        "name": "languageCode",
                         "in": "path",
                         "required": true
                     }
@@ -3800,11 +3814,8 @@ const docTemplate = `{
                 "data": {
                     "type": "object",
                     "properties": {
-                        "loginMethods": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/types.LoginMethodDetailReply"
-                            }
+                        "loginMethod": {
+                            "$ref": "#/definitions/types.LoginMethodDetailReply"
                         }
                     }
                 },

@@ -918,10 +918,8 @@ definitions:
         type: integer
       data:
         properties:
-          loginMethods:
-            items:
-              $ref: '#/definitions/types.LoginMethodDetailReply'
-            type: array
+          loginMethod:
+            $ref: '#/definitions/types.LoginMethodDetailReply'
         type: object
       msg:
         description: return information description
@@ -1532,7 +1530,7 @@ paths:
             $ref: '#/definitions/types.LoginMethodReply'
       summary: get user login method
       tags:
-      - globalConfig
+      - globalConfigma
   /api/v1/globalConfig/sendResetPasswordCode:
     post:
       consumes:
@@ -1565,11 +1563,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.VerificationCodeReq'
-      - description: dev mode
-        in: header
-        name: env
-        required: true
-        type: string
       responses:
         "200":
           description: OK
@@ -1675,15 +1668,30 @@ paths:
       summary: update interests
       tags:
       - interests
-  /api/v1/interests/allList/{language_code}:
+  /api/v1/interests/allList/{languageCode}:
     get:
       consumes:
       - application/json
       description: obtain all interests tags
       parameters:
-      - description: language_code
+      - description: token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: platform - ios/android
+        in: header
+        name: platform
+        required: true
+        type: string
+      - description: deviceToken device id
+        in: header
+        name: deviceToken
+        required: true
+        type: string
+      - description: languageCode
         in: path
-        name: language_code
+        name: languageCode
         required: true
         type: string
       produces:

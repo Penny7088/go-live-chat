@@ -60,9 +60,12 @@ func NewInterestsHandler() InterestsHandler {
 // @Tags interests
 // @accept json
 // @Produce json
-// @Param language_code path string true "language_code"
+// @Param Authorization header string true "Authorization"
+// @Param platform header string true "platform - ios/android"
+// @Param deviceToken header string true "deviceToken device id"
+// @Param languageCode path string true "languageCode"
 // @Success 200 {object} types.GetInterestsByLanguageReply{}
-// @Router /api/v1/interests/allList/{language_code} [get]
+// @Router /api/v1/interests/allList/{languageCode} [get]
 // @Security BearerAuth
 func (h *interestsHandler) AllList(c *gin.Context) {
 	languageCode, isAbort := getInterestsLanguageFromPath(c)
@@ -474,7 +477,7 @@ func getInterestsIDFromPath(c *gin.Context) (string, uint64, bool) {
 }
 
 func getInterestsLanguageFromPath(c *gin.Context) (string, bool) {
-	languageCode := c.Param("language_code")
+	languageCode := c.Param("languageCode")
 	if languageCode == "" {
 		logger.Warn("languageCode error: ", logger.String("idStr", languageCode), middleware.GCtxRequestIDField(c))
 		return "", true

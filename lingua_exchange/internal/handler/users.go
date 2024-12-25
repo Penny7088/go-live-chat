@@ -182,8 +182,14 @@ func (h *usersHandler) SignUpFromEmail(c *gin.Context) {
 		return
 	}
 
+	token, refreshToken, err2 := h.generateAndCacheToken(user)
+	if err2 != nil {
+		h.handleError(c, err2, ecode.ErrToken)
+		return
+	}
+
 	// 成功响应
-	data := h.buildUserDetailResponse(user, "", "", true)
+	data := h.buildUserDetailResponse(user, token, refreshToken, true)
 
 	response.Success(c, gin.H{"user": data})
 
