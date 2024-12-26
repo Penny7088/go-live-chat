@@ -67,14 +67,9 @@ type UpdateUsersByIDRequest struct {
 	LanguageLevel      string    `json:"languageLevel" binding:""`
 	Age                int       `json:"age" binding:""`
 	Gender             string    `json:"gender" binding:""`
-	Interests          string    `json:"interests" binding:""`
+	Interests          []int64   `json:"interests" binding:""`
 	CountryID          int64     `json:"countryID" binding:""`
-	RegistrationDate   time.Time `json:"registrationDate" binding:""`
-	LastLogin          time.Time `json:"lastLogin" binding:""`
-	Status             string    `json:"status" binding:""`
-	EmailVerified      int       `json:"emailVerified" binding:""`
-	VerificationToken  string    `json:"verificationToken" binding:""`
-	TokenExpiration    time.Time `json:"tokenExpiration" binding:""`
+	BirthDate          time.Time `json:"birthDate" binding:""`
 }
 
 // UsersObjDetail detail
@@ -138,7 +133,7 @@ type GetUsersByIDReply struct {
 	Code int    `json:"code"` // return code
 	Msg  string `json:"msg"`  // return information description
 	Data struct {
-		Users UsersObjDetail `json:"users"`
+		Users UsersObjDetail `json:"user"`
 	} `json:"data"` // return data
 }
 

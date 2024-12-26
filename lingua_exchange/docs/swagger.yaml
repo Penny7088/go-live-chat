@@ -174,6 +174,29 @@ definitions:
       userID:
         type: integer
     type: object
+  types.CreateUserInterestsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          id:
+            description: id
+            type: integer
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.CreateUserInterestsRequest:
+    properties:
+      tagID:
+        type: integer
+      userID:
+        type: integer
+    type: object
   types.CreateUsersReply:
     properties:
       code:
@@ -382,6 +405,37 @@ definitions:
         minItems: 1
         type: array
     type: object
+  types.DeleteUserInterestsByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteUserInterestssByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.DeleteUserInterestssByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
   types.DeleteUsersByIDReply:
     properties:
       code:
@@ -578,6 +632,36 @@ definitions:
         description: return information description
         type: string
     type: object
+  types.GetUserInterestsByConditionReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userInterests:
+            $ref: '#/definitions/types.UserInterestsObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.GetUserInterestsByIDReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userInterests:
+            $ref: '#/definitions/types.UserInterestsObjDetail'
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
   types.GetUsersByConditionReply:
     properties:
       code:
@@ -601,7 +685,7 @@ definitions:
       data:
         description: return data
         properties:
-          users:
+          user:
             $ref: '#/definitions/types.UsersObjDetail'
         type: object
       msg:
@@ -847,6 +931,49 @@ definitions:
           userDevicess:
             items:
               $ref: '#/definitions/types.UserDevicesObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListUserInterestssByIDsReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userInterestss:
+            items:
+              $ref: '#/definitions/types.UserInterestsObjDetail'
+            type: array
+        type: object
+      msg:
+        description: return information description
+        type: string
+    type: object
+  types.ListUserInterestssByIDsRequest:
+    properties:
+      ids:
+        description: id list
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    type: object
+  types.ListUserInterestssReply:
+    properties:
+      code:
+        description: return code
+        type: integer
+      data:
+        description: return data
+        properties:
+          userInterestss:
+            items:
+              $ref: '#/definitions/types.UserInterestsObjDetail'
             type: array
         type: object
       msg:
@@ -1174,22 +1301,22 @@ definitions:
     properties:
       age:
         type: integer
+      birthDate:
+        type: string
       countryID:
         type: integer
       email:
         type: string
-      emailVerified:
-        type: integer
       gender:
         type: string
       id:
         description: uint64 id
         type: integer
       interests:
-        type: string
+        items:
+          type: integer
+        type: array
       languageLevel:
-        type: string
-      lastLogin:
         type: string
       learningLanguageID:
         type: integer
@@ -1199,15 +1326,7 @@ definitions:
         type: string
       profilePicture:
         type: string
-      registrationDate:
-        type: string
-      status:
-        type: string
-      tokenExpiration:
-        type: string
       username:
-        type: string
-      verificationToken:
         type: string
     type: object
   types.UserDevicesObjDetail:
@@ -1222,6 +1341,17 @@ definitions:
         description: convert to uint64 id
         type: integer
       lastActive:
+        type: string
+      userID:
+        type: integer
+    type: object
+  types.UserInterestsObjDetail:
+    properties:
+      createdAt:
+        type: string
+      tagID:
+        type: integer
+      updatedAt:
         type: string
       userID:
         type: integer
@@ -1674,9 +1804,9 @@ paths:
       - application/json
       description: obtain all interests tags
       parameters:
-      - description: token
+      - description: Authorization
         in: header
-        name: token
+        name: Authorization
         required: true
         type: string
       - description: platform - ios/android
@@ -2513,6 +2643,204 @@ paths:
       summary: list of userDevicess by batch id
       tags:
       - userDevices
+  /api/v1/userInterests:
+    post:
+      consumes:
+      - application/json
+      description: submit information to create userInterests
+      parameters:
+      - description: userInterests information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateUserInterestsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.CreateUserInterestsReply'
+      security:
+      - BearerAuth: []
+      summary: create userInterests
+      tags:
+      - userInterests
+  /api/v1/userInterests/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete userInterests by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteUserInterestsByIDReply'
+      security:
+      - BearerAuth: []
+      summary: delete userInterests
+      tags:
+      - userInterests
+    get:
+      consumes:
+      - application/json
+      description: get userInterests detail by id
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetUserInterestsByIDReply'
+      security:
+      - BearerAuth: []
+      summary: get userInterests detail
+      tags:
+      - userInterests
+  /api/v1/userInterests/condition:
+    post:
+      consumes:
+      - application/json
+      description: get userInterests by condition
+      parameters:
+      - description: query condition
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Conditions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetUserInterestsByConditionReply'
+      security:
+      - BearerAuth: []
+      summary: get userInterests by condition
+      tags:
+      - userInterests
+  /api/v1/userInterests/delete/ids:
+    post:
+      consumes:
+      - application/json
+      description: delete userInterestss by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.DeleteUserInterestssByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.DeleteUserInterestssByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: delete userInterestss
+      tags:
+      - userInterests
+  /api/v1/userInterests/list:
+    get:
+      consumes:
+      - application/json
+      description: list of userInterestss by last id and limit
+      parameters:
+      - default: 0
+        description: last id, default is MaxInt32
+        in: query
+        name: lastID
+        required: true
+        type: integer
+      - default: 10
+        description: number per page
+        in: query
+        name: limit
+        type: integer
+      - default: -id
+        description: 'sort by column name of table, and the '
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListUserInterestssReply'
+      security:
+      - BearerAuth: []
+      summary: list of userInterestss by last id and limit
+      tags:
+      - userInterests
+    post:
+      consumes:
+      - application/json
+      description: list of userInterestss by paging and conditions
+      parameters:
+      - description: query parameters
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.Params'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListUserInterestssReply'
+      security:
+      - BearerAuth: []
+      summary: list of userInterestss by query parameters
+      tags:
+      - userInterests
+  /api/v1/userInterests/list/ids:
+    post:
+      consumes:
+      - application/json
+      description: list of userInterestss by batch id
+      parameters:
+      - description: id array
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.ListUserInterestssByIDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ListUserInterestssByIDsReply'
+      security:
+      - BearerAuth: []
+      summary: list of userInterestss by batch id
+      tags:
+      - userInterests
   /api/v1/users:
     post:
       consumes:
@@ -2829,6 +3157,50 @@ paths:
       summary: login from email
       tags:
       - Login
+  /api/v1/users/updateUserInfo/{id}:
+    put:
+      consumes:
+      - application/json
+      description: update user info
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: platform - ios/android
+        in: header
+        name: platform
+        required: true
+        type: string
+      - description: deviceToken device id
+        in: header
+        name: deviceToken
+        required: true
+        type: string
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: users information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateUsersByIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GetUsersByIDReply'
+      security:
+      - BearerAuth: []
+      summary: update user info
+      tags:
+      - users
 schemes:
 - http
 - https

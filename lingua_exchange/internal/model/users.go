@@ -25,4 +25,5 @@ type Users struct {
 	EmailVerified      int       `gorm:"column:email_verified;type:tinyint(1);default:0" json:"emailVerified"`
 	VerificationToken  string    `gorm:"column:verification_token;type:varchar(255);default:NULL" json:"verificationToken"`
 	TokenExpiration    time.Time `gorm:"column:token_expiration;type:timestamp;default:NULL" json:"tokenExpiration"`
+	BirthDate          time.Time `gorm:"column:birth_date;type:timestamp;default:NULL" json:"birth_date"`
 }

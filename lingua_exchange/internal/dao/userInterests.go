@@ -17,45 +17,51 @@ import (
 	"lingua_exchange/internal/model"
 )
 
-var _ UsersDao = (*usersDao)(nil)
+var _ UserInterestsDao = (*userInterestsDao)(nil)
 
-// UsersDao defining the dao interface
-type UsersDao interface {
-	Create(ctx context.Context, table *model.Users) error
+// UserInterestsDao defining the dao interface
+type UserInterestsDao interface {
+	Create(ctx context.Context, table *model.UserInterests) error
 	DeleteByID(ctx context.Context, id uint64) error
-	UpdateByID(ctx context.Context, table *model.Users) error
-	GetByID(ctx context.Context, id uint64) (*model.Users, error)
-	GetByColumns(ctx context.Context, params *query.Params) ([]*model.Users, int64, error)
+	UpdateByID(ctx context.Context, table *model.UserInterests) error
+	GetByID(ctx context.Context, id uint64) (*model.UserInterests, error)
+	GetByColumns(ctx context.Context, params *query.Params) ([]*model.UserInterests, int64, error)
+
 	DeleteByIDs(ctx context.Context, ids []uint64) error
-	GetByCondition(ctx context.Context, condition *query.Conditions) (*model.Users, error)
-	GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.Users, error)
-	GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.Users, error)
-	GetByEmail(ctx context.Context, params string) (*model.Users, error)
-	GetByEmailTx(ctx context.Context, tx *gorm.DB, params *model.Users) (*model.Users, error)
-	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Users) (uint64, error)
+	GetByCondition(ctx context.Context, condition *query.Conditions) (*model.UserInterests, error)
+	GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.UserInterests, error)
+	GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.UserInterests, error)
+
+	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.UserInterests) error
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
-	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.Users) error
+	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.UserInterests) error
+	FirstOrCreateByTx(ctx context.Context, tx *gorm.DB, table *model.UserInterests) error
 }
 
-type usersDao struct {
+type userInterestsDao struct {
 	db    *gorm.DB
-	cache cache.UsersCache    // if nil, the cache is not used.
-	sfg   *singleflight.Group // if cache is nil, the sfg is not used.
+	cache cache.UserInterestsCache // if nil, the cache is not used.
+	sfg   *singleflight.Group      // if cache is nil, the sfg is not used.
 }
 
-// NewUsersDao creating the dao interface
-func NewUsersDao(db *gorm.DB, xCache cache.UsersCache) UsersDao {
+// NewUserInterestsDao creating the dao interface
+func NewUserInterestsDao(db *gorm.DB, xCache cache.UserInterestsCache) UserInterestsDao {
 	if xCache == nil {
-		return &usersDao{db: db}
+		return &userInterestsDao{db: db}
 	}
-	return &usersDao{
+	return &userInterestsDao{
 		db:    db,
 		cache: xCache,
 		sfg:   new(singleflight.Group),
 	}
 }
 
-func (d *usersDao) deleteCache(ctx context.Context, id uint64) error {
+func (d *userInterestsDao) FirstOrCreateByTx(ctx context.Context, tx *gorm.DB, table *model.UserInterests) error {
+
+	return nil
+}
+
+func (d *userInterestsDao) deleteCache(ctx context.Context, id uint64) error {
 	if d.cache != nil {
 		return d.cache.Del(ctx, id)
 	}
@@ -63,13 +69,13 @@ func (d *usersDao) deleteCache(ctx context.Context, id uint64) error {
 }
 
 // Create a record, insert the record and the id value is written back to the table
-func (d *usersDao) Create(ctx context.Context, table *model.Users) error {
+func (d *userInterestsDao) Create(ctx context.Context, table *model.UserInterests) error {
 	return d.db.WithContext(ctx).Create(table).Error
 }
 
 // DeleteByID delete a record by id
-func (d *usersDao) DeleteByID(ctx context.Context, id uint64) error {
-	err := d.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Users{}).Error
+func (d *userInterestsDao) DeleteByID(ctx context.Context, id uint64) error {
+	err := d.db.WithContext(ctx).Where("id = ?", id).Delete(&model.UserInterests{}).Error
 	if err != nil {
 		return err
 	}
@@ -81,7 +87,7 @@ func (d *usersDao) DeleteByID(ctx context.Context, id uint64) error {
 }
 
 // UpdateByID update a record by id
-func (d *usersDao) UpdateByID(ctx context.Context, table *model.Users) error {
+func (d *userInterestsDao) UpdateByID(ctx context.Context, table *model.UserInterests) error {
 	err := d.updateDataByID(ctx, d.db, table)
 
 	// delete cache
@@ -90,73 +96,28 @@ func (d *usersDao) UpdateByID(ctx context.Context, table *model.Users) error {
 	return err
 }
 
-func (d *usersDao) updateDataByID(ctx context.Context, db *gorm.DB, table *model.Users) error {
+func (d *userInterestsDao) updateDataByID(ctx context.Context, db *gorm.DB, table *model.UserInterests) error {
 	if table.ID < 1 {
 		return errors.New("id cannot be 0")
 	}
 
 	update := map[string]interface{}{}
 
-	if table.Email != "" {
-		update["email"] = table.Email
+	if table.UserID != 0 {
+		update["user_id"] = table.UserID
 	}
-	if table.Username != "" {
-		update["username"] = table.Username
-	}
-	if table.PasswordHash != "" {
-		update["password_hash"] = table.PasswordHash
-	}
-	if table.ProfilePicture != "" {
-		update["profile_picture"] = table.ProfilePicture
-	}
-	if table.NativeLanguageID != 0 {
-		update["native_language_id"] = table.NativeLanguageID
-	}
-	if table.LearningLanguageID != 0 {
-		update["learning_language_id"] = table.LearningLanguageID
-	}
-	if table.LanguageLevel != "" {
-		update["language_level"] = table.LanguageLevel
-	}
-	if table.Age != 0 {
-		update["age"] = table.Age
-	}
-	if table.Gender != "" {
-		update["gender"] = table.Gender
-	}
-	if table.CountryID != 0 {
-		update["country_id"] = table.CountryID
-	}
-	if table.RegistrationDate.IsZero() == false {
-		update["registration_date"] = table.RegistrationDate
-	}
-	if table.LastLogin.IsZero() == false {
-		update["last_login"] = table.LastLogin
-	}
-	if table.Status != "" {
-		update["status"] = table.Status
-	}
-	if table.EmailVerified != 0 {
-		update["email_verified"] = table.EmailVerified
-	}
-	if table.VerificationToken != "" {
-		update["verification_token"] = table.VerificationToken
-	}
-	if table.TokenExpiration.IsZero() == false {
-		update["token_expiration"] = table.TokenExpiration
-	}
-	if table.BirthDate.IsZero() == false {
-		update["birth_date"] = table.BirthDate
+	if table.TagID != 0 {
+		update["tag_id"] = table.TagID
 	}
 
 	return db.WithContext(ctx).Model(table).Updates(update).Error
 }
 
 // GetByID get a record by id
-func (d *usersDao) GetByID(ctx context.Context, id uint64) (*model.Users, error) {
+func (d *userInterestsDao) GetByID(ctx context.Context, id uint64) (*model.UserInterests, error) {
 	// no cache
 	if d.cache == nil {
-		record := &model.Users{}
+		record := &model.UserInterests{}
 		err := d.db.WithContext(ctx).Where("id = ?", id).First(record).Error
 		return record, err
 	}
@@ -170,7 +131,7 @@ func (d *usersDao) GetByID(ctx context.Context, id uint64) (*model.Users, error)
 	if errors.Is(err, model.ErrCacheNotFound) {
 		// for the same id, prevent high concurrent simultaneous access to database
 		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { // nolint
-			table := &model.Users{}
+			table := &model.UserInterests{}
 			err = d.db.WithContext(ctx).Where("id = ?", id).First(table).Error
 			if err != nil {
 				// if data is empty, set not found cache to prevent cache penetration, default expiration time 10 minutes
@@ -184,7 +145,7 @@ func (d *usersDao) GetByID(ctx context.Context, id uint64) (*model.Users, error)
 				return nil, err
 			}
 			// set cache
-			err = d.cache.Set(ctx, id, table, cache.UsersExpireTime)
+			err = d.cache.Set(ctx, id, table, cache.UserInterestsExpireTime)
 			if err != nil {
 				return nil, fmt.Errorf("cache.Set error: %v, id=%d", err, id)
 			}
@@ -193,7 +154,7 @@ func (d *usersDao) GetByID(ctx context.Context, id uint64) (*model.Users, error)
 		if err != nil {
 			return nil, err
 		}
-		table, ok := val.(*model.Users)
+		table, ok := val.(*model.UserInterests)
 		if !ok {
 			return nil, model.ErrRecordNotFound
 		}
@@ -239,7 +200,7 @@ func (d *usersDao) GetByID(ctx context.Context, id uint64) (*model.Users, error)
 //			Value: "male",
 //		},
 //	}
-func (d *usersDao) GetByColumns(ctx context.Context, params *query.Params) ([]*model.Users, int64, error) {
+func (d *userInterestsDao) GetByColumns(ctx context.Context, params *query.Params) ([]*model.UserInterests, int64, error) {
 	queryStr, args, err := params.ConvertToGormConditions()
 	if err != nil {
 		return nil, 0, errors.New("query params error: " + err.Error())
@@ -247,7 +208,7 @@ func (d *usersDao) GetByColumns(ctx context.Context, params *query.Params) ([]*m
 
 	var total int64
 	if params.Sort != "ignore count" { // determine if count is required
-		err = d.db.WithContext(ctx).Model(&model.Users{}).Select([]string{"id"}).Where(queryStr, args...).Count(&total).Error
+		err = d.db.WithContext(ctx).Model(&model.UserInterests{}).Select([]string{"id"}).Where(queryStr, args...).Count(&total).Error
 		if err != nil {
 			return nil, 0, err
 		}
@@ -256,7 +217,7 @@ func (d *usersDao) GetByColumns(ctx context.Context, params *query.Params) ([]*m
 		}
 	}
 
-	records := []*model.Users{}
+	records := []*model.UserInterests{}
 	order, limit, offset := params.ConvertToPage()
 	err = d.db.WithContext(ctx).Order(order).Limit(limit).Offset(offset).Where(queryStr, args...).Find(&records).Error
 	if err != nil {
@@ -267,8 +228,8 @@ func (d *usersDao) GetByColumns(ctx context.Context, params *query.Params) ([]*m
 }
 
 // DeleteByIDs delete records by batch id
-func (d *usersDao) DeleteByIDs(ctx context.Context, ids []uint64) error {
-	err := d.db.WithContext(ctx).Where("id IN (?)", ids).Delete(&model.Users{}).Error
+func (d *userInterestsDao) DeleteByIDs(ctx context.Context, ids []uint64) error {
+	err := d.db.WithContext(ctx).Where("id IN (?)", ids).Delete(&model.UserInterests{}).Error
 	if err != nil {
 		return err
 	}
@@ -302,13 +263,13 @@ func (d *usersDao) DeleteByIDs(ctx context.Context, ids []uint64) error {
 //			Value: "male",
 //		},
 //	}
-func (d *usersDao) GetByCondition(ctx context.Context, c *query.Conditions) (*model.Users, error) {
+func (d *userInterestsDao) GetByCondition(ctx context.Context, c *query.Conditions) (*model.UserInterests, error) {
 	queryStr, args, err := c.ConvertToGorm()
 	if err != nil {
 		return nil, err
 	}
 
-	table := &model.Users{}
+	table := &model.UserInterests{}
 	err = d.db.WithContext(ctx).Where(queryStr, args...).First(table).Error
 	if err != nil {
 		return nil, err
@@ -318,15 +279,15 @@ func (d *usersDao) GetByCondition(ctx context.Context, c *query.Conditions) (*mo
 }
 
 // GetByIDs get records by batch id
-func (d *usersDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.Users, error) {
+func (d *userInterestsDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.UserInterests, error) {
 	// no cache
 	if d.cache == nil {
-		var records []*model.Users
+		var records []*model.UserInterests
 		err := d.db.WithContext(ctx).Where("id IN (?)", ids).Find(&records).Error
 		if err != nil {
 			return nil, err
 		}
-		itemMap := make(map[uint64]*model.Users)
+		itemMap := make(map[uint64]*model.UserInterests)
 		for _, record := range records {
 			itemMap[record.ID] = record
 		}
@@ -361,7 +322,7 @@ func (d *usersDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*mode
 		}
 
 		if len(realMissedIDs) > 0 {
-			var missedData []*model.Users
+			var missedData []*model.UserInterests
 			err = d.db.WithContext(ctx).Where("id IN (?)", realMissedIDs).Find(&missedData).Error
 			if err != nil {
 				return nil, err
@@ -371,7 +332,7 @@ func (d *usersDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*mode
 				for _, data := range missedData {
 					itemMap[data.ID] = data
 				}
-				err = d.cache.MultiSet(ctx, missedData, cache.UsersExpireTime)
+				err = d.cache.MultiSet(ctx, missedData, cache.UserInterestsExpireTime)
 				if err != nil {
 					return nil, err
 				}
@@ -387,10 +348,10 @@ func (d *usersDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*mode
 }
 
 // GetByLastID get paging records by last id and limit
-func (d *usersDao) GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.Users, error) {
+func (d *userInterestsDao) GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.UserInterests, error) {
 	page := query.NewPage(0, limit, sort)
 
-	records := []*model.Users{}
+	records := []*model.UserInterests{}
 	err := d.db.WithContext(ctx).Order(page.Sort()).Limit(page.Limit()).Where("id < ?", lastID).Find(&records).Error
 	if err != nil {
 		return nil, err
@@ -398,46 +359,21 @@ func (d *usersDao) GetByLastID(ctx context.Context, lastID uint64, limit int, so
 	return records, nil
 }
 
-func (d *usersDao) GetByEmail(ctx context.Context, params string) (*model.Users, error) {
-	user := &model.Users{}
-	err := d.db.WithContext(ctx).Where("email = ?", params).First(user).Error
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-// GetByEmailTx GetByEmail query by email
-func (d *usersDao) GetByEmailTx(ctx context.Context, tx *gorm.DB, params *model.Users) (*model.Users, error) {
-	user := &model.Users{}
-	err := tx.WithContext(ctx).Where("email = ?", params.Email).First(user).Error
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
 // CreateByTx create a record in the database using the provided transaction
-func (d *usersDao) CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Users) (uint64, error) {
-	if tx == nil {
-		return 0, errors.New("transaction is nil")
-	}
-	if table == nil {
-		return 0, errors.New("user model is nil")
-	}
-	if ctx == nil {
-		return 0, errors.New("context is nil")
-	}
+func (d *userInterestsDao) CreateByTx(ctx context.Context, tx *gorm.DB, table *model.UserInterests) error {
 	err := tx.WithContext(ctx).Create(table).Error
-	return table.ID, err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // DeleteByTx delete a record by id in the database using the provided transaction
-func (d *usersDao) DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error {
+func (d *userInterestsDao) DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error {
 	update := map[string]interface{}{
 		"deleted_at": time.Now(),
 	}
-	err := tx.WithContext(ctx).Model(&model.Users{}).Where("id = ?", id).Updates(update).Error
+	err := tx.WithContext(ctx).Model(&model.UserInterests{}).Where("id = ?", id).Updates(update).Error
 	if err != nil {
 		return err
 	}
@@ -449,7 +385,7 @@ func (d *usersDao) DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
 }
 
 // UpdateByTx update a record by id in the database using the provided transaction
-func (d *usersDao) UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.Users) error {
+func (d *userInterestsDao) UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.UserInterests) error {
 	err := d.updateDataByID(ctx, tx, table)
 
 	// delete cache

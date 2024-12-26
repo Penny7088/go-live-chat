@@ -522,8 +522,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
-                        "name": "token",
+                        "description": "Authorization",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1964,6 +1964,323 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/userInterests": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "submit information to create userInterests",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "userInterests"
+                ],
+                "summary": "create userInterests",
+                "parameters": [
+                    {
+                        "description": "userInterests information",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.CreateUserInterestsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.CreateUserInterestsReply"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/userInterests/condition": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "get userInterests by condition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "userInterests"
+                ],
+                "summary": "get userInterests by condition",
+                "parameters": [
+                    {
+                        "description": "query condition",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.Conditions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.GetUserInterestsByConditionReply"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/userInterests/delete/ids": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "delete userInterestss by batch id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "userInterests"
+                ],
+                "summary": "delete userInterestss",
+                "parameters": [
+                    {
+                        "description": "id array",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.DeleteUserInterestssByIDsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.DeleteUserInterestssByIDsReply"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/userInterests/list": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "list of userInterestss by last id and limit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "userInterests"
+                ],
+                "summary": "list of userInterestss by last id and limit",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "last id, default is MaxInt32",
+                        "name": "lastID",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "number per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "-id",
+                        "description": "sort by column name of table, and the ",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.ListUserInterestssReply"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "list of userInterestss by paging and conditions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "userInterests"
+                ],
+                "summary": "list of userInterestss by query parameters",
+                "parameters": [
+                    {
+                        "description": "query parameters",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.Params"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.ListUserInterestssReply"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/userInterests/list/ids": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "list of userInterestss by batch id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "userInterests"
+                ],
+                "summary": "list of userInterestss by batch id",
+                "parameters": [
+                    {
+                        "description": "id array",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ListUserInterestssByIDsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.ListUserInterestssByIDsReply"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/userInterests/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "get userInterests detail by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "userInterests"
+                ],
+                "summary": "get userInterests detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.GetUserInterestsByIDReply"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "delete userInterests by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "userInterests"
+                ],
+                "summary": "delete userInterests",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.DeleteUserInterestsByIDReply"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "post": {
                 "security": [
@@ -2350,6 +2667,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/updateUserInfo/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "update user info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "update user info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "platform - ios/android",
+                        "name": "platform",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "deviceToken device id",
+                        "name": "deviceToken",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "users information",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.UpdateUsersByIDRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.GetUsersByIDReply"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/{id}": {
             "get": {
                 "security": [
@@ -2722,6 +3106,40 @@ const docTemplate = `{
                 }
             }
         },
+        "types.CreateUserInterestsReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data",
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "description": "id",
+                            "type": "integer"
+                        }
+                    }
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.CreateUserInterestsRequest": {
+            "type": "object",
+            "properties": {
+                "tagID": {
+                    "type": "integer"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
         "types.CreateUsersReply": {
             "type": "object",
             "properties": {
@@ -3026,6 +3444,51 @@ const docTemplate = `{
                 }
             }
         },
+        "types.DeleteUserInterestsByIDReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data"
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.DeleteUserInterestssByIDsReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data"
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.DeleteUserInterestssByIDsRequest": {
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "description": "id list",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "types.DeleteUsersByIDReply": {
             "type": "object",
             "properties": {
@@ -3313,6 +3776,50 @@ const docTemplate = `{
                 }
             }
         },
+        "types.GetUserInterestsByConditionReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data",
+                    "type": "object",
+                    "properties": {
+                        "userInterests": {
+                            "$ref": "#/definitions/types.UserInterestsObjDetail"
+                        }
+                    }
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.GetUserInterestsByIDReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data",
+                    "type": "object",
+                    "properties": {
+                        "userInterests": {
+                            "$ref": "#/definitions/types.UserInterestsObjDetail"
+                        }
+                    }
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
         "types.GetUsersByConditionReply": {
             "type": "object",
             "properties": {
@@ -3346,7 +3853,7 @@ const docTemplate = `{
                     "description": "return data",
                     "type": "object",
                     "properties": {
-                        "users": {
+                        "user": {
                             "$ref": "#/definitions/types.UsersObjDetail"
                         }
                     }
@@ -3708,6 +4215,69 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/types.UserDevicesObjDetail"
+                            }
+                        }
+                    }
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.ListUserInterestssByIDsReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data",
+                    "type": "object",
+                    "properties": {
+                        "userInterestss": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.UserInterestsObjDetail"
+                            }
+                        }
+                    }
+                },
+                "msg": {
+                    "description": "return information description",
+                    "type": "string"
+                }
+            }
+        },
+        "types.ListUserInterestssByIDsRequest": {
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "description": "id list",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "types.ListUserInterestssReply": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "return code",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "return data",
+                    "type": "object",
+                    "properties": {
+                        "userInterestss": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.UserInterestsObjDetail"
                             }
                         }
                     }
@@ -4190,14 +4760,14 @@ const docTemplate = `{
                 "age": {
                     "type": "integer"
                 },
+                "birthDate": {
+                    "type": "string"
+                },
                 "countryID": {
                     "type": "integer"
                 },
                 "email": {
                     "type": "string"
-                },
-                "emailVerified": {
-                    "type": "integer"
                 },
                 "gender": {
                     "type": "string"
@@ -4207,12 +4777,12 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "interests": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "languageLevel": {
-                    "type": "string"
-                },
-                "lastLogin": {
                     "type": "string"
                 },
                 "learningLanguageID": {
@@ -4227,19 +4797,7 @@ const docTemplate = `{
                 "profilePicture": {
                     "type": "string"
                 },
-                "registrationDate": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "tokenExpiration": {
-                    "type": "string"
-                },
                 "username": {
-                    "type": "string"
-                },
-                "verificationToken": {
                     "type": "string"
                 }
             }
@@ -4261,6 +4819,23 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "lastActive": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "types.UserInterestsObjDetail": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "tagID": {
+                    "type": "integer"
+                },
+                "updatedAt": {
                     "type": "string"
                 },
                 "userID": {

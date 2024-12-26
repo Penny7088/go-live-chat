@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	UserTokenExpireTime    = 15 * time.Second // / 15分钟过期时间
-	RefreshTokenExpireTime = 24 * time.Hour   // / 1天过期时间
+	UserTokenExpireTime    = 24 * time.Hour     // / 15分钟过期时间
+	RefreshTokenExpireTime = 7 * 24 * time.Hour // / 1天过期时间
 
 	// cache prefix key, must end with a colon
 	tokenCachePrefixKey = "access_token:"

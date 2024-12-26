@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math"
+	"time"
 
 	"cloud.google.com/go/auth/credentials/idtoken"
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,7 @@ type UsersHandler interface {
 	LoginFromEmail(c *gin.Context)
 	SignUpFromEmail(c *gin.Context)
 	ResetPassword(c *gin.Context)
+	UpdateUserInfoByID(c *gin.Context)
 }
 
 type usersHandler struct {
@@ -55,6 +57,7 @@ type usersHandler struct {
 	deviceDao         dao.UserDevicesDao
 	userCache         cache.UsersCache
 	globalConfigCache cache.GlobalConfigCache
+	userInterestsDao  dao.UserInterestsDao
 }
 
 // NewUsersHandler creating the handler interface
@@ -68,6 +71,7 @@ func NewUsersHandler() UsersHandler {
 		deviceDao:         dao.NewUserDevicesDao(model.GetDB(), cache.NewUserDevicesCache(model.GetCacheType())),
 		userCache:         cache.NewUsersCache(model.GetCacheType()),
 		globalConfigCache: cache.NewGlobalConfigCache(model.GetCacheType()),
+		userInterestsDao:  dao.NewUserInterestsDao(model.GetDB(), cache.NewUserInterestsCache(model.GetCacheType())),
 	}
 }
 
@@ -534,6 +538,81 @@ func (h *usersHandler) DeleteByID(c *gin.Context) {
 	}
 
 	response.Success(c)
+}
+
+// UpdateUserInfoByID  update user info
+// @Summary  update user info
+// @Description  update user info
+// @Tags users
+// @accept json
+// @Produce json
+// @Param Authorization header string true "Authorization"
+// @Param platform header string true "platform - ios/android"
+// @Param deviceToken header string true "deviceToken device id"
+// @Param id path string true "id"
+// @Param data body types.UpdateUsersByIDRequest true "users information"
+// @Success 200 {object} types.GetUsersByIDReply{}
+// @Router /api/v1/users/updateUserInfo/{id} [put]
+// @Security BearerAuth
+func (h *usersHandler) UpdateUserInfoByID(c *gin.Context) {
+	_, id, isAbort := getUsersIDFromPath(c)
+	if isAbort {
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	form := &types.UpdateUsersByIDRequest{}
+	err := c.ShouldBindJSON(form)
+	if err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	form.ID = id
+
+	users := &model.Users{}
+	err = copier.Copy(users, form)
+	if err != nil {
+		response.Error(c, ecode.ErrUpdateByIDUsers)
+		return
+	}
+	users.RegistrationDate = time.Now()
+	ctx := middleware.WrapCtx(c)
+	db := model.GetDB()
+	err = db.Transaction(func(db *gorm.DB) error {
+		err2 := h.iDao.UpdateByTx(ctx, db, users)
+		if err2 != nil {
+			logger.Error("UpdateByID error", logger.Err(err), logger.Any("form", form), middleware.GCtxRequestIDField(c))
+			return err2
+		}
+
+		if len(form.Interests) > 0 {
+			interests := form.Interests
+			for _, tagId := range interests {
+				userInterests := &model.UserInterests{
+					UserID: int64(form.ID),
+					TagID:  tagId,
+				}
+
+				if err := h.userInterestsDao.CreateByTx(ctx, db, userInterests); err != nil {
+					if errors.Is(err, gorm.ErrDuplicatedKey) {
+						continue
+					} else {
+						return err
+					}
+				}
+
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		h.handleError(c, err, ecode.ErrUpdateByIDUsers)
+	}
+
+	response.Success(c, gin.H{"user": users})
+
 }
 
 // UpdateByID update information by id
