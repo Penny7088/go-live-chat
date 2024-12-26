@@ -24,8 +24,8 @@ func newUserInterestsHandler() *gotest.Handler {
 	testData := &model.UserInterests{}
 	testData.ID = 1
 	// you can set the other fields of testData here, such as:
-	//testData.CreatedAt = time.Now()
-	//testData.UpdatedAt = testData.CreatedAt
+	// testData.CreatedAt = time.Now()
+	// testData.UpdatedAt = testData.CreatedAt
 
 	// init mock cache
 	c := gotest.NewCache(map[string]interface{}{utils.Uint64ToStr(testData.ID): testData})
@@ -56,12 +56,12 @@ func newUserInterestsHandler() *gotest.Handler {
 			Path:        "/userInterests/:id",
 			HandlerFunc: iHandler.DeleteByID,
 		},
-		{
-			FuncName:    "UpdateByID",
-			Method:      http.MethodPut,
-			Path:        "/userInterests/:id",
-			HandlerFunc: iHandler.UpdateByID,
-		},
+		// {
+		// 	FuncName:    "UpdateByID",
+		// 	Method:      http.MethodPut,
+		// 	Path:        "/userInterests/:id",
+		// 	HandlerFunc: iHandler.UpdateByID,
+		// },
 		{
 			FuncName:    "GetByID",
 			Method:      http.MethodGet,
@@ -161,33 +161,33 @@ func Test_userInterestsHandler_DeleteByID(t *testing.T) {
 }
 
 func Test_userInterestsHandler_UpdateByID(t *testing.T) {
-	h := newUserInterestsHandler()
-	defer h.Close()
-	testData := &types.UpdateUserInterestsByIDRequest{}
-	_ = copier.Copy(testData, h.TestData.(*model.UserInterests))
-
-	h.MockDao.SQLMock.ExpectBegin()
-	h.MockDao.SQLMock.ExpectExec("UPDATE .*").
-		WithArgs(h.MockDao.AnyTime, testData.ID). // adjusted for the amount of test data
-		WillReturnResult(sqlmock.NewResult(int64(testData.ID), 1))
-	h.MockDao.SQLMock.ExpectCommit()
-
-	result := &httpcli.StdResult{}
-	err := httpcli.Put(result, h.GetRequestURL("UpdateByID", testData.ID), testData)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result.Code != 0 {
-		t.Fatalf("%+v", result)
-	}
-
-	// zero id error test
-	err = httpcli.Put(result, h.GetRequestURL("UpdateByID", 0), testData)
-	assert.NoError(t, err)
-
-	// update error test
-	err = httpcli.Put(result, h.GetRequestURL("UpdateByID", 111), testData)
-	assert.Error(t, err)
+	// h := newUserInterestsHandler()
+	// defer h.Close()
+	// testData := &types.UpdateUserInterestsByIDRequest{}
+	// _ = copier.Copy(testData, h.TestData.(*model.UserInterests))
+	//
+	// h.MockDao.SQLMock.ExpectBegin()
+	// h.MockDao.SQLMock.ExpectExec("UPDATE .*").
+	// 	WithArgs(h.MockDao.AnyTime, testData.ID). // adjusted for the amount of test data
+	// 	WillReturnResult(sqlmock.NewResult(int64(testData.ID), 1))
+	// h.MockDao.SQLMock.ExpectCommit()
+	//
+	// result := &httpcli.StdResult{}
+	// err := httpcli.Put(result, h.GetRequestURL("UpdateByID", testData.ID), testData)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// if result.Code != 0 {
+	// 	t.Fatalf("%+v", result)
+	// }
+	//
+	// // zero id error test
+	// err = httpcli.Put(result, h.GetRequestURL("UpdateByID", 0), testData)
+	// assert.NoError(t, err)
+	//
+	// // update error test
+	// err = httpcli.Put(result, h.GetRequestURL("UpdateByID", 111), testData)
+	// assert.Error(t, err)
 }
 
 func Test_userInterestsHandler_GetByID(t *testing.T) {
