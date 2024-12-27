@@ -6,7 +6,9 @@ import (
 	"github.com/zhufuyi/sponge/pkg/gin/middleware"
 	"github.com/zhufuyi/sponge/pkg/gin/response"
 	"github.com/zhufuyi/sponge/pkg/logger"
+	"gorm.io/gorm"
 	"lingua_exchange/internal/cache"
+	"lingua_exchange/internal/dao"
 	"lingua_exchange/internal/ecode"
 	"lingua_exchange/internal/model"
 	"lingua_exchange/internal/types"
@@ -16,18 +18,22 @@ import (
 )
 
 type GlobalConfigHandler interface {
-	LoginMethod(c *gin.Context)
+	GlobalConfig(c *gin.Context)
 	SendResetPasswordCode(c *gin.Context)
 	SendSignUpVerifyCode(c *gin.Context)
 }
 
 type globalConfigHandler struct {
-	cache cache.GlobalConfigCache
+	cache       cache.GlobalConfigCache
+	countryDao  dao.CountriesDao
+	languageDao dao.LanguagesDao
 }
 
 func NewGlobalConfigHandler() GlobalConfigHandler {
 	return &globalConfigHandler{
-		cache: cache.NewGlobalConfigCache(model.GetCacheType()),
+		cache:       cache.NewGlobalConfigCache(model.GetCacheType()),
+		countryDao:  dao.NewCountriesDao(model.GetDB(), cache.NewCountriesCache(model.GetCacheType())),
+		languageDao: dao.NewLanguagesDao(model.GetDB(), cache.NewLanguagesCache(model.GetCacheType())),
 	}
 }
 
@@ -55,15 +61,15 @@ func (g globalConfigHandler) SendResetPasswordCode(c *gin.Context) {
 	g.sendVerificationCode(c, cache.VCodeForgetType, "reset_pwd.html", "Your Reset Password code")
 }
 
-// LoginMethod  obtain login method
-// @Summary get user login method
-// @Description  Get different login methods based on the user's IP
-// @Tags    globalConfigma
+// GlobalConfig  obtain global config
+// @Summary get user global config
+// @Description  Get different global config  based on the user's IP
+// @Tags    全局配置
 // @accept  json
 // @Produce json
 // @Success 200 {object} types.LoginMethodReply{}
-// @Router /api/v1/globalConfig/loginMethod [get]
-func (g globalConfigHandler) LoginMethod(c *gin.Context) {
+// @Router /api/v1/globalConfig [get]
+func (g globalConfigHandler) GlobalConfig(c *gin.Context) {
 	clientIP := c.ClientIP()
 	if clientIP == "" {
 		logger.Warn("ip is nil  error: ", middleware.GCtxRequestIDField(c))
@@ -77,8 +83,34 @@ func (g globalConfigHandler) LoginMethod(c *gin.Context) {
 		methods = queryLoginMethodFromCH()
 	}
 
+	wrapCtx := middleware.WrapCtx(c)
+	db := model.GetDB()
+	var allCountries []*model.Countries
+	var allLanguages []*model.Languages
+
+	err := db.Transaction(func(tx *gorm.DB) (err error) {
+		allCountries, err = g.countryDao.QueryAllCountriesByTx(wrapCtx, tx)
+		if err != nil {
+			return err
+		}
+
+		allLanguages, err = g.languageDao.QueryAllLanguagesByTx(wrapCtx, tx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGlobalConfig)
+		return
+	}
+
 	response.Success(c, gin.H{
 		"loginMethod": methods,
+		"countries":   allCountries,
+		"languages":   allLanguages,
 	})
 }
 

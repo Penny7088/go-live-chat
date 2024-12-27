@@ -14,7 +14,8 @@ import (
 
 const (
 	// cache prefix key, must end with a colon
-	languagesCachePrefixKey = "languages:"
+	languagesCachePrefixKey   = "languages:"
+	allLanguageCachePrefixKey = "allLanguages:"
 	// LanguagesExpireTime expire time
 	LanguagesExpireTime = 5 * time.Minute
 )
@@ -29,6 +30,8 @@ type LanguagesCache interface {
 	MultiSet(ctx context.Context, data []*model.Languages, duration time.Duration) error
 	Del(ctx context.Context, id uint64) error
 	SetCacheWithNotFound(ctx context.Context, id uint64) error
+	SetAllLanguages(ctx context.Context, data []*model.Languages, duration time.Duration) error
+	GetAllLanguages(ctx context.Context) ([]*model.Languages, error)
 }
 
 // languagesCache define a cache struct
@@ -58,9 +61,36 @@ func NewLanguagesCache(cacheType *model.CacheType) LanguagesCache {
 	return nil // no cache
 }
 
+// GetAllLanguagesCacheKey cache key
+func (c *languagesCache) GetAllLanguagesCacheKey() string {
+	return allLanguageCachePrefixKey
+}
+
 // GetLanguagesCacheKey cache key
 func (c *languagesCache) GetLanguagesCacheKey(id uint64) string {
 	return languagesCachePrefixKey + utils.Uint64ToStr(id)
+}
+
+func (c *languagesCache) SetAllLanguages(ctx context.Context, data []*model.Languages, duration time.Duration) error {
+	if data == nil || len(data) == 0 {
+		return nil
+	}
+	key := c.GetAllLanguagesCacheKey()
+	err := c.cache.Set(ctx, key, data, duration)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *languagesCache) GetAllLanguages(ctx context.Context) ([]*model.Languages, error) {
+	var data []*model.Languages
+	key := c.GetAllLanguagesCacheKey()
+	err := c.cache.Get(ctx, key, &data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // Set write to cache

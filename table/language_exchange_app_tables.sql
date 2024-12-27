@@ -1,29 +1,27 @@
 -- 用户表 (users)
 CREATE TABLE users
 (
-    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
-    email                VARCHAR(255) UNIQUE,
-    username             VARCHAR(100) NOT NULL,
-    password_hash        VARCHAR(255),
-    profile_picture      VARCHAR(255),
-    native_language_id   BIGINT,
-    learning_language_id BIGINT,
-    language_level       VARCHAR(50),
-    age                  INT,
-    gender               ENUM ('male', 'female', 'other'),
-    interests            TEXT,
-    country_id           BIGINT,
-    registration_date    TIMESTAMP                             DEFAULT CURRENT_TIMESTAMP,
-    last_login           TIMESTAMP,
-    status               ENUM ('active', 'inactive', 'banned') DEFAULT 'active',
-    email_verified       BOOLEAN                               DEFAULT FALSE,
-    verification_token   VARCHAR(255),
-    token_expiration     TIMESTAMP,
-    created_at           datetime     null,
-    updated_at           datetime     null,
-    deleted_at           datetime     null,
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email              VARCHAR(255) UNIQUE,
+    username           VARCHAR(100) NOT NULL,
+    password_hash      VARCHAR(255),
+    profile_picture    VARCHAR(255),
+    native_language_id BIGINT,
+    age                INT,
+    gender             ENUM ('male', 'female', 'other'),
+    interests          TEXT,
+    country_id         BIGINT,
+    registration_date  TIMESTAMP                             DEFAULT CURRENT_TIMESTAMP,
+    last_login         TIMESTAMP,
+    status             ENUM ('active', 'inactive', 'banned') DEFAULT 'active',
+    email_verified     BOOLEAN                               DEFAULT FALSE,
+    verification_token VARCHAR(255),
+    token_expiration   TIMESTAMP,
+    birth_date         datetime     null,
+    created_at         datetime     null,
+    updated_at         datetime     null,
+    deleted_at         datetime     null,
     FOREIGN KEY (native_language_id) REFERENCES languages (id) ON DELETE SET NULL,
-    FOREIGN KEY (learning_language_id) REFERENCES languages (id) ON DELETE SET NULL,
     FOREIGN KEY (country_id) REFERENCES countries (id) ON DELETE SET NULL
 );
 
@@ -49,7 +47,8 @@ CREATE TABLE languages
     iso_code    VARCHAR(10) UNIQUE NOT NULL,
     created_at  datetime           null,
     updated_at  datetime           null,
-    deleted_at  datetime           null
+    deleted_at  datetime           null,
+    visit_name VARCHAR(100)       NOT NULL
 );
 
 -- 国家表 (countries)
@@ -57,7 +56,9 @@ CREATE TABLE countries
 (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     name       VARCHAR(100)       NOT NULL,
+    visit_name VARCHAR(100)       NOT NULL,
     iso_code   VARCHAR(10) UNIQUE NOT NULL,
+    phone_code int UNIQUE NOT NULL,
     created_at datetime           null,
     updated_at datetime           null,
     deleted_at datetime           null
@@ -103,6 +104,21 @@ CREATE TABLE user_devices
     INDEX (user_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
+
+-- 用户学习语言表
+CREATE TABLE user_languages
+(
+    user_id        BIGINT   NOT NULL,
+    language_id    BIGINT   NOT NULL,
+    language_level VARCHAR(50),
+    created_at     datetime DEFAULT CURRENT_TIMESTAMP,
+    updated_at     datetime DEFAULT CURRENT_TIMESTAMP,
+    deleted_at     datetime null,
+    PRIMARY KEY (user_id, language_id), -- 组合主键
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (language_id) REFERENCES languages (id) ON DELETE CASCADE
+);
+
 
 -- 聊天绘画列表
 CREATE TABLE talk_session

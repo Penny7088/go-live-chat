@@ -58,6 +58,7 @@ type usersHandler struct {
 	userCache         cache.UsersCache
 	globalConfigCache cache.GlobalConfigCache
 	userInterestsDao  dao.UserInterestsDao
+	userLanguagesDao  dao.UserLanguagesDao
 }
 
 // NewUsersHandler creating the handler interface
@@ -72,6 +73,7 @@ func NewUsersHandler() UsersHandler {
 		userCache:         cache.NewUsersCache(model.GetCacheType()),
 		globalConfigCache: cache.NewGlobalConfigCache(model.GetCacheType()),
 		userInterestsDao:  dao.NewUserInterestsDao(model.GetDB(), cache.NewUserInterestsCache(model.GetCacheType())),
+		userLanguagesDao:  dao.NewUserLanguagesDao(model.GetDB(), cache.NewUserLanguagesCache(model.GetCacheType())),
 	}
 }
 
@@ -242,21 +244,19 @@ func (h *usersHandler) verifyCode(c *gin.Context, email string, code string, cod
 // buildUserDetailResponse  组装用户数据
 func (h *usersHandler) buildUserDetailResponse(users *model.Users, token string, refreshToken string, newUser bool) *types.UsersObjDetail {
 	data := &types.UsersObjDetail{
-		ID:                 users.ID,
-		Email:              users.Email,
-		ProfilePicture:     users.ProfilePicture,
-		EmailVerified:      users.EmailVerified,
-		Token:              token,
-		RefreshToken:       refreshToken,
-		Username:           users.Username,
-		LanguageLevel:      users.LanguageLevel,
-		CountryID:          users.CountryID,
-		NativeLanguageID:   users.NativeLanguageID,
-		LearningLanguageID: users.LearningLanguageID,
-		Age:                users.Age,
-		Gender:             users.Gender,
-		RegistrationDate:   users.RegistrationDate,
-		IsNewUser:          newUser, // 由于此时用户是新注册的，所以直接赋值为 true。
+		ID:               users.ID,
+		Email:            users.Email,
+		ProfilePicture:   users.ProfilePicture,
+		EmailVerified:    users.EmailVerified,
+		Token:            token,
+		RefreshToken:     refreshToken,
+		Username:         users.Username,
+		CountryID:        users.CountryID,
+		NativeLanguageID: users.NativeLanguageID,
+		Age:              users.Age,
+		Gender:           users.Gender,
+		RegistrationDate: users.RegistrationDate,
+		IsNewUser:        newUser, // 由于此时用户是新注册的，所以直接赋值为 true。
 	}
 
 	// 使用 copier 复制用户信息
@@ -583,6 +583,20 @@ func (h *usersHandler) UpdateUserInfoByID(c *gin.Context) {
 		if err2 != nil {
 			logger.Error("UpdateByID error", logger.Err(err), logger.Any("form", form), middleware.GCtxRequestIDField(c))
 			return err2
+		}
+
+		learnLanModel := &model.UserLanguages{
+			UserID:        int64(form.ID),
+			LanguageID:    form.LearningLanguageID,
+			LanguageLevel: form.LanguageLevel,
+		}
+
+		if err := h.userLanguagesDao.CreateByTx(ctx, db, learnLanModel); err != nil {
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				logger.Warn("learn language ErrDuplicatedKey error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+			} else {
+				return err
+			}
 		}
 
 		if len(form.Interests) > 0 {

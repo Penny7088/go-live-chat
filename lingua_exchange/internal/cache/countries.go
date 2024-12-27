@@ -14,7 +14,8 @@ import (
 
 const (
 	// cache prefix key, must end with a colon
-	countriesCachePrefixKey = "countries:"
+	countriesCachePrefixKey    = "countries:"
+	allCountriesCachePrefixKey = "allCountries:"
 	// CountriesExpireTime expire time
 	CountriesExpireTime = 5 * time.Minute
 )
@@ -29,6 +30,8 @@ type CountriesCache interface {
 	MultiSet(ctx context.Context, data []*model.Countries, duration time.Duration) error
 	Del(ctx context.Context, id uint64) error
 	SetCacheWithNotFound(ctx context.Context, id uint64) error
+	SetAllCountries(ctx context.Context, data []*model.Countries, duration time.Duration) error
+	GetAllCountries(ctx context.Context) ([]*model.Countries, error)
 }
 
 // countriesCache define a cache struct
@@ -58,6 +61,11 @@ func NewCountriesCache(cacheType *model.CacheType) CountriesCache {
 	return nil // no cache
 }
 
+// GetAllCountriesCacheKey cache key
+func (c *countriesCache) GetAllCountriesCacheKey() string {
+	return allCountriesCachePrefixKey
+}
+
 // GetCountriesCacheKey cache key
 func (c *countriesCache) GetCountriesCacheKey(id uint64) string {
 	return countriesCachePrefixKey + utils.Uint64ToStr(id)
@@ -74,6 +82,28 @@ func (c *countriesCache) Set(ctx context.Context, id uint64, data *model.Countri
 		return err
 	}
 	return nil
+}
+
+func (c *countriesCache) SetAllCountries(ctx context.Context, data []*model.Countries, duration time.Duration) error {
+	if data == nil || len(data) == 0 {
+		return nil
+	}
+	key := c.GetAllCountriesCacheKey()
+	err := c.cache.Set(ctx, key, data, duration)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *countriesCache) GetAllCountries(ctx context.Context) ([]*model.Countries, error) {
+	var data []*model.Countries
+	key := c.GetAllCountriesCacheKey()
+	err := c.cache.Get(ctx, key, &data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // Get cache value

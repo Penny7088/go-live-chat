@@ -13,6 +13,8 @@ type LoginMethodReply struct {
 	Msg  string `json:"msg"`  // return information description
 	Data struct {
 		LoginMethods LoginMethodDetailReply `json:"loginMethod"`
+		Countries    []CountriesObjDetail   `json:"countries"`
+		Languages    []LanguagesObjDetail   `json:"languages"`
 	} `json:"data"`
 }
 

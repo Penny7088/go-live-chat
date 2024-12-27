@@ -11,4 +11,5 @@ var (
 	ErrSendCode                   = errcode.NewError(globalConfigBaseCode+4, "Verification code send fail"+globalConfigName)
 	ErrGetCode                    = errcode.NewError(globalConfigBaseCode+5, "get code "+globalConfigName)
 	ErrVerificationSentRepeatedly = errcode.NewError(globalConfigBaseCode+6, "Verification sent repeatedly "+globalConfigName)
+	ErrGlobalConfig               = errcode.NewError(globalConfigBaseCode+7, "global config error "+globalConfigName)
 )

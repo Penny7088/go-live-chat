@@ -35,6 +35,8 @@ type LanguagesDao interface {
 	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Languages) (uint64, error)
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
 	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.Languages) error
+	QueryAllLanguages(ctx context.Context) ([]*model.Languages, error)
+	QueryAllLanguagesByTx(ctx context.Context, tx *gorm.DB) ([]*model.Languages, error)
 }
 
 type languagesDao struct {
@@ -127,7 +129,7 @@ func (d *languagesDao) GetByID(ctx context.Context, id uint64) (*model.Languages
 
 	if errors.Is(err, model.ErrCacheNotFound) {
 		// for the same id, prevent high concurrent simultaneous access to database
-		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { //nolint
+		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { // nolint
 			table := &model.Languages{}
 			err = d.db.WithContext(ctx).Where("id = ?", id).First(table).Error
 			if err != nil {
@@ -386,4 +388,43 @@ func (d *languagesDao) UpdateByTx(ctx context.Context, tx *gorm.DB, table *model
 	_ = d.deleteCache(ctx, table.ID)
 
 	return err
+}
+
+func (d *languagesDao) QueryAllLanguages(ctx context.Context) ([]*model.Languages, error) {
+	languages, err := d.cache.GetAllLanguages(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+	if languages != nil && len(languages) > 0 {
+		return languages, nil
+	}
+
+	database, err := d.queryAllLanguages(d.db)
+	d.cache.SetAllLanguages(ctx, database, 7*24*time.Hour)
+	return database, err
+}
+
+func (d *languagesDao) QueryAllLanguagesByTx(ctx context.Context, tx *gorm.DB) ([]*model.Languages, error) {
+	languages, err := d.cache.GetAllLanguages(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if languages != nil && len(languages) > 0 {
+		return languages, nil
+	}
+
+	byTx, err := d.queryAllLanguages(tx.WithContext(ctx))
+	d.cache.SetAllLanguages(ctx, byTx, 7*24*time.Hour)
+	return byTx, err
+}
+
+func (d *languagesDao) queryAllLanguages(db *gorm.DB) ([]*model.Languages, error) {
+	var lan []*model.Languages
+	if err := db.Find(&lan).Error; err != nil {
+		return nil, err
+	}
+	return lan, nil
 }

@@ -14,7 +14,7 @@ func init() {
 func globalConfigRouter(group *gin.RouterGroup, h handler.GlobalConfigHandler) {
 	g := group.Group("/globalConfig")
 
-	g.GET("/loginMethod", h.LoginMethod)                      //  [get] api/vi/globalConfig/loginMethod
-	g.POST("/sendSignUpVerifyCode", h.SendSignUpVerifyCode)   // [post] api/vi/globalConfig/sendSignUpVerifyCode
-	g.POST("/sendResetPasswordCode", h.SendResetPasswordCode) // [post] api/vi/globalConfig/sendResetPasswordCode
+	g.GET("/", h.GlobalConfig)                                //  [get] api/v1/globalConfig/loginMethod
+	g.POST("/sendSignUpVerifyCode", h.SendSignUpVerifyCode)   // [post] api/v1/globalConfig/sendSignUpVerifyCode
+	g.POST("/sendResetPasswordCode", h.SendResetPasswordCode) // [post] api/v1/globalConfig/sendResetPasswordCode
 }
