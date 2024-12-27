@@ -394,32 +394,12 @@ func (d *countriesDao) UpdateByTx(ctx context.Context, tx *gorm.DB, table *model
 }
 
 func (d *countriesDao) QueryAllCountries(ctx context.Context) ([]*model.Countries, error) {
-	countries, err := d.cache.GetAllCountries(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-	if countries != nil && len(countries) > 0 {
-		return countries, nil
-	}
-
 	database, err := d.queryAllCountries(d.db)
-	d.cache.SetAllCountries(ctx, database, 7*24*time.Hour)
 	return database, err
 }
 
 func (d *countriesDao) QueryAllCountriesByTx(ctx context.Context, tx *gorm.DB) ([]*model.Countries, error) {
-	countries, err := d.cache.GetAllCountries(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if countries != nil && len(countries) > 0 {
-		return countries, nil
-	}
 	byTx, err := d.queryAllCountries(tx.WithContext(ctx))
-	d.cache.SetAllCountries(ctx, byTx, 7*24*time.Hour)
 	return byTx, err
 }
 

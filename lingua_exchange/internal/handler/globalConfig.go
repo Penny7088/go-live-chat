@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/zhufuyi/sponge/pkg/errcode"
 	"github.com/zhufuyi/sponge/pkg/gin/middleware"
@@ -24,16 +26,20 @@ type GlobalConfigHandler interface {
 }
 
 type globalConfigHandler struct {
-	cache       cache.GlobalConfigCache
-	countryDao  dao.CountriesDao
-	languageDao dao.LanguagesDao
+	cache          cache.GlobalConfigCache
+	countryDao     dao.CountriesDao
+	languageDao    dao.LanguagesDao
+	cacheCountries cache.CountriesCache
+	cacheLanguage  cache.LanguagesCache
 }
 
 func NewGlobalConfigHandler() GlobalConfigHandler {
 	return &globalConfigHandler{
-		cache:       cache.NewGlobalConfigCache(model.GetCacheType()),
-		countryDao:  dao.NewCountriesDao(model.GetDB(), cache.NewCountriesCache(model.GetCacheType())),
-		languageDao: dao.NewLanguagesDao(model.GetDB(), cache.NewLanguagesCache(model.GetCacheType())),
+		cache:          cache.NewGlobalConfigCache(model.GetCacheType()),
+		countryDao:     dao.NewCountriesDao(model.GetDB(), cache.NewCountriesCache(model.GetCacheType())),
+		languageDao:    dao.NewLanguagesDao(model.GetDB(), cache.NewLanguagesCache(model.GetCacheType())),
+		cacheCountries: cache.NewCountriesCache(model.GetCacheType()),
+		cacheLanguage:  cache.NewLanguagesCache(model.GetCacheType()),
 	}
 }
 
@@ -87,6 +93,18 @@ func (g globalConfigHandler) GlobalConfig(c *gin.Context) {
 	db := model.GetDB()
 	var allCountries []*model.Countries
 	var allLanguages []*model.Languages
+	allCountries, _ = g.cacheCountries.GetAllCountries(wrapCtx)
+	allLanguages, _ = g.cacheLanguage.GetAllLanguages(wrapCtx)
+
+	if (allCountries != nil && len(allCountries) > 0) && (allLanguages != nil && len(allLanguages) > 0) {
+		logger.Info("from cache...")
+		response.Success(c, gin.H{
+			"loginMethod": methods,
+			"countries":   allCountries,
+			"languages":   allLanguages,
+		})
+		return
+	}
 
 	err := db.Transaction(func(tx *gorm.DB) (err error) {
 		allCountries, err = g.countryDao.QueryAllCountriesByTx(wrapCtx, tx)
@@ -106,6 +124,9 @@ func (g globalConfigHandler) GlobalConfig(c *gin.Context) {
 		response.Error(c, ecode.ErrGlobalConfig)
 		return
 	}
+
+	g.cacheCountries.SetAllCountries(wrapCtx, allCountries, 7*24*time.Hour)
+	g.cacheLanguage.SetAllLanguages(wrapCtx, allLanguages, 7*24*time.Hour)
 
 	response.Success(c, gin.H{
 		"loginMethod": methods,

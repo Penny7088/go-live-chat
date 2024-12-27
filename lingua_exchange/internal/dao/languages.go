@@ -391,33 +391,13 @@ func (d *languagesDao) UpdateByTx(ctx context.Context, tx *gorm.DB, table *model
 }
 
 func (d *languagesDao) QueryAllLanguages(ctx context.Context) ([]*model.Languages, error) {
-	languages, err := d.cache.GetAllLanguages(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-	if languages != nil && len(languages) > 0 {
-		return languages, nil
-	}
-
 	database, err := d.queryAllLanguages(d.db)
-	d.cache.SetAllLanguages(ctx, database, 7*24*time.Hour)
 	return database, err
+
 }
 
 func (d *languagesDao) QueryAllLanguagesByTx(ctx context.Context, tx *gorm.DB) ([]*model.Languages, error) {
-	languages, err := d.cache.GetAllLanguages(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if languages != nil && len(languages) > 0 {
-		return languages, nil
-	}
-
 	byTx, err := d.queryAllLanguages(tx.WithContext(ctx))
-	d.cache.SetAllLanguages(ctx, byTx, 7*24*time.Hour)
 	return byTx, err
 }
 
