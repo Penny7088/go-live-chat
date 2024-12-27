@@ -377,9 +377,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/globalConfig/loginMethod": {
+        "/api/v1/globalConfig": {
             "get": {
-                "description": "Get different login methods based on the user's IP",
+                "description": "Get different global config  based on the user's IP",
                 "consumes": [
                     "application/json"
                 ],
@@ -387,9 +387,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "globalConfigma"
+                    "全局配置"
                 ],
-                "summary": "get user login method",
+                "summary": "get user global config",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4384,6 +4384,18 @@ const docTemplate = `{
                 "data": {
                     "type": "object",
                     "properties": {
+                        "countries": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.CountriesObjDetail"
+                            }
+                        },
+                        "languages": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.LanguagesObjDetail"
+                            }
+                        },
                         "loginMethod": {
                             "$ref": "#/definitions/types.LoginMethodDetailReply"
                         }

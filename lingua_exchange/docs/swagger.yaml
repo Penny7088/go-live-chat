@@ -1045,6 +1045,14 @@ definitions:
         type: integer
       data:
         properties:
+          countries:
+            items:
+              $ref: '#/definitions/types.CountriesObjDetail'
+            type: array
+          languages:
+            items:
+              $ref: '#/definitions/types.LanguagesObjDetail'
+            type: array
           loginMethod:
             $ref: '#/definitions/types.LoginMethodDetailReply'
         type: object
@@ -1646,11 +1654,11 @@ paths:
       summary: list of countriess by batch id
       tags:
       - countries
-  /api/v1/globalConfig/loginMethod:
+  /api/v1/globalConfig:
     get:
       consumes:
       - application/json
-      description: Get different login methods based on the user's IP
+      description: Get different global config  based on the user's IP
       produces:
       - application/json
       responses:
@@ -1658,9 +1666,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/types.LoginMethodReply'
-      summary: get user login method
+      summary: get user global config
       tags:
-      - globalConfigma
+      - 全局配置
   /api/v1/globalConfig/sendResetPasswordCode:
     post:
       consumes:
