@@ -112,12 +112,6 @@ func (d *usersDao) updateDataByID(ctx context.Context, db *gorm.DB, table *model
 	if table.NativeLanguageID != 0 {
 		update["native_language_id"] = table.NativeLanguageID
 	}
-	if table.LearningLanguageID != 0 {
-		update["learning_language_id"] = table.LearningLanguageID
-	}
-	if table.LanguageLevel != "" {
-		update["language_level"] = table.LanguageLevel
-	}
 	if table.Age != 0 {
 		update["age"] = table.Age
 	}
