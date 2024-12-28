@@ -30,7 +30,7 @@ type LanguagesCache interface {
 	MultiSet(ctx context.Context, data []*model.Languages, duration time.Duration) error
 	Del(ctx context.Context, id uint64) error
 	SetCacheWithNotFound(ctx context.Context, id uint64) error
-	SetAllLanguages(ctx context.Context, data []*model.Languages, duration time.Duration) error
+	SetAllLanguages(ctx context.Context, data *[]*model.Languages, duration time.Duration) error
 	GetAllLanguages(ctx context.Context) ([]*model.Languages, error)
 }
 
@@ -71,8 +71,8 @@ func (c *languagesCache) GetLanguagesCacheKey(id uint64) string {
 	return languagesCachePrefixKey + utils.Uint64ToStr(id)
 }
 
-func (c *languagesCache) SetAllLanguages(ctx context.Context, data []*model.Languages, duration time.Duration) error {
-	if data == nil || len(data) == 0 {
+func (c *languagesCache) SetAllLanguages(ctx context.Context, data *[]*model.Languages, duration time.Duration) error {
+	if data == nil {
 		return nil
 	}
 	key := c.GetAllLanguagesCacheKey()

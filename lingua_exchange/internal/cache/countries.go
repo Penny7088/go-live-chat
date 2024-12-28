@@ -30,7 +30,7 @@ type CountriesCache interface {
 	MultiSet(ctx context.Context, data []*model.Countries, duration time.Duration) error
 	Del(ctx context.Context, id uint64) error
 	SetCacheWithNotFound(ctx context.Context, id uint64) error
-	SetAllCountries(ctx context.Context, data []*model.Countries, duration time.Duration) error
+	SetAllCountries(ctx context.Context, data *[]*model.Countries, duration time.Duration) error
 	GetAllCountries(ctx context.Context) ([]*model.Countries, error)
 }
 
@@ -84,10 +84,12 @@ func (c *countriesCache) Set(ctx context.Context, id uint64, data *model.Countri
 	return nil
 }
 
-func (c *countriesCache) SetAllCountries(ctx context.Context, data []*model.Countries, duration time.Duration) error {
-	if data == nil || len(data) == 0 {
+func (c *countriesCache) SetAllCountries(ctx context.Context, data *[]*model.Countries, duration time.Duration) error {
+	if data == nil {
 		return nil
 	}
+	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
 	key := c.GetAllCountriesCacheKey()
 	err := c.cache.Set(ctx, key, data, duration)
 	if err != nil {

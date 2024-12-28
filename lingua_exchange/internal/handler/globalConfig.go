@@ -124,9 +124,14 @@ func (g globalConfigHandler) GlobalConfig(c *gin.Context) {
 		response.Error(c, ecode.ErrGlobalConfig)
 		return
 	}
-
-	g.cacheCountries.SetAllCountries(wrapCtx, allCountries, 7*24*time.Hour)
-	g.cacheLanguage.SetAllLanguages(wrapCtx, allLanguages, 7*24*time.Hour)
+	var pAllCountries = &allCountries
+	var pLanguages = &allLanguages
+	if err := g.cacheCountries.SetAllCountries(wrapCtx, pAllCountries, 7*24*time.Hour); err != nil {
+		logger.Warn("storage countries cache error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+	}
+	if err := g.cacheLanguage.SetAllLanguages(wrapCtx, pLanguages, 7*24*time.Hour); err != nil {
+		logger.Warn("storage languages error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+	}
 
 	response.Success(c, gin.H{
 		"loginMethod": methods,
