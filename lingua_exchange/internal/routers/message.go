@@ -4,8 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// todo 路由需要升级至websocket
 func init() {
-	apiV1RouterFns = append(apiV1RouterFns, func(r *gin.RouterGroup) {
+	apiWSRouterFns = append(apiWSRouterFns, func(r *gin.RouterGroup) {
 
 	})
 }
