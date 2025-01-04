@@ -1,23 +1,24 @@
-package ws
+package socket
 
 import (
 	"context"
 	"fmt"
-	"github.com/bytedance/sonic"
-	"github.com/google/uuid"
-	"github.com/zhufuyi/sponge/pkg/logger"
 	"log"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
+	"github.com/zhufuyi/sponge/pkg/logger"
 )
 
 const (
-	//ping
+	// ping
 	_MsgEventPing = "ping"
-	//pong
+	// pong
 	_MsgEventPong = "pong"
-	//ack
+	// ack
 	_MsgEventAck = "ack"
 )
 

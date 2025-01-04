@@ -120,7 +120,7 @@ CREATE TABLE user_languages
 );
 
 
--- 聊天绘画列表
+-- 聊天会话列表
 CREATE TABLE talk_session
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '聊天列表ID',
@@ -134,7 +134,6 @@ CREATE TABLE talk_session
     created_at  datetime            NOT NULL COMMENT '创建时间',
     updated_at  datetime            NOT NULL COMMENT '更新时间',
     deleted_at  datetime            NOT NULL COMMENT '删除时间',
-    PRIMARY KEY (id),
     UNIQUE KEY idx_user_id_receiver_id_talk_type (user_id, receiver_id, talk_type) USING BTREE,
     KEY idx_created_at (created_at) USING BTREE,
     KEY idx_updated_at (updated_at) USING BTREE
@@ -165,7 +164,73 @@ CREATE TABLE talk_records
     KEY idx_created_at (created_at) USING BTREE,
     KEY idx_updated_at (updated_at) USING BTREE
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4 COMMENT ='用户聊天记录表';;
+  DEFAULT CHARSET = utf8mb4 COMMENT ='用户聊天记录表';
+
+CREATE TABLE talk_records_delete
+(
+    `id`         int(11) unsigned NOT NULL AUTO_INCREMENT,
+    `msg_id`     varchar(64) NOT NULL DEFAULT '' COMMENT '聊天记录ID',
+    `user_id`    int(11) unsigned NOT NULL DEFAULT '0' COMMENT '用户ID',
+    `created_at` datetime    NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user_id_msg_id` (`user_id`,`msg_id`) USING BTREE,
+    KEY          `idx_created_at` (`created_at`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天记录删除记录表';
+
+CREATE TABLE `talk_records_read`
+(
+    `id`          bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID\n',
+    `msg_id`      varchar(64) NOT NULL DEFAULT '' COMMENT '消息ID',
+    `user_id`     int(11) unsigned NOT NULL DEFAULT '0' COMMENT '用户ID',
+    `receiver_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '接受者ID',
+    `created_at`  datetime    NOT NULL COMMENT '创建时间',
+    `updated_at`  datetime    NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_user_id_receiver_id_msg_id` (`user_id`,`receiver_id`,`msg_id`) USING BTREE,
+    KEY           `uk_msgid` (`msg_id`) USING BTREE,
+    KEY           `idx_created_at` (`created_at`) USING BTREE,
+    KEY           `idx_updated_at` (`updated_at`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户已读列表';
+
+
+CREATE TABLE `group_member`
+(
+    `id`         int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `group_id`   int(11) unsigned NOT NULL DEFAULT '0' COMMENT '群组ID',
+    `user_id`    int(11) unsigned NOT NULL DEFAULT '0' COMMENT '用户ID',
+    `leader`     tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '成员属性[0:普通成员;1:管理员;2:群主;]',
+    `user_card` varchar(64) NOT NULL DEFAULT '' COMMENT '群名片',
+    `is_quit`    tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否退群[0:否;1:是;]',
+    `is_mute`    tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否禁言[0:否;1:是;]',
+    `join_time`  datetime             DEFAULT NULL COMMENT '入群时间',
+    `created_at` datetime    NOT NULL COMMENT '创建时间',
+    `updated_at` datetime    NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_group_id_user_id` (`group_id`,`user_id`) USING BTREE,
+    KEY          `idx_user_id` (`user_id`) USING BTREE,
+    KEY          `idx_created_at` (`created_at`) USING BTREE,
+    KEY          `idx_updated_at` (`updated_at`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='群聊成员';
+
+CREATE TABLE `group_notice`
+(
+    `id`            int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '公告ID',
+    `group_id`      int(11) unsigned NOT NULL DEFAULT '0' COMMENT '群组ID',
+    `creator_id`    int(11) unsigned NOT NULL DEFAULT '0' COMMENT '创建者用户ID',
+    `title` varchar(64) NOT NULL DEFAULT '' COMMENT '公告标题',
+    `content`       text        NOT NULL COMMENT '公告内容',
+    `confirm_users` json                 DEFAULT NULL COMMENT '已确认成员',
+    `is_delete`     tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否删除[0:否;1:是;]',
+    `is_top`        tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否置顶[0:否;1:是;]',
+    `is_confirm`    tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否需群成员确认公告[0:否;1:是;]',
+    `created_at`    datetime    NOT NULL COMMENT '创建时间',
+    `updated_at`    datetime    NOT NULL COMMENT '更新时间',
+    `deleted_at`    datetime             DEFAULT NULL COMMENT '删除时间',
+    PRIMARY KEY (`id`),
+    KEY             `idx_group` (`group_id`) USING BTREE,
+    KEY             `idx_created_at` (`created_at`) USING BTREE,
+    KEY             `idx_updated_at` (`updated_at`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='群组公告表';
 
 
 -- 预插入数据 (languages, countries, country_languages)

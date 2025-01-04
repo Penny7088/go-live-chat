@@ -1,4 +1,4 @@
-package ws
+package socket
 
 // Message 表示客户端交互的消息体
 // 包含事件名称和消息内容

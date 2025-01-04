@@ -22,5 +22,7 @@ func main() {
 	closes := initial.Close(services)
 
 	a := app.New(services, closes)
+	socketServer := initial.NewSocketServer()
+	initial.Run(socketServer)
 	a.Run()
 }

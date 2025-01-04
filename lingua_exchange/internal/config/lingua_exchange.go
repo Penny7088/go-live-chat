@@ -39,8 +39,7 @@ type Config struct {
 	NacosRd  NacosRd  `yaml:"nacosRd" json:"nacosRd"`
 	Redis    Redis    `yaml:"redis" json:"redis"`
 	Server   Server   `yaml:"server" json:"server"`
-	SMTP     SMTP     `yaml:"email" json:"email"`
-	Sid      string
+	SMTP     SMTP     `yaml:"smtp" json:"smtp"`
 }
 
 type Consul struct {
@@ -49,6 +48,14 @@ type Consul struct {
 
 type Etcd struct {
 	Addrs []string `yaml:"addrs" json:"addrs"`
+}
+
+type SMTP struct {
+	AdminEmail string `yaml:"adminEmail" json:"adminEmail"`
+	Host       string `yaml:"host" json:"host"`
+	Password   string `yaml:"password" json:"password"`
+	Port       int    `yaml:"port" json:"port"`
+	UserName   string `yaml:"userName" json:"userName"`
 }
 
 type Jaeger struct {
@@ -68,6 +75,7 @@ type App struct {
 	Host                  string  `yaml:"host" json:"host"`
 	Name                  string  `yaml:"name" json:"name"`
 	RegistryDiscoveryType string  `yaml:"registryDiscoveryType" json:"registryDiscoveryType"`
+	Sid                   string  `yaml:"sid" json:"sid"`
 	TracingSamplingRate   float64 `yaml:"tracingSamplingRate" json:"tracingSamplingRate"`
 	Version               string  `yaml:"version" json:"version"`
 }
@@ -98,13 +106,6 @@ type Logger struct {
 	Level  string `yaml:"level" json:"level"`
 }
 
-type SMTP struct {
-	Host     string `yaml:"host" json:"host"`
-	Password string `yaml:"password" json:"password"`
-	Port     int    `yaml:"port" json:"port"`
-	UserName string `yaml:"userName" json:"userName"`
-}
-
 type NacosRd struct {
 	IPAddr      string `yaml:"ipAddr" json:"ipAddr"`
 	NamespaceID string `yaml:"namespaceID" json:"namespaceID"`
@@ -117,6 +118,5 @@ type HTTP struct {
 }
 
 type Server struct {
-	Tcp       int `yaml:"tcp" json:"tcp"`
 	Websocket int `yaml:"websocket" json:"websocket"`
 }

@@ -27,7 +27,6 @@ func CreateServices() []app.IServer {
 		server.WithHTTPRegistry(httpRegistry, httpInstance),
 		server.WithHTTPIsProd(cfg.App.Env == "prod"),
 	)
-	/// init socket
 	servers = append(servers, httpServer)
 
 	return servers

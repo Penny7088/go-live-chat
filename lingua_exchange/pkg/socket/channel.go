@@ -1,14 +1,15 @@
-package ws
+package socket
 
 import (
 	"context"
 	"fmt"
-	cmap "github.com/orcaman/concurrent-map/v2"
-	"github.com/sourcegraph/conc/pool"
 	"log"
 	"strconv"
 	"sync/atomic"
 	"time"
+
+	cmap "github.com/orcaman/concurrent-map/v2"
+	"github.com/sourcegraph/conc/pool"
 )
 
 type IChannel interface {

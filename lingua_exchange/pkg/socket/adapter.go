@@ -1,4 +1,4 @@
-package ws
+package socket
 
 type IConn interface {
 	// Read 数据读取

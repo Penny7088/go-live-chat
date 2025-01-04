@@ -1,10 +1,11 @@
-package ws
+package socket
 
 import (
 	"context"
-	"golang.org/x/sync/errgroup"
 	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // Session 客户端管理实例，单例模式

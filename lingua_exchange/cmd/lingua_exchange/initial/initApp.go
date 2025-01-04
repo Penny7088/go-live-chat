@@ -6,10 +6,11 @@ package initial
 import (
 	"flag"
 	"fmt"
-	"lingua_exchange/pkg/encrypt"
-	"lingua_exchange/pkg/strutil"
 	"strconv"
 	"time"
+
+	"lingua_exchange/pkg/encrypt"
+	"lingua_exchange/pkg/strutil"
 
 	"github.com/jinzhu/copier"
 
@@ -41,11 +42,11 @@ func InitApp() {
 		logger.WithFormat(cfg.Logger.Format),
 		logger.WithSave(
 			cfg.Logger.IsSave,
-			//logger.WithFileName(cfg.Logger.LogFileConfig.Filename),
-			//logger.WithFileMaxSize(cfg.Logger.LogFileConfig.MaxSize),
-			//logger.WithFileMaxBackups(cfg.Logger.LogFileConfig.MaxBackups),
-			//logger.WithFileMaxAge(cfg.Logger.LogFileConfig.MaxAge),
-			//logger.WithFileIsCompression(cfg.Logger.LogFileConfig.IsCompression),
+			// logger.WithFileName(cfg.Logger.LogFileConfig.Filename),
+			// logger.WithFileMaxSize(cfg.Logger.LogFileConfig.MaxSize),
+			// logger.WithFileMaxBackups(cfg.Logger.LogFileConfig.MaxBackups),
+			// logger.WithFileMaxAge(cfg.Logger.LogFileConfig.MaxAge),
+			// logger.WithFileIsCompression(cfg.Logger.LogFileConfig.IsCompression),
 		),
 	)
 	if err != nil {
@@ -133,6 +134,6 @@ func initConfig() {
 		config.Get().App.Version = version
 	}
 
-	config.Get().Sid = encrypt.Md5(fmt.Sprintf("%d%s", time.Now().UnixNano(), strutil.Random(6)))
+	config.Get().App.Sid = encrypt.Md5(fmt.Sprintf("%d%s", time.Now().UnixNano(), strutil.Random(6)))
 
 }
