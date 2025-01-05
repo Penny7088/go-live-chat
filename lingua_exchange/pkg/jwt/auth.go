@@ -162,3 +162,14 @@ func HeaderDeviceToken(c *gin.Context) string {
 		return deviceToken
 	}
 }
+
+func HeaderObtainUID(c *gin.Context) string {
+	token := c.Request.Header.Get(authorizationKey)
+	if token != "" {
+		claims, err := jwt.ParseToken(token)
+		if err != nil {
+			return claims.UID
+		}
+	}
+	return ""
+}
