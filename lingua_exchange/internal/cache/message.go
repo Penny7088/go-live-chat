@@ -3,13 +3,14 @@ package cache
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/redis/go-redis/v9"
 	basicCache "github.com/zhufuyi/sponge/pkg/cache"
 	"github.com/zhufuyi/sponge/pkg/encoding"
 	"lingua_exchange/internal/config"
 	"lingua_exchange/internal/model"
-	"strconv"
-	"strings"
 )
 
 type MessageCache interface {
@@ -28,6 +29,10 @@ type messageCache struct {
 	storage     ServerCache
 }
 
+// Set 设置客户端与用户绑定关系
+// @params channel  渠道分组
+// @params fd       客户端连接ID
+// @params id       用户ID
 func (m *messageCache) Set(ctx context.Context, channel string, fd string, uid int) error {
 	sid := m.config.App.Sid
 	_, err := m.redisClient.Pipelined(ctx, func(pipe redis.Pipeliner) error {
@@ -38,6 +43,9 @@ func (m *messageCache) Set(ctx context.Context, channel string, fd string, uid i
 	return err
 }
 
+// Del 删除客户端与用户绑定关系
+// @params channel  渠道分组
+// @params fd       客户端连接ID
 func (m *messageCache) Del(ctx context.Context, channel, fd string) error {
 	sid := m.config.App.Sid
 	key := m.clientKey(sid, channel)
@@ -50,6 +58,9 @@ func (m *messageCache) Del(ctx context.Context, channel, fd string) error {
 	return err
 }
 
+// IsOnline 判断客户端是否在线[所有部署机器]
+// @params channel  渠道分组
+// @params uid      用户ID
 func (m *messageCache) IsOnline(ctx context.Context, channel, uid string) bool {
 	for _, sid := range m.storage.All(ctx, 1) {
 		if m.IsCurrentServerOnline(ctx, sid, channel, uid) {
@@ -60,11 +71,19 @@ func (m *messageCache) IsOnline(ctx context.Context, channel, uid string) bool {
 	return false
 }
 
+// IsCurrentServerOnline 判断当前节点是否在线
+// @params sid      服务ID
+// @params channel  渠道分组
+// @params uid      用户ID
 func (m *messageCache) IsCurrentServerOnline(ctx context.Context, sid, channel, uid string) bool {
 	val, err := m.redisClient.SCard(ctx, m.userKey(sid, channel, uid)).Result()
 	return err == nil && val > 0
 }
 
+// GetUidFromClientIds 获取当前节点用户ID关联的客户端ID
+// @params sid      服务ID
+// @params channel  渠道分组
+// @params uid      用户ID
 func (m *messageCache) GetUidFromClientIds(ctx context.Context, sid, channel, uid string) []int64 {
 	cids := make([]int64, 0)
 
@@ -82,6 +101,10 @@ func (m *messageCache) GetUidFromClientIds(ctx context.Context, sid, channel, ui
 	return cids
 }
 
+// GetClientIdFromUid 获取客户端ID关联的用户ID
+// @params sid     服务节点ID
+// @params channel 渠道分组
+// @params cid     客户端ID
 func (m *messageCache) GetClientIdFromUid(ctx context.Context, sid, channel, cid string) (int64, error) {
 	uid, err := m.redisClient.HGet(ctx, m.clientKey(sid, channel), cid).Result()
 	if err != nil {

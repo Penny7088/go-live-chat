@@ -26,3 +26,8 @@ type GroupMember struct {
 func (m *GroupMember) TableName() string {
 	return "group_member"
 }
+
+type CountGroupMember struct {
+	GroupId int `gorm:"column:group_id;"`
+	Count   int `gorm:"column:count;"`
+}
