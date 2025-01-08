@@ -30,6 +30,9 @@ type GroupMemberDao interface {
 	GetMembers(ctx context.Context, groupId int) []*types.MemberItem
 	CountGroupMemberNum(ids []int) ([]*model.CountGroupMember, error)
 	CheckUserGroup(ids []int, userId int) ([]int, error)
+	Handover(ctx context.Context, groupId int, userId int, memberId int) error
+	SetLeaderStatus(ctx context.Context, groupId int, userId int, leader int) error
+	SetMuteStatus(ctx context.Context, groupId int, userId int, status int) error
 }
 
 type groupMemberDao struct {
@@ -151,6 +154,31 @@ func (g groupMemberDao) CheckUserGroup(ids []int, userId int) ([]int, error) {
 	}
 
 	return items, nil
+}
+
+func (g groupMemberDao) Handover(ctx context.Context, groupId int, userId int, memberId int) error {
+	return g.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
+		err := tx.Model(&model.GroupMember{}).Where("group_id = ? and user_id = ? and leader = 2", groupId, userId).Update("leader", 0).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Model(&model.GroupMember{}).Where("group_id = ? and user_id = ?", groupId, memberId).Update("leader", 2).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (g groupMemberDao) SetLeaderStatus(ctx context.Context, groupId int, userId int, leader int) error {
+	return g.db.Model(ctx).Where("group_id = ? and user_id = ?", groupId, userId).UpdateColumn("leader", leader).Error
+}
+
+func (g groupMemberDao) SetMuteStatus(ctx context.Context, groupId int, userId int, status int) error {
+	return g.db.Model(ctx).Where("group_id = ? and user_id = ?", groupId, userId).UpdateColumn("is_mute", status).Error
 }
 
 func (g groupMemberDao) queryExist(ctx context.Context, where string, args ...any) (bool, error) {

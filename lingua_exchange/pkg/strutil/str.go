@@ -2,8 +2,10 @@ package strutil
 
 import (
 	"fmt"
+	"math/big"
 	"math/rand"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -71,4 +73,42 @@ func NewMsgId() string {
 
 func NewUuid() string {
 	return uuid.New().String()
+}
+
+// StringToInt 将字符串转换为 int
+func StringToInt(s string) (int, error) {
+	num, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, fmt.Errorf("无法将字符串转换为整数: %v", err)
+	}
+	return num, nil
+}
+
+// StringToUint 将字符串转换为 uint
+func StringToUint(s string) (uint, error) {
+	num, err := strconv.ParseUint(s, 10, 0)
+	if err != nil {
+		return 0, fmt.Errorf("无法将字符串转换为无符号整数: %v", err)
+	}
+	return uint(num), nil
+}
+
+// StringToBigInt 将字符串转换为 big.Int
+func StringToBigInt(s string) (*big.Int, error) {
+	bi := new(big.Int)
+	_, success := bi.SetString(s, 10) // 设置为十进制
+	if !success {
+		return nil, fmt.Errorf("无法将字符串转换为大整数")
+	}
+	return bi, nil
+}
+
+// StringToBigUint 将字符串转换为 big.Uint
+func StringToBigUint(s string) (*big.Int, error) {
+	bi := new(big.Int)
+	_, success := bi.SetString(s, 10) // 设置为十进制
+	if !success {
+		return nil, fmt.Errorf("无法将字符串转换为大无符号整数")
+	}
+	return bi, nil
 }
