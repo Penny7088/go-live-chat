@@ -3,6 +3,7 @@ package jwt
 import (
 	"context"
 	"errors"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -107,6 +108,32 @@ func ValidateAndRefreshTokens(c *gin.Context) {
 	c.Next()
 }
 
+func ValidateWSToken(c *gin.Context) {
+	wsURL := c.Request.URL.String()
+
+	// 解析 URL
+	parsedURL, err := url.Parse(wsURL)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "Invalid URL"})
+		return
+	}
+	queryParams := parsedURL.Query()
+	authorization := queryParams.Get(authorizationKey)
+
+	uid, err := validateToken(authorization, c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "refresh token expired, please re-login"})
+		c.Abort()
+		return
+	}
+	// 将授权令牌放入上下文
+	c.Set(tokenUserKey, uid)
+
+	// 调用下一个中间件/处理程序
+	c.Next()
+
+}
+
 // 验证Token有效性
 func validateToken(tokenString string, c *gin.Context) (string, error) {
 	token, err := jwt.ParseToken(tokenString)
@@ -131,6 +158,12 @@ func validateToken(tokenString string, c *gin.Context) (string, error) {
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ValidateAndRefreshTokens(c)
+	}
+}
+
+func AuthWSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ValidateWSToken(c)
 	}
 }
 

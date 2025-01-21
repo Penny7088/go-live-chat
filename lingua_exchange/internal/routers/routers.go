@@ -28,7 +28,6 @@ var (
 	apiV1RouterFns []func(r *gin.RouterGroup) // group router functions  验证
 	// if you have other group routes you can define them here
 	// example:
-	apiWSRouterFns []func(r *gin.RouterGroup)
 )
 
 // NewRouter create a new router
@@ -106,18 +105,10 @@ func NewRouter() *gin.Engine {
 	// if you have other group routes you can add them here
 	// example:
 	//    registerRouters(r, "/api/v2", apiV2RouteFns, middleware.Auth())
-	registerWSRouters(r, "/wss", apiWSRouterFns)
 	return r
 }
 
 func registerRouters(r *gin.Engine, groupPath string, routerFns []func(*gin.RouterGroup), handlers ...gin.HandlerFunc) {
-	rg := r.Group(groupPath, handlers...)
-	for _, fn := range routerFns {
-		fn(rg)
-	}
-}
-
-func registerWSRouters(r *gin.Engine, groupPath string, routerFns []func(*gin.RouterGroup), handlers ...gin.HandlerFunc) {
 	rg := r.Group(groupPath, handlers...)
 	for _, fn := range routerFns {
 		fn(rg)

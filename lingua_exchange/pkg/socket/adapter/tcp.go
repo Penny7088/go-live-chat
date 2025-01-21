@@ -6,7 +6,7 @@ import (
 	"io"
 	"net"
 
-	"lingua_exchange/internal/ws/adapter/encoding"
+	"lingua_exchange/pkg/socket/adapter/encoding"
 )
 
 // TcpAdapter TCP 适配器

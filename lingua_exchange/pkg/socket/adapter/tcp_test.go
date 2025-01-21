@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"go-chat/internal/pkg/ichat/socket/adapter/encoding"
-	"go-chat/internal/pkg/jsonutil"
-	"go-chat/internal/pkg/strutil"
+	"lingua_exchange/pkg/socket/adapter/encoding"
+	"lingua_exchange/pkg/strutil"
 )
 
 func TestTcp_Server(t *testing.T) {
@@ -54,15 +53,15 @@ var jsons = `["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJndWFyZCI6ImFwaSIsImlzcyI6
 // nolint
 func TestTcp_Client_new(t1 *testing.T) {
 
-	tokens := make([]string, 0)
-
-	jsonutil.Decode(jsons, &tokens)
-
-	for _, val := range tokens {
-		ct(val)
-	}
-
-	time.Sleep(1 * time.Hour)
+	// tokens := make([]string, 0)
+	//
+	// jsonutil.Decode(jsons, &tokens)
+	//
+	// for _, val := range tokens {
+	// 	ct(val)
+	// }
+	//
+	// time.Sleep(1 * time.Hour)
 }
 
 // nolint
