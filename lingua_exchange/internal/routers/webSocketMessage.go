@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"lingua_exchange/internal/handler"
-	verify "lingua_exchange/pkg/jwt"
 	"lingua_exchange/pkg/socket"
 )
 
@@ -58,5 +57,6 @@ func messageRouter(group *gin.Engine, h handler.MessageHandler) {
 		})
 	})
 
-	routerGroup.GET("/chat.io", verify.AuthWSMiddleware(), h.Connection)
+	// routerGroup.GET("/chat.io", verify.AuthWSMiddleware(), h.Connection)
+	routerGroup.GET("/chat.io", h.Connection)
 }
