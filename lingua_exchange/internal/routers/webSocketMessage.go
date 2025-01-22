@@ -19,29 +19,6 @@ func NewWebSocketRouter() *gin.Engine {
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, map[string]any{"msg": "请求地址不存在"})
 	})
-	// r.Use(middleware.Cors())
-	//
-	// if config.Get().HTTP.Timeout > 0 {
-	// 	// if you need more fine-grained control over your routes, set the timeout in your routes, unsetting the timeout globally here.
-	// 	r.Use(middleware.Timeout(time.Second * time.Duration(config.Get().HTTP.Timeout)))
-	// }
-
-	// request id middleware
-	// r.Use(middleware.RequestID())
-
-	// logger middleware, to print simple messages, replace middleware.Logging with middleware.SimpleLog
-	// r.Use(middleware.Logging(
-	// 	middleware.WithLog(logger.Get()),
-	// 	middleware.WithRequestIDFromContext(),
-	// 	middleware.WithIgnoreRoutes("/metrics"), // ignore path
-	// ))
-
-	// init jwt middleware
-	// jwt.Init(
-	// 	jwt.WithExpire(verify.UserTokenExpireTime),
-	// 	jwt.WithSigningKey("live_lingua:"),
-	// 	jwt.WithSigningMethod(jwt.HS384),
-	// )
 
 	messageRouter(r, handler.NewMessageHandler())
 

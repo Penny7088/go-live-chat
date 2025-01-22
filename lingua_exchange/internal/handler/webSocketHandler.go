@@ -11,8 +11,10 @@ import (
 	"lingua_exchange/internal/config"
 	"lingua_exchange/internal/dao"
 	"lingua_exchange/internal/model"
+	"lingua_exchange/pkg/jwt"
 	"lingua_exchange/pkg/socket"
 	"lingua_exchange/pkg/socket/adapter"
+	"lingua_exchange/pkg/strutil"
 )
 
 var _ MessageHandler = (*messageHandler)(nil)
@@ -39,13 +41,12 @@ func (m messageHandler) conn(ctx *gin.Context) error {
 		log.Printf("websocket connect error: %s", err.Error())
 		return err
 	}
-	// todo 这里需要获取用户的uid
-	// uid := jwt.HeaderObtainUID(ctx)
-	// id, err := strutil.StringToInt(uid)
-	// if err != nil {
-	// 	return err
-	// }
-	return m.newClient(999, conn)
+	uid := jwt.ParseWSUrlUserId(ctx)
+	id, err := strutil.StringToInt(uid)
+	if err != nil {
+		return err
+	}
+	return m.newClient(id, conn)
 }
 
 func (m messageHandler) newClient(uid int, conn socket.IConn) error {

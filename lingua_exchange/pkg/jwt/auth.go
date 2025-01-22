@@ -167,6 +167,21 @@ func AuthWSMiddleware() gin.HandlerFunc {
 	}
 }
 
+func ParseWSUrlUserId(c *gin.Context) string {
+	wsURL := c.Request.URL.String()
+
+	// 解析 URL
+	parsedURL, err := url.Parse(wsURL)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"error": "Invalid URL"})
+		return ""
+	}
+	queryParams := parsedURL.Query()
+	userId := queryParams.Get(tokenUserKey)
+	return userId
+
+}
+
 func HeaderDevMode(c *gin.Context) (string, error) {
 	env := c.Request.Header.Get(env)
 	if env == "" {
