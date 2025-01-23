@@ -40,3 +40,10 @@ type SearchTalkSession struct {
 	GroupAvatar string    `json:"group_avatar"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
+
+type TalkSessionCreateOpt struct {
+	UserId     int
+	TalkType   int
+	ReceiverId int
+	IsBoot     bool
+}

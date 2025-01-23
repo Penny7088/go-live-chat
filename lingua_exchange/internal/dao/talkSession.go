@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -17,10 +18,42 @@ type TalkSessionDao interface {
 	FindBySessionId(ctx context.Context, uid int, receiverId int, talkType int) int
 	BatchAddList(ctx context.Context, uid int, values map[string]int)
 	List(ctx context.Context, uid int) ([]*model.SearchTalkSession, error)
+	Create(ctx context.Context, opt *model.TalkSessionCreateOpt) (*model.TalkSession, error)
 }
 
 type talkSessionDao struct {
 	db *gorm.DB
+}
+
+func (t talkSessionDao) Create(ctx context.Context, opt *model.TalkSessionCreateOpt) (*model.TalkSession, error) {
+	talkSession, err := t.FindByWhere(ctx, "talk_type = ? and user_id = ? and receiver_id = ?", opt.TalkType, opt.UserId, opt.ReceiverId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		talkSession = &model.TalkSession{
+			TalkType:   uint(opt.TalkType),
+			UserID:     int64(opt.UserId),
+			ReceiverID: uint64(opt.ReceiverId),
+		}
+
+		if opt.IsBoot {
+			talkSession.IsRobot = 1
+		}
+		t.db.WithContext(ctx).Create(talkSession)
+	} else {
+		talkSession.IsTop = 0
+		talkSession.IsDelete = 0
+		talkSession.IsDisturb = 0
+
+		if opt.IsBoot {
+			talkSession.IsRobot = 1
+		}
+		t.db.WithContext(ctx).Save(talkSession)
+	}
+
+	return talkSession, nil
 }
 
 func (t talkSessionDao) List(ctx context.Context, uid int) ([]*model.SearchTalkSession, error) {
@@ -79,4 +112,16 @@ func (t talkSessionDao) IsDisturb(ctx context.Context, uid int, receiverId int, 
 func (t talkSessionDao) FindBySessionId(ctx context.Context, uid int, receiverId int, talkType int) int {
 	// TODO implement me
 	panic("implement me")
+}
+
+// FindByWhere 根据条件查询一条数据
+func (t talkSessionDao) FindByWhere(ctx context.Context, where string, args ...any) (*model.TalkSession, error) {
+
+	var talkSession *model.TalkSession
+	err := t.db.WithContext(ctx).Where(where, args...).First(&talkSession).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return talkSession, nil
 }

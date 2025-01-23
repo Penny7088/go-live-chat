@@ -16,3 +16,10 @@ const (
 	ImTopicExample        = "im:message:example:all"
 	ImTopicExamplePrivate = "im:message:example:%s"
 )
+
+// 聊天模式
+const (
+	ChatPrivateMode = 1 // 私信模式
+	ChatGroupMode   = 2 // 群聊模式
+	ChatRoomMode    = 3 // 房间模式
+)
