@@ -11,13 +11,75 @@ import (
 	"github.com/zhufuyi/sponge/pkg/encoding"
 	"lingua_exchange/internal/config"
 	"lingua_exchange/internal/model"
+	"lingua_exchange/pkg/jsonutil"
 )
+
+const lastMessageCacheKey = "redis:hash:last-message"
 
 type MessageCache struct {
 	cache       basicCache.Cache
 	redisClient *redis.Client
 	config      *config.Config
 	storage     ServerCache
+}
+
+type MessageModel struct {
+}
+type LastCacheMessage struct {
+	Content  string `json:"content"`
+	Datetime string `json:"datetime"`
+}
+
+func (m *MessageCache) name(talkType int, sender int, receive int) string {
+	if talkType == 2 {
+		sender = 0
+	}
+
+	if sender > receive {
+		sender, receive = receive, sender
+	}
+
+	return fmt.Sprintf("%d_%d_%d", talkType, sender, receive)
+}
+
+func (m *MessageCache) SetLastMessage(ctx context.Context, talkType int, sender int, receive int, message *LastCacheMessage) error {
+	text := jsonutil.Encode(message)
+
+	return m.redisClient.HSet(ctx, lastMessageCacheKey, m.name(talkType, sender, receive), text).Err()
+}
+
+func (m *MessageCache) GetLastMessage(ctx context.Context, talkType int, sender int, receive int) (*LastCacheMessage, error) {
+
+	res, err := m.redisClient.HGet(ctx, lastMessageCacheKey, m.name(talkType, sender, receive)).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &LastCacheMessage{}
+	if err = jsonutil.Decode(res, msg); err != nil {
+		return nil, err
+	}
+
+	return msg, nil
+}
+
+func (m *MessageCache) MGetLastMessage(ctx context.Context, fields []string) ([]*LastCacheMessage, error) {
+
+	res := m.redisClient.HMGet(ctx, lastMessageCacheKey, fields...)
+
+	items := make([]*LastCacheMessage, 0)
+	for _, item := range res.Val() {
+		if val, ok := item.(string); ok {
+			msg := &LastCacheMessage{}
+			if err := jsonutil.Decode(val, msg); err != nil {
+				return nil, err
+			}
+
+			items = append(items, msg)
+		}
+	}
+
+	return items, nil
 }
 
 // Set 设置客户端与用户绑定关系
@@ -119,9 +181,6 @@ func (m *MessageCache) clientKey(sid, channel string) string {
 
 func (m *MessageCache) userKey(sid, channel, uid string) string {
 	return fmt.Sprintf("ws:%s:%s:user:%s", sid, channel, uid)
-}
-
-type MessageModel struct {
 }
 
 func NewMessageCache(cacheType *model.CacheType) *MessageCache {

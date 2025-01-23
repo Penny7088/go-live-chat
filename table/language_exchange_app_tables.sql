@@ -193,6 +193,26 @@ CREATE TABLE `talk_records_read`
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户已读列表';
 
 
+CREATE TABLE `group`
+(
+    `id`         int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '群ID',
+    `type`       tinyint(4) unsigned NOT NULL DEFAULT '1' COMMENT '群类型[1:普通群;2:企业群;]',
+    `name`    varchar(64)  NOT NULL DEFAULT '' COMMENT '群名称',
+    `profile` varchar(128) NOT NULL DEFAULT '' COMMENT '群介绍',
+    `avatar`     varchar(255) NOT NULL DEFAULT '' COMMENT '群头像',
+    `max_num`    smallint(5) unsigned NOT NULL DEFAULT '200' COMMENT '最大群成员数量',
+    `is_overt`   tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否公开可见[0:否;1:是;]',
+    `is_mute`    tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否全员禁言 [0:否;1:是;]，提示:不包含群主或管理员',
+    `is_dismiss` tinyint(4) unsigned NOT NULL DEFAULT '0' COMMENT '是否已解散[0:否;1:是;]',
+    `creator_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '创建者ID(群主ID)',
+    `created_at` datetime     NOT NULL COMMENT '创建时间',
+    `updated_at` datetime     NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY          `idx_created_at` (`created_at`) USING BTREE,
+    KEY          `idx_updated_at` (`updated_at`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户聊天群';
+
+
 CREATE TABLE `group_member`
 (
     `id`         int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
