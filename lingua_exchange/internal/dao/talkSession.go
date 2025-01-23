@@ -9,6 +9,7 @@ import (
 
 	"gorm.io/gorm"
 	"lingua_exchange/internal/model"
+	"lingua_exchange/pkg/strutil"
 	"lingua_exchange/pkg/timeutil"
 )
 
@@ -21,10 +22,19 @@ type TalkSessionDao interface {
 	List(ctx context.Context, uid int) ([]*model.SearchTalkSession, error)
 	Create(ctx context.Context, opt *model.TalkSessionCreateOpt) (*model.TalkSession, error)
 	Delete(ctx context.Context, uid int, id int) error
+	Top(ctx context.Context, opt *model.TalkSessionTopOpt) error
 }
 
 type talkSessionDao struct {
 	db *gorm.DB
+}
+
+func (t talkSessionDao) Top(ctx context.Context, opt *model.TalkSessionTopOpt) error {
+	_, err := t.UpdateWhere(ctx, map[string]any{
+		"is_top":     strutil.BoolToInt(opt.Type == 1),
+		"updated_at": time.Now(),
+	}, "id = ? and user_id = ?", opt.Id, opt.UserId)
+	return err
 }
 
 func (t talkSessionDao) Delete(ctx context.Context, uid int, id int) error {

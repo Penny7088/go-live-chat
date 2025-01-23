@@ -27,6 +27,7 @@ type SessionHandler interface {
 	SessionList(c *gin.Context)
 	Create(c *gin.Context)
 	Delete(c *gin.Context)
+	Top(c *gin.Context)
 }
 
 type sessionHandler struct {
@@ -36,6 +37,46 @@ type sessionHandler struct {
 	lockCache      *cache.RedisLock
 	userDao        dao.UsersDao
 	groupDao       dao.GroupDao
+}
+
+// Top  置顶会话
+// @Summary 置顶会话
+// @Description  置顶会话
+// @Tags    聊天列表
+// @Param data body types.TalkSessionTopRequest true
+// @accept  json
+// @Produce json
+// @Success 200 {object} types.TalkSessionTopReply{}
+// @Router /api/v1/session/topping [post]
+func (s sessionHandler) Top(c *gin.Context) {
+	body := &types.TalkSessionTopRequest{}
+	uid := jwt.HeaderObtainUID(c)
+	ctx := middleware.WrapCtx(c)
+	if err := c.ShouldBindJSON(body); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+	}
+	if s.verify(c, uid) {
+		return
+	}
+
+	toInt, _, done := s.convertUID(c, uid)
+	if done {
+		return
+	}
+	err := s.talkSessionDao.Top(ctx, &model.TalkSessionTopOpt{
+		UserId: toInt,
+		Id:     int(body.SessionId),
+		Type:   int(body.Type),
+	})
+
+	if err != nil {
+		logger.Warn("top session error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrTopSessionFail)
+		return
+	}
+
+	response.Success(c, "ok")
 }
 
 // Delete  删除会话记录

@@ -47,3 +47,9 @@ type TalkSessionCreateOpt struct {
 	ReceiverId int
 	IsBoot     bool
 }
+
+type TalkSessionTopOpt struct {
+	UserId int
+	Id     int
+	Type   int
+}

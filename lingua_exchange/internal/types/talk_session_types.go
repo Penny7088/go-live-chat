@@ -50,9 +50,18 @@ type TalkSessionCreateDetails struct {
 }
 
 type TalkSessionDeleteRequest struct {
-	SessionId int32 `json:"session_id"`
+	SessionId int32 `json:"session_id" binding:"required"`
 }
 
 type TalkSessionDeleteReply struct {
+	Result
+}
+
+type TalkSessionTopRequest struct {
+	SessionId int32 `json:"session_id" binding:"required"`
+	Type      int32 `json:"type" binding:"required"`
+}
+
+type TalkSessionTopReply struct {
 	Result
 }
