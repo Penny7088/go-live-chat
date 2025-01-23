@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 	"lingua_exchange/internal/model"
@@ -19,10 +20,16 @@ type TalkSessionDao interface {
 	BatchAddList(ctx context.Context, uid int, values map[string]int)
 	List(ctx context.Context, uid int) ([]*model.SearchTalkSession, error)
 	Create(ctx context.Context, opt *model.TalkSessionCreateOpt) (*model.TalkSession, error)
+	Delete(ctx context.Context, uid int, id int) error
 }
 
 type talkSessionDao struct {
 	db *gorm.DB
+}
+
+func (t talkSessionDao) Delete(ctx context.Context, uid int, id int) error {
+	_, err := t.UpdateWhere(ctx, map[string]any{"is_delete": 1, "updated_at": time.Now()}, "id = ? and user_id = ?", id, uid)
+	return err
 }
 
 func (t talkSessionDao) Create(ctx context.Context, opt *model.TalkSessionCreateOpt) (*model.TalkSession, error) {
@@ -124,4 +131,10 @@ func (t talkSessionDao) FindByWhere(ctx context.Context, where string, args ...a
 	}
 
 	return talkSession, nil
+}
+
+// UpdateWhere 批量更新
+func (t talkSessionDao) UpdateWhere(ctx context.Context, data any, where string, args ...any) (int64, error) {
+	res := t.db.Model(ctx).Where(where, args...).Updates(data)
+	return res.RowsAffected, res.Error
 }

@@ -26,6 +26,7 @@ var _ SessionHandler = (*sessionHandler)(nil)
 type SessionHandler interface {
 	SessionList(c *gin.Context)
 	Create(c *gin.Context)
+	Delete(c *gin.Context)
 }
 
 type sessionHandler struct {
@@ -35,6 +36,42 @@ type sessionHandler struct {
 	lockCache      *cache.RedisLock
 	userDao        dao.UsersDao
 	groupDao       dao.GroupDao
+}
+
+// Delete  删除会话记录
+// @Summary 删除会话记录
+// @Description  删除会话记录
+// @Tags    聊天列表
+// @Param data body types.TalkSessionDeleteRequest true
+// @accept  json
+// @Produce json
+// @Success 200 {object} types.TalkSessionDeleteReply{}
+// @Router /api/v1/session/delete [post]
+func (s sessionHandler) Delete(c *gin.Context) {
+	body := &types.TalkSessionDeleteRequest{}
+	uid := jwt.HeaderObtainUID(c)
+	if err := c.ShouldBindJSON(body); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+	}
+	if s.verify(c, uid) {
+		return
+	}
+
+	toInt, err, done := s.convertUID(c, uid)
+	if done {
+		return
+	}
+	ctx := middleware.WrapCtx(c)
+	err = s.talkSessionDao.Delete(ctx, toInt, int(body.SessionId))
+	if err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrDeleteSessionFail)
+		return
+	}
+
+	response.Success(c, "ok")
+
 }
 
 // Create  创建聊天记录
@@ -61,7 +98,7 @@ func (s sessionHandler) Create(c *gin.Context) {
 
 	err2 := c.ShouldBindJSON(body)
 	if err2 != nil {
-		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
 	}
 

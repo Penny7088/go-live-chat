@@ -17,4 +17,5 @@ func sessionRouter(group *gin.RouterGroup, h handler.SessionHandler) {
 	g.Use(jwt.AuthMiddleware())
 	g.GET("/list", h.SessionList)
 	g.POST("/create", h.Create)
+	g.POST("/delete", h.Delete)
 }

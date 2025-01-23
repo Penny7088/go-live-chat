@@ -48,3 +48,11 @@ type TalkSessionCreateDetails struct {
 	MsgText    string `json:"msg_text"`
 	UpdatedAt  string `json:"updated_at"`
 }
+
+type TalkSessionDeleteRequest struct {
+	SessionId int32 `json:"session_id"`
+}
+
+type TalkSessionDeleteReply struct {
+	Result
+}
