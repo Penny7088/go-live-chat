@@ -19,4 +19,5 @@ func sessionRouter(group *gin.RouterGroup, h handler.SessionHandler) {
 	g.POST("/create", h.Create)
 	g.POST("/delete", h.Delete)
 	g.POST("/topping", h.Top)
+	g.POST("/disturb", h.Disturb)
 }

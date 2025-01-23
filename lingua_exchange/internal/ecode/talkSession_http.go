@@ -14,4 +14,5 @@ var (
 	ErrReceiverGroupNotFound = errcode.NewError(sessionBaseCode+6, "receiver group is not found "+sessionName)
 	ErrDeleteSessionFail     = errcode.NewError(sessionBaseCode+7, "delete session fail "+sessionName)
 	ErrTopSessionFail        = errcode.NewError(sessionBaseCode+8, "top session fail "+sessionName)
+	ErrDisturbSessionFail    = errcode.NewError(sessionBaseCode+8, "Disturb session fail "+sessionName)
 )

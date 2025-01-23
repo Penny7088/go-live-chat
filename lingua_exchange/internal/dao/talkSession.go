@@ -23,10 +23,19 @@ type TalkSessionDao interface {
 	Create(ctx context.Context, opt *model.TalkSessionCreateOpt) (*model.TalkSession, error)
 	Delete(ctx context.Context, uid int, id int) error
 	Top(ctx context.Context, opt *model.TalkSessionTopOpt) error
+	Disturb(ctx context.Context, opt *model.TalkSessionDisturbOpt) error
 }
 
 type talkSessionDao struct {
 	db *gorm.DB
+}
+
+func (t talkSessionDao) Disturb(ctx context.Context, opt *model.TalkSessionDisturbOpt) error {
+	_, err := t.UpdateWhere(ctx, map[string]any{
+		"is_disturb": opt.IsDisturb,
+		"updated_at": time.Now(),
+	}, "user_id = ? and receiver_id = ? and talk_type = ?", opt.UserId, opt.ReceiverId, opt.TalkType)
+	return err
 }
 
 func (t talkSessionDao) Top(ctx context.Context, opt *model.TalkSessionTopOpt) error {

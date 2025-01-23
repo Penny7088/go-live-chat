@@ -53,3 +53,10 @@ type TalkSessionTopOpt struct {
 	Id     int
 	Type   int
 }
+
+type TalkSessionDisturbOpt struct {
+	UserId     int
+	TalkType   int
+	ReceiverId int
+	IsDisturb  int
+}

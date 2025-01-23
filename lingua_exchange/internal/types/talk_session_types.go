@@ -65,3 +65,13 @@ type TalkSessionTopRequest struct {
 type TalkSessionTopReply struct {
 	Result
 }
+
+type TalkSessionDisturbRequest struct {
+	TalkType   int32 `json:"talk_type" binding:"required"`
+	ReceiverID int32 `json:"receiver_id" binding:"required"`
+	IsDisturb  int32 `json:"is_disturb" binding:"required"`
+}
+
+type TalkSessionDisturbReply struct {
+	Result
+}

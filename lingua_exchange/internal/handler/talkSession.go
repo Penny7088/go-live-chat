@@ -28,6 +28,7 @@ type SessionHandler interface {
 	Create(c *gin.Context)
 	Delete(c *gin.Context)
 	Top(c *gin.Context)
+	Disturb(c *gin.Context)
 }
 
 type sessionHandler struct {
@@ -37,6 +38,47 @@ type sessionHandler struct {
 	lockCache      *cache.RedisLock
 	userDao        dao.UsersDao
 	groupDao       dao.GroupDao
+}
+
+// Disturb  会话免打扰
+// @Summary 会话免打扰
+// @Description  会话免打扰
+// @Tags    聊天列表
+// @Param data body types.TalkSessionDisturbRequest true
+// @accept  json
+// @Produce json
+// @Success 200 {object} types.TalkSessionDisturbReply{}
+// @Router /api/v1/session/disturb [post]
+func (s sessionHandler) Disturb(c *gin.Context) {
+	body := &types.TalkSessionDisturbRequest{}
+	uid := jwt.HeaderObtainUID(c)
+	ctx := middleware.WrapCtx(c)
+	if err := c.ShouldBindJSON(body); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+	}
+	if s.verify(c, uid) {
+		return
+	}
+
+	toInt, _, done := s.convertUID(c, uid)
+	if done {
+		return
+	}
+
+	err := s.talkSessionDao.Disturb(ctx, &model.TalkSessionDisturbOpt{
+		UserId:     toInt,
+		TalkType:   int(body.TalkType),
+		ReceiverId: int(body.ReceiverID),
+		IsDisturb:  int(body.IsDisturb),
+	})
+
+	if err != nil {
+		logger.Warn("Disturb error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrDisturbSessionFail)
+		return
+	}
+	response.Success(c, "ok")
 }
 
 // Top  置顶会话
