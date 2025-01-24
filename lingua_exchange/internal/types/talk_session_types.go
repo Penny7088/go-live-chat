@@ -75,3 +75,8 @@ type TalkSessionDisturbRequest struct {
 type TalkSessionDisturbReply struct {
 	Result
 }
+
+type TalkSessionClearUnreadNumRequest struct {
+	TalkType   int32 `json:"talk_type" binding:"required,oneof=1 2"`       // 对话类型
+	ReceiverId int32 `json:"receiver_id" binding:"required,numeric,min=1"` // 接收者ID
+}

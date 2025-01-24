@@ -29,6 +29,7 @@ type SessionHandler interface {
 	Delete(c *gin.Context)
 	Top(c *gin.Context)
 	Disturb(c *gin.Context)
+	ClearUnreadMessage(c *gin.Context)
 }
 
 type sessionHandler struct {
@@ -38,6 +39,35 @@ type sessionHandler struct {
 	lockCache      *cache.RedisLock
 	userDao        dao.UsersDao
 	groupDao       dao.GroupDao
+}
+
+// ClearUnreadMessage  清除未读消息
+// @Summary 清除未读消息
+// @Description  清除未读消息
+// @Tags    消息
+// @Param data body types.TalkSessionClearUnreadNumRequest true
+// @accept  json
+// @Produce json
+// @Success 200 {object}
+// @Router /api/v1/session/disturb [post]
+func (s sessionHandler) ClearUnreadMessage(c *gin.Context) {
+	params := &types.TalkSessionClearUnreadNumRequest{}
+	ctx := middleware.WrapCtx(c)
+	if err := c.ShouldBind(params); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	uid := jwt.HeaderObtainUID(c)
+
+	toInt, _, done := s.convertUID(c, uid)
+	if done {
+		return
+	}
+
+	s.unreadCache.Reset(ctx, int(params.TalkType), int(params.ReceiverId), toInt)
+
+	response.Success(c)
 }
 
 // Disturb  会话免打扰
@@ -56,6 +86,7 @@ func (s sessionHandler) Disturb(c *gin.Context) {
 	if err := c.ShouldBindJSON(body); err != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
+		return
 	}
 	if s.verify(c, uid) {
 		return
@@ -97,6 +128,7 @@ func (s sessionHandler) Top(c *gin.Context) {
 	if err := c.ShouldBindJSON(body); err != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
+		return
 	}
 	if s.verify(c, uid) {
 		return
@@ -136,6 +168,7 @@ func (s sessionHandler) Delete(c *gin.Context) {
 	if err := c.ShouldBindJSON(body); err != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
+		return
 	}
 	if s.verify(c, uid) {
 		return
@@ -183,6 +216,7 @@ func (s sessionHandler) Create(c *gin.Context) {
 	if err2 != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
+		return
 	}
 
 	if body.TalkType == constant.ChatPrivateMode && int(body.ReceiverID) == toInt {
