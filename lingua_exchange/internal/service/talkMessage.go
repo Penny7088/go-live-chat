@@ -1,4 +1,4 @@
-package handler
+package service
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"lingua_exchange/internal/types"
 )
 
+// 消息发送控制类
 var _ IMessageService = (*MessageService)(nil)
 
 type IMessageService interface {

@@ -12,6 +12,14 @@ type MemberItem struct {
 	UserCard string `json:"user_card"`
 }
 
+type PublishBaseMessageRequest struct {
+	Type     string `json:"type" binding:"required"`
+	Receiver struct {
+		TalkType   int `json:"talk_type" binding:"required,gt=0"`   // 对话类型 1:私聊 2:群聊
+		ReceiverId int `json:"receiver_id" binding:"required,gt=0"` // 好友ID或群ID
+	} `json:"receiver" binding:"required"`
+}
+
 type MessageReceiver struct {
 	TalkType   int32 `json:"talk_type"`   // 对话类型
 	ReceiverID int32 `json:"receiver_id"` // 接受者ID
@@ -135,4 +143,11 @@ type MixedMessageRequest struct {
 type Item struct {
 	Type    int32  `json:"type"`
 	Content string `json:"content"`
+}
+
+type AuthOption struct {
+	TalkType          int
+	UserId            int
+	ReceiverId        int
+	IsVerifyGroupMute bool
 }
