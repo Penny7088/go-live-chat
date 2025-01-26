@@ -2,12 +2,8 @@
 package main
 
 import (
-	"log"
-
 	"github.com/zhufuyi/sponge/pkg/app"
-	"golang.org/x/sync/errgroup"
 	"lingua_exchange/cmd/lingua_exchange/initial"
-	routers "lingua_exchange/internal/routers"
 )
 
 // @title lingua_exchange api docs
@@ -25,14 +21,6 @@ func main() {
 	services := initial.CreateServices()
 
 	closes := initial.Close(services)
-
-	socketServer := initial.NewSocketServer(routers.NewWebSocketRouter())
-
-	var eg errgroup.Group
-	eg.Go(func() error {
-		log.Println("Starting WebSocket server...")
-		return initial.Run(socketServer) // 启动 WebSocket 服务器
-	})
 
 	a := app.New(services, closes)
 	a.Run()

@@ -2,6 +2,7 @@ package initial
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/zhufuyi/sponge/pkg/app"
@@ -12,41 +13,58 @@ import (
 	"github.com/zhufuyi/sponge/pkg/servicerd/registry/nacos"
 
 	"lingua_exchange/internal/config"
+	routers "lingua_exchange/internal/routers"
 	"lingua_exchange/internal/server"
 )
 
-// CreateServices create grpc or http service
 func CreateServices() []app.IServer {
 	var cfg = config.Get()
 	var servers []app.IServer
 
-	// creating http service
-	httpAddr := ":" + strconv.Itoa(cfg.HTTP.Port)
-	httpRegistry, httpInstance := registerService("http", cfg.App.Host, cfg.HTTP.Port)
-	httpServer := server.NewHTTPServer(httpAddr,
-		server.WithHTTPRegistry(httpRegistry, httpInstance),
-		server.WithHTTPIsProd(cfg.App.Env == "prod"),
-	)
-	servers = append(servers, httpServer)
+	if httpServer, err := createHTTPServer(cfg); err != nil {
+		log.Printf("Failed to create HTTP server: %v", err)
+	} else {
+		servers = append(servers, httpServer)
+	}
+
+	if wsServer, err := createWebSocketServer(cfg); err != nil {
+		log.Printf("Failed to create WebSocket server: %v", err)
+	} else {
+		servers = append(servers, wsServer)
+	}
 
 	return servers
+}
+
+func createWebSocketServer(cfg *config.Config) (app.IServer, error) {
+	wsRegistry, wsInstance := registerService("ws", cfg.App.Host, cfg.Server.Websocket)
+	return NewSocketServer(
+		routers.NewWebSocketRouter(),
+		WithRegistry(wsRegistry, wsInstance),
+	), nil
+}
+
+func createHTTPServer(cfg *config.Config) (app.IServer, error) {
+	httpAddr := ":" + strconv.Itoa(cfg.HTTP.Port)
+	httpRegistry, httpInstance := registerService("http", cfg.App.Host, cfg.HTTP.Port)
+	return server.NewHTTPServer(httpAddr,
+		server.WithHTTPRegistry(httpRegistry, httpInstance),
+		server.WithHTTPIsProd(cfg.App.Env == "prod"),
+	), nil
 }
 
 func registerService(scheme string, host string, port int) (registry.Registry, *registry.ServiceInstance) {
 	var (
 		instanceEndpoint = fmt.Sprintf("%s://%s:%d", scheme, host, port)
 		cfg              = config.Get()
-
-		iRegistry registry.Registry
-		instance  *registry.ServiceInstance
-		err       error
-
-		id       = cfg.App.Name + "_" + scheme + "_" + host
-		logField logger.Field
+		iRegistry        registry.Registry
+		instance         *registry.ServiceInstance
+		err              error
+		id               = cfg.App.Name + "_" + scheme + "_" + host
+		logField         logger.Field
 	)
 
 	switch cfg.App.RegistryDiscoveryType {
-	// registering service with consul
 	case "consul":
 		iRegistry, instance, err = consul.NewRegistry(
 			cfg.Consul.Addr,
@@ -59,7 +77,6 @@ func registerService(scheme string, host string, port int) (registry.Registry, *
 		}
 		logField = logger.Any("consulAddress", cfg.Consul.Addr)
 
-	// registering service with etcd
 	case "etcd":
 		iRegistry, instance, err = etcd.NewRegistry(
 			cfg.Etcd.Addrs,
@@ -72,7 +89,6 @@ func registerService(scheme string, host string, port int) (registry.Registry, *
 		}
 		logField = logger.Any("etcdAddress", cfg.Etcd.Addrs)
 
-	// registering service with nacos
 	case "nacos":
 		iRegistry, instance, err = nacos.NewRegistry(
 			cfg.NacosRd.IPAddr,

@@ -8,91 +8,170 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/zhufuyi/sponge/pkg/servicerd/registry"
 	"golang.org/x/sync/errgroup"
 	"lingua_exchange/internal/config"
 	"lingua_exchange/pkg/socket"
 )
 
-var ErrServerClosed = errors.New("shutting down server")
+type ServerOption struct {
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	IdleTimeout  time.Duration
+}
 
 type SocketServerConfig struct {
-	Config *config.Config
-	Ctx    context.Context
-	Engine *gin.Engine
+	Config   *config.Config
+	ctx      context.Context
+	cancel   context.CancelFunc
+	engine   *gin.Engine
+	server   *http.Server
+	registry registry.Registry
+	instance *registry.ServiceInstance
 }
 
-func NewSocketServer(engine *gin.Engine) *SocketServerConfig {
-	return &SocketServerConfig{
-		Config: config.Get(),
-		Ctx:    context.Background(),
-		Engine: engine,
+func (s *SocketServerConfig) String() string {
+	wsAddr := ":" + strconv.Itoa(s.Config.Server.Websocket)
+	return "websocket service address " + wsAddr
+}
+
+type Option func(*SocketServerConfig)
+
+func WithRegistry(reg registry.Registry, instance *registry.ServiceInstance) Option {
+	return func(s *SocketServerConfig) {
+		s.registry = reg
+		s.instance = instance
 	}
 }
 
-func Run(socketServer *SocketServerConfig) error {
-	eg, groupCtx := errgroup.WithContext(socketServer.Ctx)
-	socket.Initialize(groupCtx, eg, func(name string) {
-		if socketServer.Config.App.Env == "prod" {
-			// todo  发送警告邮件
-			// emailtool.SendEmail(socketServer.Config.SMTP.AdminEmail,)
+func WithServerOption(opt ServerOption) Option {
+	return func(s *SocketServerConfig) {
+		s.server = &http.Server{
+			ReadTimeout:  opt.ReadTimeout,
+			WriteTimeout: opt.WriteTimeout,
+			IdleTimeout:  opt.IdleTimeout,
 		}
-	})
+	}
+}
+
+func NewSocketServer(engine *gin.Engine, opts ...Option) *SocketServerConfig {
+	ctx, cancel := context.WithCancel(context.Background())
+	s := &SocketServerConfig{
+		Config: config.Get(),
+		ctx:    ctx,
+		cancel: cancel,
+		engine: engine,
+	}
+
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
+}
+
+func (s *SocketServerConfig) Start() error {
+	if err := s.validate(); err != nil {
+		return fmt.Errorf("invalid server config: %w", err)
+	}
+
+	eg, groupCtx := errgroup.WithContext(s.ctx)
+	socket.Initialize(groupCtx, eg, s.handleError)
+
+	if err := s.registerService(); err != nil {
+		return err
+	}
+
+	s.server = &http.Server{
+		Addr:    fmt.Sprintf(":%d", s.Config.Server.Websocket),
+		Handler: s.engine,
+	}
 
 	c := make(chan os.Signal, 1)
-
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 
-	log.Printf("Websocket Listen Port :%d", socketServer.Config.Server.Websocket)
+	log.Printf("WebSocket server starting on port: %d", s.Config.Server.Websocket)
 
-	return start(socketServer, eg, groupCtx, c)
+	return s.run(eg, groupCtx, c)
 }
 
-func start(socketServer *SocketServerConfig, eg *errgroup.Group, ctx context.Context, c chan os.Signal) error {
-	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", socketServer.Config.Server.Websocket),
-		Handler: socketServer.Engine,
+func (s *SocketServerConfig) Stop() error {
+	if s.cancel != nil {
+		s.cancel()
 	}
 
-	eg.Go(func() error {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			return err
-		}
+	if err := s.deregisterService(); err != nil {
+		log.Printf("Failed to deregister service: %v", err)
+	}
 
+	if s.server != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		return s.server.Shutdown(ctx)
+	}
+
+	return nil
+}
+
+func (s *SocketServerConfig) validate() error {
+	if s.engine == nil {
+		return errors.New("gin engine is required")
+	}
+	if s.Config == nil {
+		return errors.New("config is required")
+	}
+	return nil
+}
+
+func (s *SocketServerConfig) run(eg *errgroup.Group, ctx context.Context, c chan os.Signal) error {
+	eg.Go(func() error {
+		if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("websocket server error: %w", err)
+		}
 		return nil
 	})
 
-	eg.Go(func() (err error) {
-		defer func() {
-			log.Println("Shutting down server...")
-
-			// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
-			timeCtx, timeCancel := context.WithTimeout(context.TODO(), 3*time.Second)
-			defer timeCancel()
-
-			if err := server.Shutdown(timeCtx); err != nil {
-				log.Printf("Websocket Shutdown Err: %s \n", err)
-			}
-
-			err = ErrServerClosed
-		}()
-
+	eg.Go(func() error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-c:
-			return nil
+			return s.Stop()
 		}
 	})
 
-	if err := eg.Wait(); err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, ErrServerClosed) {
-		log.Fatalf("Server forced to shutdown: %s", err)
+	if err := eg.Wait(); err != nil && !errors.Is(err, context.Canceled) {
+		return fmt.Errorf("server forced to shutdown: %w", err)
 	}
 
-	log.Println("Server exiting")
-
 	return nil
+}
+
+func (s *SocketServerConfig) registerService() error {
+	if s.registry != nil && s.instance != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		return s.registry.Register(ctx, s.instance)
+	}
+	return nil
+}
+
+func (s *SocketServerConfig) deregisterService() error {
+	if s.registry != nil && s.instance != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		return s.registry.Deregister(ctx, s.instance)
+	}
+	return nil
+}
+
+func (s *SocketServerConfig) handleError(name string) {
+	if s.Config.App.Env == "prod" {
+		log.Printf("WebSocket error occurred: %s", name)
+	}
 }
