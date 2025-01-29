@@ -30,7 +30,10 @@ type imMessageHandler struct {
 }
 
 func NewIMMessageHandler() IMMessageHandler {
-	return &imMessageHandler{}
+	return &imMessageHandler{
+		imAuthService:  imService.NewPermissionService(),
+		messageService: imService.NewMessageService(),
+	}
 }
 
 func (i imMessageHandler) Publish(c *gin.Context) {

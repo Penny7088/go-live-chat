@@ -3,8 +3,14 @@ package imService
 import (
 	"context"
 
+	"github.com/zhufuyi/sponge/pkg/ggorm/query"
+	"github.com/zhufuyi/sponge/pkg/logger"
+	"lingua_exchange/internal/cache"
+	"lingua_exchange/internal/constant"
+	"lingua_exchange/internal/dao"
 	"lingua_exchange/internal/model"
 	"lingua_exchange/internal/types"
+	"lingua_exchange/pkg/jsonutil"
 	"lingua_exchange/pkg/strutil"
 )
 
@@ -49,6 +55,15 @@ type IMessageService interface {
 }
 
 type MessageService struct {
+	talkRecordsDao dao.TalkRecordsDao
+	usersDao       dao.UsersDao
+}
+
+func NewMessageService() IMessageService {
+	return &MessageService{
+		talkRecordsDao: dao.NewTalkRecordsDao(model.GetDB(), cache.NewTalkRecordsCache(model.GetCacheType())),
+		usersDao:       dao.NewUsersDao(model.GetDB(), cache.NewUsersCache(model.GetCacheType())),
+	}
 }
 
 func (m MessageService) SendSystemText(ctx *context.Context, uid int, req *types.TextMessageRequest) error {
@@ -57,8 +72,18 @@ func (m MessageService) SendSystemText(ctx *context.Context, uid int, req *types
 }
 
 func (m MessageService) SendText(ctx *context.Context, uid int, req *types.TextMessageRequest) error {
-	// TODO implement me
-	panic("implement me")
+	data := &model.TalkRecords{
+		TalkType:   uint(req.Receiver.TalkType),
+		MsgType:    constant.ChatMsgTypeText,
+		QuoteID:    req.QuoteID,
+		UserID:     uint64(uid),
+		ReceiverID: uint(req.Receiver.ReceiverID),
+		Extra: jsonutil.Encode(types.TalkRecordExtraText{
+			Content:  strutil.EscapeHtml(req.Content),
+			Mentions: req.Mentions,
+		}),
+	}
+	return m.save(ctx, data)
 }
 
 func (m MessageService) SendImage(ctx *context.Context, uid int, req *types.ImageMessageRequest) error {
@@ -135,16 +160,75 @@ func (m MessageService) save(ctx *context.Context, data *model.TalkRecords) erro
 	if data.MsgID == "" {
 		data.MsgID = strutil.NewMsgId()
 	}
+	m.loadReply(ctx, data)
+
+	m.loadSequence(ctx, data)
 
 	return nil
 
 }
 
-func (m *MessageService) loadReply(_ context.Context, data *model.TalkRecords) {
+func (m *MessageService) loadReply(ctx *context.Context, data *model.TalkRecords) {
+	if data.QuoteID == "" {
+		return
+	}
 
+	if data.Extra == "" {
+		data.Extra = "{}"
+	}
+
+	extra := make(map[string]any)
+	err := jsonutil.Decode(data.Extra, &extra)
+	if err != nil {
+		logger.Errorf("MessageService Json Decode err: %s", err.Error())
+		return
+	}
+	ctx2 := *ctx
+	record, err := m.talkRecordsDao.GetByID(ctx2, data.QuoteID)
+	if err != nil {
+		return
+	}
+
+	users, err := m.usersDao.GetByCondition(ctx2, &query.Conditions{
+		Columns: []query.Column{
+			{
+				Name:  "Username",
+				Value: record.UserID,
+			},
+		},
+	})
+	if err != nil {
+		return
+	}
+
+	reply := types.Reply{
+		UserId:   int(record.UserID),
+		Nickname: users.Username,
+		MsgType:  1,
+		MsgId:    record.MsgID,
+	}
+
+	if record.MsgType != constant.ChatMsgTypeText {
+		reply.Content = "[未知消息]"
+		if value, ok := constant.ChatMsgTypeMapping[record.MsgType]; ok {
+			reply.Content = value
+		}
+	} else {
+		extra := types.TalkRecordExtraText{}
+		if err := jsonutil.Decode(record.Extra, &extra); err != nil {
+			logger.Errorf("loadReply Json Decode err: %s", err.Error())
+			return
+		}
+
+		reply.Content = extra.Content
+	}
+
+	extra["reply"] = reply
+
+	data.Extra = jsonutil.Encode(extra)
 }
 
-func (m *MessageService) loadSequence(ctx context.Context, data *model.TalkRecords) {
+func (m *MessageService) loadSequence(ctx *context.Context, data *model.TalkRecords) {
 	// if data.TalkType == constant.ChatGroupMode {
 	// 	data.Sequence = m.Sequence.Get(ctx, 0, data.ReceiverId)
 	// } else {
