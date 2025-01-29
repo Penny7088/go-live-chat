@@ -58,14 +58,14 @@ func (s sessionHandler) ClearUnreadMessage(c *gin.Context) {
 		response.Error(c, ecode.InvalidParams)
 		return
 	}
-	uid := jwt.HeaderObtainUID(c)
-
-	toInt, _, done := s.convertUID(c, uid)
-	if done {
+	uid, err := jwt.HeaderObtainUID(c)
+	if err != nil {
+		logger.Warn("obtain uid  error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.Unauthorized, err)
 		return
 	}
 
-	s.unreadCache.Reset(ctx, int(params.TalkType), int(params.ReceiverId), toInt)
+	s.unreadCache.Reset(ctx, int(params.TalkType), int(params.ReceiverId), uid)
 
 	response.Success(c)
 }
@@ -81,31 +81,28 @@ func (s sessionHandler) ClearUnreadMessage(c *gin.Context) {
 // @Router /api/v1/session/disturb [post]
 func (s sessionHandler) Disturb(c *gin.Context) {
 	body := &types.TalkSessionDisturbRequest{}
-	uid := jwt.HeaderObtainUID(c)
 	ctx := middleware.WrapCtx(c)
 	if err := c.ShouldBindJSON(body); err != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
 		return
 	}
-	if s.verify(c, uid) {
+	uid, err := jwt.HeaderObtainUID(c)
+	if err != nil {
+		logger.Warn("obtain uid  error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.Unauthorized, err)
 		return
 	}
 
-	toInt, _, done := s.convertUID(c, uid)
-	if done {
-		return
-	}
-
-	err := s.talkSessionDao.Disturb(ctx, &model.TalkSessionDisturbOpt{
-		UserId:     toInt,
+	err2 := s.talkSessionDao.Disturb(ctx, &model.TalkSessionDisturbOpt{
+		UserId:     uid,
 		TalkType:   int(body.TalkType),
 		ReceiverId: int(body.ReceiverID),
 		IsDisturb:  int(body.IsDisturb),
 	})
 
-	if err != nil {
-		logger.Warn("Disturb error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+	if err2 != nil {
+		logger.Warn("Disturb error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.ErrDisturbSessionFail)
 		return
 	}
@@ -123,29 +120,26 @@ func (s sessionHandler) Disturb(c *gin.Context) {
 // @Router /api/v1/session/topping [post]
 func (s sessionHandler) Top(c *gin.Context) {
 	body := &types.TalkSessionTopRequest{}
-	uid := jwt.HeaderObtainUID(c)
 	ctx := middleware.WrapCtx(c)
 	if err := c.ShouldBindJSON(body); err != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
 		return
 	}
-	if s.verify(c, uid) {
+	uid, err := jwt.HeaderObtainUID(c)
+	if err != nil {
+		logger.Warn("obtain uid  error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.Unauthorized, err)
 		return
 	}
-
-	toInt, _, done := s.convertUID(c, uid)
-	if done {
-		return
-	}
-	err := s.talkSessionDao.Top(ctx, &model.TalkSessionTopOpt{
-		UserId: toInt,
+	err2 := s.talkSessionDao.Top(ctx, &model.TalkSessionTopOpt{
+		UserId: uid,
 		Id:     int(body.SessionId),
 		Type:   int(body.Type),
 	})
 
-	if err != nil {
-		logger.Warn("top session error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+	if err2 != nil {
+		logger.Warn("top session error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.ErrTopSessionFail)
 		return
 	}
@@ -164,22 +158,19 @@ func (s sessionHandler) Top(c *gin.Context) {
 // @Router /api/v1/session/delete [post]
 func (s sessionHandler) Delete(c *gin.Context) {
 	body := &types.TalkSessionDeleteRequest{}
-	uid := jwt.HeaderObtainUID(c)
 	if err := c.ShouldBindJSON(body); err != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
 		return
 	}
-	if s.verify(c, uid) {
-		return
-	}
-
-	toInt, err, done := s.convertUID(c, uid)
-	if done {
+	uid, err := jwt.HeaderObtainUID(c)
+	if err != nil {
+		logger.Warn("obtain uid  error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.Unauthorized, err)
 		return
 	}
 	ctx := middleware.WrapCtx(c)
-	err = s.talkSessionDao.Delete(ctx, toInt, int(body.SessionId))
+	err = s.talkSessionDao.Delete(ctx, uid, int(body.SessionId))
 	if err != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.ErrDeleteSessionFail)
@@ -201,37 +192,34 @@ func (s sessionHandler) Delete(c *gin.Context) {
 // @Router /api/v1/session/create [post]
 func (s sessionHandler) Create(c *gin.Context) {
 	body := &types.TalkSessionCreateRequest{}
-	uid := jwt.HeaderObtainUID(c)
-	ctx := middleware.WrapCtx(c)
-	if s.verify(c, uid) {
-		return
-	}
-
-	toInt, err, done := s.convertUID(c, uid)
-	if done {
-		return
-	}
-
 	err2 := c.ShouldBindJSON(body)
 	if err2 != nil {
 		logger.Warn("ShouldBindJSON error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
 		return
 	}
+	ctx := middleware.WrapCtx(c)
 
-	if body.TalkType == constant.ChatPrivateMode && int(body.ReceiverID) == toInt {
+	uid, err := jwt.HeaderObtainUID(c)
+	if err != nil {
+		logger.Warn("obtain uid  error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.Unauthorized, err)
+		return
+	}
+
+	if body.TalkType == constant.ChatPrivateMode && int(body.ReceiverID) == uid {
 		response.Error(c, ecode.ErrCreateSessionFailed)
 		return
 	}
 
-	key := fmt.Sprintf("talk:list:%d-%d-%d", toInt, body.ReceiverID, body.TalkType)
+	key := fmt.Sprintf("talk:list:%d-%d-%d", uid, body.ReceiverID, body.TalkType)
 	if !s.lockCache.Lock(ctx, key, 10) {
 		response.Error(c, ecode.ErrCreateSessionFailed)
 		return
 	}
 
 	talkSession, err := s.talkSessionDao.Create(ctx, &model.TalkSessionCreateOpt{
-		UserId:     toInt,
+		UserId:     uid,
 		TalkType:   int(body.TalkType),
 		ReceiverId: int(body.ReceiverID),
 	})
@@ -249,7 +237,7 @@ func (s sessionHandler) Create(c *gin.Context) {
 	}
 
 	if item.TalkType == constant.ChatPrivateMode {
-		item.UnreadNum = int32(s.unreadCache.Get(ctx, 1, int(body.ReceiverID), toInt))
+		item.UnreadNum = int32(s.unreadCache.Get(ctx, 1, int(body.ReceiverID), uid))
 		user, err := s.userDao.GetByID(ctx, talkSession.ReceiverID)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			response.Error(c, ecode.ErrReceiverUserNotFound)
@@ -273,7 +261,7 @@ func (s sessionHandler) Create(c *gin.Context) {
 	}
 
 	// 查询缓存消息
-	if msg, err := s.messageCache.GetLastMessage(ctx, int(talkSession.TalkType), toInt, int(talkSession.ReceiverID)); err == nil {
+	if msg, err := s.messageCache.GetLastMessage(ctx, int(talkSession.TalkType), uid, int(talkSession.ReceiverID)); err == nil {
 		item.MsgText = msg.Content
 		item.UpdatedAt = msg.Datetime
 	}
@@ -316,22 +304,20 @@ func (s sessionHandler) verify(c *gin.Context, uid string) bool {
 // @Success 200 {object} types.TalkSessionItemsReply{}
 // @Router /api/v1/session/list [get]
 func (s sessionHandler) SessionList(c *gin.Context) {
-	uid := jwt.HeaderObtainUID(c)
-	if s.verify(c, uid) {
-		return
-	}
 	ctx := middleware.WrapCtx(c)
-	toInt, err, done := s.convertUID(c, uid)
-	if done {
+	uid, err := jwt.HeaderObtainUID(c)
+	if err != nil {
+		logger.Warn("obtain uid  error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.Unauthorized, err)
 		return
 	}
 
-	unReads := s.unreadCache.All(ctx, toInt)
+	unReads := s.unreadCache.All(ctx, uid)
 	if len(unReads) > 0 {
-		s.talkSessionDao.BatchAddList(ctx, toInt, unReads)
+		s.talkSessionDao.BatchAddList(ctx, uid, unReads)
 	}
 
-	talkSessions, err := s.talkSessionDao.List(ctx, toInt)
+	talkSessions, err := s.talkSessionDao.List(ctx, uid)
 	if err != nil {
 		response.Error(c, ecode.ErrServerQueryList)
 	}
@@ -362,7 +348,7 @@ func (s sessionHandler) SessionList(c *gin.Context) {
 		}
 
 		// 查询缓存消息
-		if msg, err := s.messageCache.GetLastMessage(ctx, talkSession.TalkType, toInt, talkSession.ReceiverId); err == nil {
+		if msg, err := s.messageCache.GetLastMessage(ctx, talkSession.TalkType, uid, talkSession.ReceiverId); err == nil {
 			value.MsgText = msg.Content
 			value.UpdatedAt = msg.Datetime
 		}
@@ -373,15 +359,6 @@ func (s sessionHandler) SessionList(c *gin.Context) {
 		"data": items,
 	})
 
-}
-
-func (s sessionHandler) convertUID(c *gin.Context, uid string) (int, error, bool) {
-	toInt, err := strutil.StringToInt(uid)
-	if err != nil {
-		response.Error(c, ecode.ErrServerConvertID)
-		return 0, nil, true
-	}
-	return toInt, err, false
 }
 
 func NewSessionHandler() SessionHandler {

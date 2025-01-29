@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/zhufuyi/sponge/pkg/logger"
 	"github.com/zhufuyi/sponge/pkg/servicerd/registry"
 	"golang.org/x/sync/errgroup"
 	"lingua_exchange/internal/config"
@@ -37,7 +38,7 @@ type SocketServerConfig struct {
 
 func (s *SocketServerConfig) String() string {
 	wsAddr := ":" + strconv.Itoa(s.Config.Server.Websocket)
-	return "websocket service address " + wsAddr
+	return "websocket imService address " + wsAddr
 }
 
 type Option func(*SocketServerConfig)
@@ -95,7 +96,7 @@ func (s *SocketServerConfig) Start() error {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 
-	log.Printf("WebSocket server starting on port: %d", s.Config.Server.Websocket)
+	logger.Any("WebSocket server starting on port: %d", s.Config.Server.Websocket)
 
 	return s.run(eg, groupCtx, c)
 }
@@ -106,7 +107,7 @@ func (s *SocketServerConfig) Stop() error {
 	}
 
 	if err := s.deregisterService(); err != nil {
-		log.Printf("Failed to deregister service: %v", err)
+		log.Printf("Failed to deregister imService: %v", err)
 	}
 
 	if s.server != nil {
@@ -172,6 +173,6 @@ func (s *SocketServerConfig) deregisterService() error {
 
 func (s *SocketServerConfig) handleError(name string) {
 	if s.Config.App.Env == "prod" {
-		log.Printf("WebSocket error occurred: %s", name)
+		logger.Any("WebSocket error occurred: %s", name)
 	}
 }

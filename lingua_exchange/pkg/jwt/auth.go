@@ -14,6 +14,7 @@ import (
 	"github.com/zhufuyi/sponge/pkg/logger"
 	"github.com/zhufuyi/sponge/pkg/utils"
 	"lingua_exchange/internal/model"
+	"lingua_exchange/pkg/strutil"
 )
 
 var (
@@ -211,13 +212,21 @@ func HeaderDeviceToken(c *gin.Context) string {
 	}
 }
 
-func HeaderObtainUID(c *gin.Context) string {
+func HeaderObtainUID(c *gin.Context) (int, error) {
 	token := c.Request.Header.Get(authorizationKey)
 	if token != "" {
 		claims, err := jwt.ParseToken(token)
-		if err != nil {
-			return claims.UID
+		if err == nil {
+			return convertUID(claims.UID)
 		}
 	}
-	return ""
+	return 0, errors.New("token expired")
+}
+
+func convertUID(uid string) (int, error) {
+	toInt, err := strutil.StringToInt(uid)
+	if err != nil {
+		return 0, err
+	}
+	return toInt, err
 }

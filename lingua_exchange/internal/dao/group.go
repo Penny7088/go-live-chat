@@ -8,6 +8,7 @@ import (
 
 	"golang.org/x/sync/singleflight"
 	"gorm.io/gorm"
+	"lingua_exchange/internal/types"
 
 	cacheBase "github.com/zhufuyi/sponge/pkg/cache"
 	"github.com/zhufuyi/sponge/pkg/ggorm/query"
@@ -35,12 +36,36 @@ type GroupDao interface {
 	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Group) (uint64, error)
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
 	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.Group) error
+	SearchOvertList(ctx context.Context, opt *types.SearchOvertListOpt) ([]*model.Group, error)
 }
 
 type groupDao struct {
 	db    *gorm.DB
 	cache cache.GroupCache    // if nil, the cache is not used.
 	sfg   *singleflight.Group // if cache is nil, the sfg is not used.
+}
+
+func (d *groupDao) SearchOvertList(ctx context.Context, opt *types.SearchOvertListOpt) ([]*model.Group, error) {
+	return d.findAll(ctx, func(db *gorm.DB) {
+		if opt.Name != "" {
+			db.Where("name like ?", "%"+opt.Name+"%")
+		}
+		db.Where("is_overt = ?", 1)
+		db.Where("id NOT IN (?)", d.db.Select("group_id").Where("user_id = ? and is_quit= ?", opt.UserId, 0).Table("group_member"))
+		db.Where("is_dismiss = 0").Order("created_at desc").Offset((opt.Page - 1) * opt.Size).Limit(opt.Size)
+	})
+}
+
+func (d *groupDao) findAll(ctx context.Context, arg ...func(*gorm.DB)) ([]*model.Group, error) {
+	db := d.db.Model(ctx)
+	for _, fn := range arg {
+		fn(db)
+	}
+	var items []*model.Group
+	if err := db.Scan(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 // NewGroupDao creating the dao interface
@@ -145,7 +170,7 @@ func (d *groupDao) GetByID(ctx context.Context, id uint64) (*model.Group, error)
 
 	if errors.Is(err, model.ErrCacheNotFound) {
 		// for the same id, prevent high concurrent simultaneous access to database
-		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { //nolint
+		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { // nolint
 			table := &model.Group{}
 			err = d.db.WithContext(ctx).Where("id = ?", id).First(table).Error
 			if err != nil {

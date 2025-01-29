@@ -23,3 +23,28 @@ const (
 	ChatGroupMode   = 2 // 群聊模式
 	ChatRoomMode    = 3 // 房间模式
 )
+
+// 群组
+const (
+	GroupMemberQuitStatusYes = 1
+	GroupMemberQuitStatusNo  = 0
+
+	GroupMemberMuteStatusYes = 1
+	GroupMemberMuteStatusNo  = 0
+)
+
+// 消息类型
+const (
+	Text     = "text"     // 文本
+	Code     = "code"     // 代码
+	Location = "location" // 位置
+	Emoticon = "emoticon" // 表情
+	Vote     = "vote"     // 投票
+	Image    = "image"    // 图片
+	Voice    = "voice"    // 语音
+	Video    = "video"    // 视频
+	File     = "file"     // 文件
+	Card     = "card"     // 卡片
+	Forward  = "forward"  // 转发
+	Mixed    = "mixed"    // 混合消息
+)

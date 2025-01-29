@@ -148,6 +148,6 @@ type Item struct {
 type AuthOption struct {
 	TalkType          int
 	UserId            int
-	ReceiverId        int
+	ReceiverId        uint64
 	IsVerifyGroupMute bool
 }

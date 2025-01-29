@@ -7,7 +7,7 @@ import (
 // group business-level http error codes.
 // the groupNO value range is 1~100, if the same error code is used, it will cause panic.
 var (
-	groupNO       = 78
+	groupNO       = 60
 	groupName     = "group"
 	groupBaseCode = errcode.HCode(groupNO)
 
@@ -21,6 +21,7 @@ var (
 	ErrGetByConditionGroup = errcode.NewError(groupBaseCode+7, "failed to get "+groupName+" details by conditions")
 	ErrListByIDsGroup      = errcode.NewError(groupBaseCode+8, "failed to list by batch ids "+groupName)
 	ErrListByLastIDGroup   = errcode.NewError(groupBaseCode+9, "failed to list by last id "+groupName)
+	ErrGroupDismiss        = errcode.NewError(groupBaseCode+10, "group is dismiss "+groupName)
 
 	// error codes are globally unique, adding 1 to the previous error code
 )
