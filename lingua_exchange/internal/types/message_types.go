@@ -21,8 +21,8 @@ type PublishBaseMessageRequest struct {
 }
 
 type MessageReceiver struct {
-	TalkType   int32 `json:"talk_type"`   // 对话类型
-	ReceiverID int32 `json:"receiver_id"` // 接受者ID
+	TalkType   uint `json:"talk_type"`   // 对话类型
+	ReceiverID int  `json:"receiver_id"` // 接受者ID
 }
 
 // TextMessageRequest 文本消息
@@ -82,7 +82,7 @@ type CodeMessageRequest struct {
 // LocationMessageRequest 位置消息
 type LocationMessageRequest struct {
 	Type        string          `json:"type"`
-	Longtitude  string          `json:"longitude" binding:"required"`
+	Longitude   string          `json:"longitude" binding:"required"`
 	Latitude    string          `json:"latitude" binding:"required"`
 	Description string          `json:"description" binding:"required"`
 	Receiver    MessageReceiver `json:"receiver"`
@@ -127,7 +127,7 @@ type EmoticonMessageRequest struct {
 // CardMessageRequest 卡片消息
 type CardMessageRequest struct {
 	Type     string          `json:"type"`
-	UserID   int32           `json:"user_id" binding:"required"`
+	UserID   int             `json:"user_id" binding:"required"`
 	Receiver MessageReceiver `json:"receiver"`
 }
 

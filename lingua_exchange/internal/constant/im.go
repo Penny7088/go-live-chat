@@ -107,3 +107,22 @@ var ChatMsgTypeMapping = map[uint]string{
 	ChatMsgSysGroupMemberCancelMuted: "[群成员解除禁言消息]",
 	ChatMsgSysGroupNotice:            "[群公告]",
 }
+
+const (
+	SubEventImMessage         = "sub.im.message"          // 对话消息通知
+	SubEventImMessageKeyboard = "sub.im.message.keyboard" // 键盘输入事件通知
+	SubEventImMessageRevoke   = "sub.im.message.revoke"   // 聊天消息撤销通知
+	SubEventImMessageRead     = "sub.im.message.read"     // 对话消息读事件
+	SubEventContactStatus     = "sub.im.contact.status"   // 用户在线状态通知
+	SubEventContactApply      = "sub.im.contact.apply"    // 好友申请消息通知
+	SubEventGroupJoin         = "sub.im.group.join"       // 邀请加入群聊通知
+	SubEventGroupApply        = "sub.im.group.apply"      // 入群申请通知
+
+	PushEventImMessage         = "im.message"          // 对话消息推送
+	PushEventImMessageKeyboard = "im.message.keyboard" // 键盘输入事件推送
+	PushEventImMessageRead     = "im.message.read"     // 对话消息读事件推送
+	PushEventImMessageRevoke   = "im.message.revoke"   // 聊天消息撤销推送
+	PushEventContactApply      = "im.contact.apply"    // 好友申请消息推送
+	PushEventContactStatus     = "im.contact.status"   // 用户在线状态推送
+	PushEventGroupApply        = "im.group.apply"      // 用户在线状态推送
+)

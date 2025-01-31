@@ -28,11 +28,12 @@ type ServerModel struct {
 
 type serverCache struct {
 	cache cache.Cache
+	redis *redis.Client
 }
 
 // Set 更新服务心跳时间
 func (s *serverCache) Set(ctx context.Context, server string, time int64) error {
-	_, err := model.GetRedisCli().Pipelined(ctx, func(pipe redis.Pipeliner) error {
+	_, err := s.redis.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 		pipe.SRem(ctx, ServerKeyExpire, server)
 		pipe.HSet(ctx, ServerKey, server, time)
 		return nil
@@ -42,7 +43,7 @@ func (s *serverCache) Set(ctx context.Context, server string, time int64) error 
 
 // Del 删除指定 ServerStorage
 func (s *serverCache) Del(ctx context.Context, server string) error {
-	return model.GetRedisCli().HDel(ctx, ServerKey, server).Err()
+	return s.redis.HDel(ctx, ServerKey, server).Err()
 }
 
 // All 获取指定状态的运行 ServerStorage
@@ -54,7 +55,7 @@ func (s *serverCache) All(ctx context.Context, status int) []string {
 		slice = make([]string, 0)
 	)
 
-	all, err := model.GetRedisCli().HGetAll(ctx, ServerKey).Result()
+	all, err := s.redis.HGetAll(ctx, ServerKey).Result()
 	if err != nil {
 		return slice
 	}
@@ -83,15 +84,15 @@ func (s *serverCache) All(ctx context.Context, status int) []string {
 }
 
 func (s *serverCache) SetExpireServer(ctx context.Context, server string) error {
-	return model.GetRedisCli().SAdd(ctx, ServerKeyExpire, server).Err()
+	return s.redis.SAdd(ctx, ServerKeyExpire, server).Err()
 }
 
 func (s *serverCache) DelExpireServer(ctx context.Context, server string) error {
-	return model.GetRedisCli().SRem(ctx, ServerKeyExpire, server).Err()
+	return s.redis.SRem(ctx, ServerKeyExpire, server).Err()
 }
 
 func (s *serverCache) GetExpireServerAll(ctx context.Context) []string {
-	return model.GetRedisCli().SMembers(ctx, ServerKeyExpire).Val()
+	return s.redis.SMembers(ctx, ServerKeyExpire).Val()
 }
 
 func NewServerCache(cacheType *model.CacheType) ServerCache {
@@ -104,12 +105,12 @@ func NewServerCache(cacheType *model.CacheType) ServerCache {
 		c := cache.NewRedisCache(cacheType.Rdb, cachePrefix, jsonEncoding, func() interface{} {
 			return &ServerModel{}
 		})
-		return &serverCache{cache: c}
+		return &serverCache{cache: c, redis: model.GetRedisCli()}
 	case "memory":
 		c := cache.NewMemoryCache(cachePrefix, jsonEncoding, func() interface{} {
 			return &ServerModel{}
 		})
-		return &serverCache{cache: c}
+		return &serverCache{cache: c, redis: model.GetRedisCli()}
 	}
 
 	return nil // no

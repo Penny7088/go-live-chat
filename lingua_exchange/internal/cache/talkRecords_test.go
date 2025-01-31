@@ -35,13 +35,13 @@ func Test_talkRecordsCache_Set(t *testing.T) {
 	defer c.Close()
 
 	record := c.TestDataSlice[0].(*model.TalkRecords)
-	err := c.ICache.(TalkRecordsCache).Set(c.Ctx, record.ID, record, time.Hour)
+	err := c.ICache.(TalkRecordsCache).Set(c.Ctx, record.MsgID, record, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// nil data
-	err = c.ICache.(TalkRecordsCache).Set(c.Ctx, 0, nil, time.Hour)
+	err = c.ICache.(TalkRecordsCache).Set(c.Ctx, "0", nil, time.Hour)
 	assert.NoError(t, err)
 }
 
@@ -50,45 +50,20 @@ func Test_talkRecordsCache_Get(t *testing.T) {
 	defer c.Close()
 
 	record := c.TestDataSlice[0].(*model.TalkRecords)
-	err := c.ICache.(TalkRecordsCache).Set(c.Ctx, record.ID, record, time.Hour)
+	err := c.ICache.(TalkRecordsCache).Set(c.Ctx, record.MsgID, record, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	got, err := c.ICache.(TalkRecordsCache).Get(c.Ctx, record.ID)
+	got, err := c.ICache.(TalkRecordsCache).Get(c.Ctx, record.MsgID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, record, got)
 
 	// zero key error
-	_, err = c.ICache.(TalkRecordsCache).Get(c.Ctx, 0)
+	_, err = c.ICache.(TalkRecordsCache).Get(c.Ctx, "0")
 	assert.Error(t, err)
-}
-
-func Test_talkRecordsCache_MultiGet(t *testing.T) {
-	c := newTalkRecordsCache()
-	defer c.Close()
-
-	var testData []*model.TalkRecords
-	for _, data := range c.TestDataSlice {
-		testData = append(testData, data.(*model.TalkRecords))
-	}
-
-	err := c.ICache.(TalkRecordsCache).MultiSet(c.Ctx, testData, time.Hour)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	got, err := c.ICache.(TalkRecordsCache).MultiGet(c.Ctx, c.GetIDs())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := c.GetTestData()
-	for k, v := range expected {
-		assert.Equal(t, got[utils.StrToUint64(k)], v.(*model.TalkRecords))
-	}
 }
 
 func Test_talkRecordsCache_MultiSet(t *testing.T) {
@@ -111,7 +86,7 @@ func Test_talkRecordsCache_Del(t *testing.T) {
 	defer c.Close()
 
 	record := c.TestDataSlice[0].(*model.TalkRecords)
-	err := c.ICache.(TalkRecordsCache).Del(c.Ctx, record.ID)
+	err := c.ICache.(TalkRecordsCache).Del(c.Ctx, record.MsgID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +97,7 @@ func Test_talkRecordsCache_SetCacheWithNotFound(t *testing.T) {
 	defer c.Close()
 
 	record := c.TestDataSlice[0].(*model.TalkRecords)
-	err := c.ICache.(TalkRecordsCache).SetCacheWithNotFound(c.Ctx, record.ID)
+	err := c.ICache.(TalkRecordsCache).SetCacheWithNotFound(c.Ctx, record.MsgID)
 	if err != nil {
 		t.Fatal(err)
 	}

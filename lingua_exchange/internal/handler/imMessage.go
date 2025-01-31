@@ -26,7 +26,7 @@ type IMMessageHandler interface {
 
 type imMessageHandler struct {
 	imAuthService  imService.IPermissionService
-	messageService imService.MessageService
+	messageService imService.IMessageService
 }
 
 func NewIMMessageHandler() IMMessageHandler {
