@@ -73,3 +73,8 @@ type TalkRecordExtraMixed struct {
 	// 消息内容。可包含图片、文字、等消息。
 	Items []*TalkRecordExtraMixedItem `json:"items"` // 消息内容。可包含图片、文字、表情等多种消息。
 }
+
+type TalkRecordExtraGroupMembers struct {
+	UserId   int    `gorm:"column:user_id;" json:"id"`        // 用户ID
+	Username string `gorm:"column:nickname;" json:"username"` // 用户昵称
+}
