@@ -18,6 +18,11 @@ type GroupCreateReply struct {
 	GroupID uint64 `json:"group_id"`
 }
 
+// GroupOutRequest 定义了退出群组请求的结构体
+type GroupOutRequest struct {
+	GroupID uint64 `json:"group_id"`
+}
+
 // TalkRecordExtraGroupCreate 创建群消息
 type TalkRecordExtraGroupCreate struct {
 	OwnerId   uint64                        `json:"owner_id"`   // 操作人ID
@@ -28,4 +33,10 @@ type TalkRecordExtraGroupCreate struct {
 // GroupDismissRequest 定义了解散群组请求的结构体
 type GroupDismissRequest struct {
 	GroupID int `json:"group_id" binding:"required"` // 群组 ID，必填
+}
+
+// GroupInviteRequest 表示邀请群组请求
+type GroupInviteRequest struct {
+	GroupID int32  `json:"group_id" validate:"required"`
+	IDs     string `json:"ids" validate:"required,ids"`
 }

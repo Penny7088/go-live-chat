@@ -17,11 +17,15 @@ var (
 	ErrGetByIDGroup    = errcode.NewError(groupBaseCode+4, "failed to get "+groupName+" details")
 	ErrListGroup       = errcode.NewError(groupBaseCode+5, "failed to list of "+groupName)
 
-	ErrDeleteByIDsGroup    = errcode.NewError(groupBaseCode+6, "failed to delete by batch ids "+groupName)
-	ErrGetByConditionGroup = errcode.NewError(groupBaseCode+7, "failed to get "+groupName+" details by conditions")
-	ErrListByIDsGroup      = errcode.NewError(groupBaseCode+8, "failed to list by batch ids "+groupName)
-	ErrListByLastIDGroup   = errcode.NewError(groupBaseCode+9, "failed to list by last id "+groupName)
-	ErrGroupDismiss        = errcode.NewError(groupBaseCode+10, "group is dismiss "+groupName)
+	ErrDeleteByIDsGroup         = errcode.NewError(groupBaseCode+6, "failed to delete by batch ids "+groupName)
+	ErrGetByConditionGroup      = errcode.NewError(groupBaseCode+7, "failed to get "+groupName+" details by conditions")
+	ErrListByIDsGroup           = errcode.NewError(groupBaseCode+8, "failed to list by batch ids "+groupName)
+	ErrListByLastIDGroup        = errcode.NewError(groupBaseCode+9, "failed to list by last id "+groupName)
+	ErrGroupDismiss             = errcode.NewError(groupBaseCode+10, "group is dismiss "+groupName)
+	ErrGroupAlreadyDismiss      = errcode.NewError(groupBaseCode+11, "group already is  dismiss "+groupName)
+	ErrGroupInviteFriendsNil    = errcode.NewError(groupBaseCode+12, "group invite friends is null "+groupName)
+	ErrGroupInviteNotPermission = errcode.NewError(groupBaseCode+13, "group invite friends is not permission "+groupName)
+	ErrGroupInviteFailed        = errcode.NewError(groupBaseCode+14, "group invite friends failed "+groupName)
 
 	// error codes are globally unique, adding 1 to the previous error code
 )

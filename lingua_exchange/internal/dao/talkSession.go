@@ -132,12 +132,17 @@ func (t talkSessionDao) BatchAddList(ctx context.Context, uid int, values map[st
 }
 
 func (t talkSessionDao) IsDisturb(ctx context.Context, uid int, receiverId int, talkType int) bool {
-	return false
+	resp, err := t.FindByWhere(ctx, "user_id = ? and receiver_id = ? and talk_type = ?", uid, receiverId, talkType)
+	return err == nil && resp.IsDisturb == 1
 }
 
 func (t talkSessionDao) FindBySessionId(ctx context.Context, uid int, receiverId int, talkType int) int {
-	// TODO implement me
-	panic("implement me")
+	resp, err := t.FindByWhere(ctx, "user_id = ? and receiver_id = ? and talk_type = ?", uid, receiverId, talkType)
+	if err != nil {
+		return 0
+	}
+
+	return int(resp.ID)
 }
 
 // FindByWhere 根据条件查询一条数据

@@ -78,3 +78,10 @@ type TalkRecordExtraGroupMembers struct {
 	UserId   int    `gorm:"column:user_id;" json:"id"`        // 用户ID
 	Username string `gorm:"column:nickname;" json:"username"` // 用户昵称
 }
+
+// TalkRecordExtraGroupJoin 群主邀请加入群消息
+type TalkRecordExtraGroupJoin struct {
+	OwnerId   uint64                        `json:"owner_id"`   // 操作人ID
+	OwnerName string                        `json:"owner_name"` // 操作人昵称
+	Members   []TalkRecordExtraGroupMembers `json:"members"`    // 成员列表
+}
