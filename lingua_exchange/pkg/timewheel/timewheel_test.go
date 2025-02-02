@@ -2,10 +2,9 @@ package timewheel
 
 import (
 	"fmt"
+	"lingua_exchange/pkg/timeutil"
 	"testing"
 	"time"
-
-	"go-chat/internal/pkg/timeutil"
 )
 
 type Conn struct {
