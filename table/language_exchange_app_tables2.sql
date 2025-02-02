@@ -296,14 +296,6 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `users`
---
-
-LOCK TABLES `users` WRITE;
-/*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (18,'jiahua.2671@gmail.com','there','$2a$10$UVroo3TFRvBlqZLLQMEljOg7Yfrh5KIBrAGjjR1WDZ.dMCKmgELKe','https://cdn.pixabay.com/photo/2024/01/25/10/50/mosque-8531576_1280.jpg',9,9,'female',5,'2024-12-28 10:10:29',NULL,'active',1,NULL,NULL,'2024-12-28 16:46:07','2024-12-28 17:10:29',NULL,'2015-12-28 00:00:00');
-/*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
