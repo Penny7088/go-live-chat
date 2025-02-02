@@ -162,7 +162,7 @@ func (d *talkRecordsDao) GetByID(ctx context.Context, id string) (*model.TalkRec
 			// set cache
 			err = d.cache.Set(ctx, id, table, cache.TalkRecordsExpireTime)
 			if err != nil {
-				return nil, fmt.Errorf("cache.Set error: %v, msg_id=%d", err, id)
+				return nil, fmt.Errorf("cache.Set error: %v, msg_id=%s", err, id)
 			}
 			return table, nil
 		})

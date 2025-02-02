@@ -40,3 +40,35 @@ type GroupInviteRequest struct {
 	GroupID int32  `json:"group_id" validate:"required"`
 	IDs     string `json:"ids" validate:"required,ids"`
 }
+
+// GroupSettingRequest 定义了群组设置请求的结构体
+type GroupSettingRequest struct {
+	GroupID   int32  `json:"group_id" binding:"required"`
+	GroupName string `json:"group_name" binding:"required"`
+	Avatar    string `json:"avatar,omitempty"`
+	Profile   string `json:"profile" binding:"max=255"`
+}
+
+// GroupRemoveMemberRequest 定义了移除群组成员请求的结构体
+type GroupRemoveMemberRequest struct {
+	GroupID    int32  `json:"group_id" binding:"required"`
+	MembersIDs string `json:"members_ids" binding:"required,ids"`
+}
+
+type GroupDetailsRequest struct {
+	GroupID    int  `json:"group_id" binding:"required"`
+}
+
+// GroupDetailResponse 群聊详情接口响应参数
+type GroupDetailResponse struct {
+	GroupID   int    `json:"group_id"`
+	GroupName string `json:"group_name"`
+	Profile   string `json:"profile"`
+	Avatar    string `json:"avatar"`
+	CreatedAt string `json:"created_at"`
+	IsManager bool   `json:"is_manager"`
+	IsDisturb int32  `json:"is_disturb"`
+	VisitCard string `json:"visit_card"`
+	IsMute    int32  `json:"is_mute"`
+	IsOvert   int32  `json:"is_overt"`
+}

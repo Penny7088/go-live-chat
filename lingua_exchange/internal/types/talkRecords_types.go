@@ -85,3 +85,11 @@ type TalkRecordExtraGroupJoin struct {
 	OwnerName string                        `json:"owner_name"` // 操作人昵称
 	Members   []TalkRecordExtraGroupMembers `json:"members"`    // 成员列表
 }
+
+
+// TalkRecordExtraGroupMemberKicked 踢出群成员消息
+type TalkRecordExtraGroupMemberKicked struct {
+	OwnerId   int                           `json:"owner_id"`   // 操作人ID
+	OwnerName string                        `json:"owner_name"` // 操作人昵称
+	Members   []TalkRecordExtraGroupMembers `json:"members"`    // 成员列表
+}

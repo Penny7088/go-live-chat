@@ -26,6 +26,9 @@ var (
 	ErrGroupInviteFriendsNil    = errcode.NewError(groupBaseCode+12, "group invite friends is null "+groupName)
 	ErrGroupInviteNotPermission = errcode.NewError(groupBaseCode+13, "group invite friends is not permission "+groupName)
 	ErrGroupInviteFailed        = errcode.NewError(groupBaseCode+14, "group invite friends failed "+groupName)
+	ErrGroupNotExist            = errcode.NewError(groupBaseCode+15, "group not exist  "+groupName)
+	ErrGroupNotPermission       = errcode.NewError(groupBaseCode+16, "group not permission  "+groupName)
+	ErrGroupDetailsFailed       = errcode.NewError(groupBaseCode+17, "get group details failed  "+groupName)
 
 	// error codes are globally unique, adding 1 to the previous error code
 )

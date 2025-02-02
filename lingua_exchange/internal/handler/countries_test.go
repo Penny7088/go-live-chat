@@ -233,11 +233,13 @@ func Test_countriesHandler_List(t *testing.T) {
 	h.MockDao.SQLMock.ExpectQuery("SELECT .*").WillReturnRows(rows)
 
 	result := &httpcli.StdResult{}
-	err := httpcli.Post(result, h.GetRequestURL("List"), &types.ListCountriessRequest{query.Params{
-		Page:  0,
-		Limit: 10,
-		Sort:  "ignore count", // ignore test count
-	}})
+	err := httpcli.Post(result, h.GetRequestURL("List"), &types.ListCountriessRequest{
+		Params: query.Params{
+			Page:  0,
+			Limit: 10,
+			Sort:  "ignore count", // ignore test count
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

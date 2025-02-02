@@ -91,7 +91,7 @@ func (c *groupCache) Get(ctx context.Context, id uint64) (*model.Group, error) {
 func (c *groupCache) MultiSet(ctx context.Context, data []*model.Group, duration time.Duration) error {
 	valMap := make(map[string]interface{})
 	for _, v := range data {
-		cacheKey := c.GetGroupCacheKey(v.ID)
+		cacheKey := c.GetGroupCacheKey(uint64(v.ID))
 		valMap[cacheKey] = v
 	}
 

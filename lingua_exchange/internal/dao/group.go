@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"lingua_exchange/internal/types"
+
 	"golang.org/x/sync/singleflight"
 	"gorm.io/gorm"
-	"lingua_exchange/internal/types"
 
 	cacheBase "github.com/zhufuyi/sponge/pkg/cache"
 	"github.com/zhufuyi/sponge/pkg/ggorm/query"
@@ -110,7 +111,7 @@ func (d *groupDao) UpdateByID(ctx context.Context, table *model.Group) error {
 	err := d.updateDataByID(ctx, d.db, table)
 
 	// delete cache
-	_ = d.deleteCache(ctx, table.ID)
+	_ = d.deleteCache(ctx, uint64(table.ID))
 
 	return err
 }
@@ -329,7 +330,7 @@ func (d *groupDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*mode
 		}
 		itemMap := make(map[uint64]*model.Group)
 		for _, record := range records {
-			itemMap[record.ID] = record
+			itemMap[uint64(record.ID)] = record
 		}
 		return itemMap, nil
 	}
@@ -370,7 +371,7 @@ func (d *groupDao) GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*mode
 
 			if len(missedData) > 0 {
 				for _, data := range missedData {
-					itemMap[data.ID] = data
+					itemMap[uint64(data.ID)] = data
 				}
 				err = d.cache.MultiSet(ctx, missedData, cache.GroupExpireTime)
 				if err != nil {
@@ -402,7 +403,7 @@ func (d *groupDao) GetByLastID(ctx context.Context, lastID uint64, limit int, so
 // CreateByTx create a record in the database using the provided transaction
 func (d *groupDao) CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Group) (uint64, error) {
 	err := tx.WithContext(ctx).Create(table).Error
-	return table.ID, err
+	return uint64(table.ID), err
 }
 
 // DeleteByTx delete a record by id in the database using the provided transaction
@@ -426,7 +427,7 @@ func (d *groupDao) UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.Gro
 	err := d.updateDataByID(ctx, tx, table)
 
 	// delete cache
-	_ = d.deleteCache(ctx, table.ID)
+	_ = d.deleteCache(ctx, uint64(table.ID))
 
 	return err
 }
