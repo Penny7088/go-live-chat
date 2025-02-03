@@ -8,6 +8,7 @@ import (
 
 	"golang.org/x/sync/singleflight"
 	"gorm.io/gorm"
+	"lingua_exchange/internal/types"
 
 	cacheBase "github.com/zhufuyi/sponge/pkg/cache"
 	"github.com/zhufuyi/sponge/pkg/ggorm/query"
@@ -35,6 +36,7 @@ type GroupNoticeDao interface {
 	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.GroupNotice) (uint64, error)
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
 	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.GroupNotice) error
+	GetListAll(ctx context.Context, groupId int) ([]*types.SearchNoticeItem, error)
 }
 
 type groupNoticeDao struct {
@@ -53,6 +55,35 @@ func NewGroupNoticeDao(db *gorm.DB, xCache cache.GroupNoticeCache) GroupNoticeDa
 		cache: xCache,
 		sfg:   new(singleflight.Group),
 	}
+}
+
+func (d *groupNoticeDao) GetListAll(ctx context.Context, groupId int) ([]*types.SearchNoticeItem, error) {
+	fields := []string{
+		"group_notice.id",
+		"group_notice.creator_id",
+		"group_notice.title",
+		"group_notice.content",
+		"group_notice.is_top",
+		"group_notice.is_confirm",
+		"group_notice.confirm_users",
+		"group_notice.created_at",
+		"group_notice.updated_at",
+		"users.avatar",
+		"users.profile_picture",
+	}
+	query := d.db.WithContext(ctx).Table("group_notice")
+	query.Joins("left join users on users.id = group_notice.creator_id")
+	query.Where("group_notice.group_id = ? and group_notice.is_delete = ?", groupId, 0)
+	query.Order("group_notice.is_top desc")
+	query.Order("group_notice.created_at desc")
+
+	var items []*types.SearchNoticeItem
+	if err := query.Select(fields).Scan(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+
 }
 
 func (d *groupNoticeDao) deleteCache(ctx context.Context, id uint64) error {

@@ -38,6 +38,9 @@ var (
 	ErrGroupApplyNotFound           = errcode.NewError(groupBaseCode+24, "Group apply not found  "+groupName)
 	ErrGroupApplyAlreadyHandler     = errcode.NewError(groupBaseCode+25, "Group apply already handler  "+groupName)
 	ErrGroupApplyUpdate             = errcode.NewError(groupBaseCode+26, "Group apply update err  "+groupName)
+	ErrGroupNoticeDeleteFailed      = errcode.NewError(groupBaseCode+27, "Group notice delete err  "+groupName)
+	ErrAllGroupNotice               = errcode.NewError(groupBaseCode+28, "get group all notice err  "+groupName)
+	ErrNoticeCreateOrUpdateFailed   = errcode.NewError(groupBaseCode+29, "create or update notice err  "+groupName)
 
 	// error codes are globally unique, adding 1 to the previous error code
 )
