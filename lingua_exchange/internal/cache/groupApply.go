@@ -2,9 +2,11 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/zhufuyi/sponge/pkg/cache"
 	"github.com/zhufuyi/sponge/pkg/encoding"
 	"github.com/zhufuyi/sponge/pkg/utils"
@@ -29,11 +31,27 @@ type GroupApplyCache interface {
 	MultiSet(ctx context.Context, data []*model.GroupApply, duration time.Duration) error
 	Del(ctx context.Context, id uint64) error
 	SetCacheWithNotFound(ctx context.Context, id uint64) error
+	Incr(ctx context.Context, uid uint64)
+	GetCount(ctx context.Context, uid uint64) int
 }
 
 // groupApplyCache define a cache struct
 type groupApplyCache struct {
 	cache cache.Cache
+	redis *redis.Client
+}
+
+func (g *groupApplyCache) Incr(ctx context.Context, uid uint64) {
+	g.redis.Incr(ctx, g.name(uid))
+}
+
+func (g *groupApplyCache) GetCount(ctx context.Context, uid uint64) int {
+	val, err := g.redis.Get(ctx, g.name(uid)).Int()
+	if err != nil {
+		return 0
+	}
+
+	return val
 }
 
 // NewGroupApplyCache new a cache
@@ -47,15 +65,19 @@ func NewGroupApplyCache(cacheType *model.CacheType) GroupApplyCache {
 		c := cache.NewRedisCache(cacheType.Rdb, cachePrefix, jsonEncoding, func() interface{} {
 			return &model.GroupApply{}
 		})
-		return &groupApplyCache{cache: c}
+		return &groupApplyCache{cache: c, redis: model.GetRedisCli()}
 	case "memory":
 		c := cache.NewMemoryCache(cachePrefix, jsonEncoding, func() interface{} {
 			return &model.GroupApply{}
 		})
-		return &groupApplyCache{cache: c}
+		return &groupApplyCache{cache: c, redis: model.GetRedisCli()}
 	}
 
 	return nil // no cache
+}
+
+func (g *groupApplyCache) name(uid uint64) string {
+	return fmt.Sprintf("im:group:apply:unread:uid_%d", uid)
 }
 
 // GetGroupApplyCacheKey cache key
@@ -130,7 +152,7 @@ func (c *groupApplyCache) MultiGet(ctx context.Context, ids []uint64) (map[uint6
 
 // Del delete cache
 func (c *groupApplyCache) Del(ctx context.Context, id uint64) error {
-	cacheKey := c.GetGroupApplyCacheKey(id)
+	cacheKey := c.name(id)
 	err := c.cache.Del(ctx, cacheKey)
 	if err != nil {
 		return err

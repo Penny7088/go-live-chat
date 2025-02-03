@@ -75,8 +75,8 @@ type TalkRecordExtraMixed struct {
 }
 
 type TalkRecordExtraGroupMembers struct {
-	UserId   int    `gorm:"column:user_id;" json:"id"`        // 用户ID
-	Username string `gorm:"column:nickname;" json:"username"` // 用户昵称
+	UserId   int    `gorm:"column:id;" json:"id"`             // 用户ID
+	Username string `gorm:"column:username;" json:"username"` // 用户昵称
 }
 
 // TalkRecordExtraGroupJoin 群主邀请加入群消息
@@ -86,10 +86,28 @@ type TalkRecordExtraGroupJoin struct {
 	Members   []TalkRecordExtraGroupMembers `json:"members"`    // 成员列表
 }
 
-
 // TalkRecordExtraGroupMemberKicked 踢出群成员消息
 type TalkRecordExtraGroupMemberKicked struct {
 	OwnerId   int                           `json:"owner_id"`   // 操作人ID
 	OwnerName string                        `json:"owner_name"` // 操作人昵称
 	Members   []TalkRecordExtraGroupMembers `json:"members"`    // 成员列表
+}
+
+// TalkRecordExtraGroupMemberCancelMuted 管理员解除群成员禁言消息
+type TalkRecordExtraGroupMemberCancelMuted struct {
+	OwnerId   int                           `json:"owner_id"`   // 操作人ID
+	OwnerName string                        `json:"owner_name"` // 操作人昵称
+	Members   []TalkRecordExtraGroupMembers `json:"members"`    // 成员列表
+}
+
+// TalkRecordExtraGroupMuted 管理员设置群禁言消息
+type TalkRecordExtraGroupMuted struct {
+	OwnerId   int    `json:"owner_id"`   // 操作人ID
+	OwnerName string `json:"owner_name"` // 操作人昵称
+}
+
+// TalkRecordExtraGroupCancelMuted 管理员解除群禁言消息
+type TalkRecordExtraGroupCancelMuted struct {
+	OwnerId   int    `json:"owner_id"`   // 操作人ID
+	OwnerName string `json:"owner_name"` // 操作人昵称
 }

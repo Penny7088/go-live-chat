@@ -8,6 +8,8 @@ import (
 
 	"golang.org/x/sync/singleflight"
 	"gorm.io/gorm"
+	"lingua_exchange/internal/constant"
+	"lingua_exchange/internal/types"
 
 	cacheBase "github.com/zhufuyi/sponge/pkg/cache"
 	"github.com/zhufuyi/sponge/pkg/ggorm/query"
@@ -35,6 +37,8 @@ type GroupApplyDao interface {
 	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.GroupApply) (uint64, error)
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
 	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.GroupApply) error
+
+	List(ctx context.Context, groupIds []uint) ([]*types.GroupApplyList, error)
 }
 
 type groupApplyDao struct {
@@ -53,6 +57,31 @@ func NewGroupApplyDao(db *gorm.DB, xCache cache.GroupApplyCache) GroupApplyDao {
 		cache: xCache,
 		sfg:   new(singleflight.Group),
 	}
+}
+
+func (d *groupApplyDao) List(ctx context.Context, groupIds []uint) ([]*types.GroupApplyList, error) {
+	fields := []string{
+		"group_apply.id",
+		"group_apply.group_id",
+		"group_apply.user_id",
+		"group_apply.remark",
+		"group_apply.created_at",
+		"users.profile_picture",
+		"users.username",
+	}
+
+	query := d.db.WithContext(ctx).Table("group_apply")
+	query.Joins("left join users on users.id = group_apply.user_id")
+	query.Where("group_apply.group_id in ?", groupIds)
+	query.Where("group_apply.status = ?", constant.GroupApplyStatusWait)
+	query.Order("group_apply.updated_at desc,group_apply.id desc")
+
+	var items []*types.GroupApplyList
+	if err := query.Select(fields).Scan(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
 
 func (d *groupApplyDao) deleteCache(ctx context.Context, id uint64) error {
@@ -133,7 +162,7 @@ func (d *groupApplyDao) GetByID(ctx context.Context, id uint64) (*model.GroupApp
 
 	if errors.Is(err, model.ErrCacheNotFound) {
 		// for the same id, prevent high concurrent simultaneous access to database
-		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { //nolint
+		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { // nolint
 			table := &model.GroupApply{}
 			err = d.db.WithContext(ctx).Where("id = ?", id).First(table).Error
 			if err != nil {

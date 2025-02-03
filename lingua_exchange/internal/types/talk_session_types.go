@@ -80,3 +80,8 @@ type TalkSessionClearUnreadNumRequest struct {
 	TalkType   int32 `json:"talk_type" binding:"required,oneof=1 2"`       // 对话类型
 	ReceiverId int32 `json:"receiver_id" binding:"required,numeric,min=1"` // 接收者ID
 }
+
+type TalkSessionPart struct {
+	ReceiverID int   `json:"receiver_id"`
+	IsDisturb  int32 `json:"is_disturb"`
+}

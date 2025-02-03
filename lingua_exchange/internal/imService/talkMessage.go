@@ -220,8 +220,7 @@ func (m MessageService) SendLogin(ctx *context.Context, uid int, req *types.Logi
 }
 
 func (m MessageService) SendSysOther(ctx *context.Context, data *model.TalkRecords) error {
-	// TODO implement me
-	panic("implement me")
+	return m.save(ctx, data)
 }
 
 func (m MessageService) SendMixedMessage(ctx *context.Context, uid int, req *types.MixedMessageRequest) error {

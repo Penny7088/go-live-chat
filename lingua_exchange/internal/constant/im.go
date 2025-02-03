@@ -126,3 +126,14 @@ const (
 	PushEventContactStatus     = "im.contact.status"   // 用户在线状态推送
 	PushEventGroupApply        = "im.group.apply"      // 用户在线状态推送
 )
+
+const (
+	TalkRecordTalkTypePrivate = 1
+	TalkRecordTalkTypeGroup   = 2
+)
+
+const (
+	GroupApplyStatusWait   = 1 // 待处理
+	GroupApplyStatusPass   = 2 // 通过
+	GroupApplyStatusRefuse = 3 // 拒绝
+)

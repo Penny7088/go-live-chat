@@ -33,11 +33,13 @@ type GroupDao interface {
 	GetByCondition(ctx context.Context, condition *query.Conditions) (*model.Group, error)
 	GetByIDs(ctx context.Context, ids []uint64) (map[uint64]*model.Group, error)
 	GetByLastID(ctx context.Context, lastID uint64, limit int, sort string) ([]*model.Group, error)
+	GroupList(ctx context.Context, id int) ([]*types.GroupItem, error)
 
 	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.Group) (uint64, error)
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
 	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.Group) error
 	SearchOvertList(ctx context.Context, opt *types.SearchOvertListOpt) ([]*model.Group, error)
+	FindAll(ctx context.Context, arg ...func(*gorm.DB)) ([]*model.Group, error)
 }
 
 type groupDao struct {
@@ -47,7 +49,7 @@ type groupDao struct {
 }
 
 func (d *groupDao) SearchOvertList(ctx context.Context, opt *types.SearchOvertListOpt) ([]*model.Group, error) {
-	return d.findAll(ctx, func(db *gorm.DB) {
+	return d.FindAll(ctx, func(db *gorm.DB) {
 		if opt.Name != "" {
 			db.Where("name like ?", "%"+opt.Name+"%")
 		}
@@ -57,7 +59,49 @@ func (d *groupDao) SearchOvertList(ctx context.Context, opt *types.SearchOvertLi
 	})
 }
 
-func (d *groupDao) findAll(ctx context.Context, arg ...func(*gorm.DB)) ([]*model.Group, error) {
+func (d *groupDao) GroupList(ctx context.Context, id int) ([]*types.GroupItem, error) {
+	tx := d.db.Table("group_member")
+	tx.Select("`group`.id,`group`.name as group_name,`group`.avatar,`group`.profile,group_member.leader,`group`.creator_id")
+	tx.Joins("left join `group` on `group`.id = group_member.group_id")
+	tx.Where("group_member.user_id = ? and group_member.is_quit = ?", id, 0)
+	tx.Order("group_member.created_at desc")
+	items := make([]*types.GroupItem, 0)
+	if err := tx.Scan(&items).Error; err != nil {
+		return nil, err
+	}
+	length := len(items)
+	if length == 0 {
+		return items, nil
+	}
+
+	ids := make([]int, 0, length)
+	for i := range items {
+		ids = append(ids, items[i].ID)
+	}
+
+	query := d.db.Table("talk_session")
+	query.Select("receiver_id,is_disturb")
+	query.Where("talk_type = ? and receiver_id in ?", 2, ids)
+	list := make([]*types.TalkSessionPart, 0)
+	if err := query.Find(&list).Error; err != nil {
+		return nil, err
+	}
+
+	hash := make(map[int]*types.TalkSessionPart)
+	for i := range list {
+		hash[list[i].ReceiverID] = list[i]
+	}
+
+	for i := range items {
+		if value, ok := hash[items[i].ID]; ok {
+			items[i].IsDisturb = value.IsDisturb
+		}
+	}
+
+	return items, nil
+}
+
+func (d *groupDao) FindAll(ctx context.Context, arg ...func(*gorm.DB)) ([]*model.Group, error) {
 	db := d.db.Model(ctx)
 	for _, fn := range arg {
 		fn(db)

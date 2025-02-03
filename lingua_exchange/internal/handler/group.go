@@ -35,14 +35,8 @@ type GroupHandler interface {
 	Invite(ctx *gin.Context)
 	SignOut(ctx *gin.Context)
 	Setting(ctx *gin.Context)
-	RemoveMembers(ctx *gin.Context)
 	Detail(ctx *gin.Context)
-	UpdateMemberRemark(ctx *gin.Context)
-	GetInviteFriends(ctx *gin.Context)
 	GroupList(ctx *gin.Context)
-	Members(ctx *gin.Context)
-	OvertList(ctx *gin.Context)
-	Overt(ctx *gin.Context)
 	Handover(ctx *gin.Context)
 	AssignAdmin(ctx *gin.Context)
 	NoSpeak(ctx *gin.Context)
@@ -60,6 +54,7 @@ type groupHandler struct {
 	redisLock        *cache.RedisLock
 	talkSessionDao   dao.TalkSessionDao
 	messageService   imService.IMessageService
+	usersDao         dao.UsersDao
 }
 
 func (g groupHandler) Create(ctx *gin.Context) {
@@ -508,125 +503,6 @@ func (g groupHandler) updateGroup(ctx context.Context, params *model.Group) erro
 	return nil
 }
 
-func (g groupHandler) RemoveMembers(c *gin.Context) {
-	params := &types.GroupRemoveMemberRequest{}
-	if err := c.ShouldBindJSON(params); err != nil {
-		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
-		response.Error(c, ecode.InvalidParams)
-		return
-	}
-
-	uid, err2 := jwt.HeaderObtainUID(c)
-	if err2 != nil {
-		logger.Warn("uid obtain error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
-		response.Error(c, ecode.InvalidParams)
-		return
-	}
-
-	ctx := middleware.WrapCtx(c)
-
-	if !g.groupMemberDao.IsLeader(ctx, int(params.GroupID), uid) {
-		logger.Warn("非群主，无权移除群成员", middleware.GCtxRequestIDField(c))
-		response.Error(c, ecode.ErrGroupNotPermission)
-		return
-	}
-
-	g.removeMember(ctx, params, uid)
-
-}
-
-func (g groupHandler) removeMember(ctx context.Context, params *types.GroupRemoveMemberRequest, uid int) error {
-	var num int64
-	membersIDs := sliceutil.ParseIds(params.MembersIDs)
-
-	if err := g.db.Model(&model.GroupMember{}).Where("group_id =? and user_id =? and is_quit =0", params.GroupID, uid, constant.GroupMemberQuitStatusNo).Count(&num).Error; err != nil {
-		return err
-	}
-	if int(num) != len(membersIDs) {
-		return errors.New("移除成员失败")
-	}
-
-	mids := make([]int, 0)
-	mids = append(mids, membersIDs...)
-	mids = append(mids, uid)
-
-	memberItems := make([]*model.Users, 0)
-	err := g.db.Table("users").Select("id,username").Select("id in?", mids).Scan(&memberItems).Error
-	if err != nil {
-		return err
-	}
-	memberMaps := make(map[int]*model.Users)
-	for _, item := range memberItems {
-		memberMaps[int(item.ID)] = item
-	}
-
-	members := make([]types.TalkRecordExtraGroupMembers, 0)
-	for _, value := range membersIDs {
-		members = append(members, types.TalkRecordExtraGroupMembers{
-			UserId:   value,
-			Username: memberMaps[value].Username,
-		})
-	}
-
-	record := &model.TalkRecords{
-		MsgID:      strutil.NewMsgId(),
-		Sequence:   g.talkRecordCache.GetSequence(ctx, 0, int(params.GroupID)),
-		TalkType:   constant.ChatGroupMode,
-		ReceiverID: int(params.GroupID),
-		MsgType:    constant.ChatMsgSysGroupMemberKicked,
-		Extra: jsonutil.Encode(&types.TalkRecordExtraGroupMemberKicked{
-			OwnerId:   int(memberMaps[uid].ID),
-			OwnerName: memberMaps[uid].Username,
-			Members:   members,
-		}),
-	}
-
-	err = g.db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&model.GroupMember{}).Where("group_id = ? and user_id in ? and is_quit = 0", params.GroupID, membersIDs).Updates(map[string]any{
-			"is_quit":    1,
-			"updated_at": time.Now(),
-		}).Error
-		if err != nil {
-			return err
-		}
-
-		return tx.Create(record).Error
-	})
-
-	if err != nil {
-		return err
-	}
-
-	g.groupMemberCache.BatchDelGroupRelation(ctx,membersIDs,int(params.GroupID))
-
-	// 广播网关将在线的用户加入房间
-	_, _ = g.redis.Pipelined(ctx, func(pipe redis.Pipeliner) error {
-		pipe.Publish(ctx, constant.ImTopicChat, jsonutil.Encode(map[string]any{
-			"event": constant.SubEventGroupJoin,
-			"data": jsonutil.Encode(map[string]any{
-				"type":     2,
-				"group_id": params.GroupID,
-				"uids":     membersIDs,
-			}),
-		}))
-
-		pipe.Publish(ctx, constant.ImTopicChat, jsonutil.Encode(map[string]any{
-			"event": constant.SubEventImMessage,
-			"data": jsonutil.Encode(map[string]any{
-				"sender_id":   int64(record.UserID),
-				"receiver_id": int64(record.ReceiverID),
-				"talk_type":   record.TalkType,
-				"msg_id":      record.MsgID,
-			}),
-		}))
-		return nil
-	})
-
-
-	return nil
-
-}
-
 func (g groupHandler) Detail(c *gin.Context) {
 	params := &types.GroupDetailsRequest{}
 	if err := c.ShouldBindQuery(params); err != nil {
@@ -635,8 +511,8 @@ func (g groupHandler) Detail(c *gin.Context) {
 		return
 	}
 
-	uid,err := jwt.HeaderObtainUID(c)
-	if err!= nil {
+	uid, err := jwt.HeaderObtainUID(c)
+	if err != nil {
 		logger.Warn("uid obtain error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
 		response.Error(c, ecode.InvalidParams)
 		return
@@ -657,7 +533,7 @@ func (g groupHandler) Detail(c *gin.Context) {
 	}
 
 	resp := &types.GroupDetailResponse{
-		GroupID:   int(groupInfo.ID),
+		GroupID:   groupInfo.ID,
 		GroupName: groupInfo.Name,
 		Profile:   groupInfo.Profile,
 		Avatar:    groupInfo.Avatar,
@@ -669,72 +545,295 @@ func (g groupHandler) Detail(c *gin.Context) {
 		VisitCard: g.groupMemberDao.GetMemberRemark(ctx, int(params.GroupID), uid),
 	}
 
-	if g.talkSessionDao.IsDisturb(ctx,uid, groupInfo.ID, 2) {
+	if g.talkSessionDao.IsDisturb(ctx, uid, groupInfo.ID, 2) {
 		resp.IsDisturb = 1
 	}
 
 	response.Success(c, resp)
 }
 
-func (g groupHandler) UpdateMemberRemark(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
+func (g groupHandler) GroupList(c *gin.Context) {
+	uid, err := jwt.HeaderObtainUID(c)
+	if err != nil {
+		logger.Warn("uid obtain error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	ctx := middleware.WrapCtx(c)
+	items, err := g.groupDao.GroupList(ctx, uid)
+
+	resp := &types.GroupListResponse{
+		Items: make([]types.GroupItem, 0, len(items)),
+	}
+
+	for _, item := range items {
+		gi := types.GroupItem{
+			ID:        item.ID,
+			GroupName: item.GroupName,
+			Avatar:    item.Avatar,
+			Profile:   item.Profile,
+			Leader:    item.Leader,
+			IsDisturb: item.IsDisturb,
+			CreatorID: item.CreatorID,
+		}
+		resp.Items = append(resp.Items, gi)
+	}
+
+	response.Success(c, resp)
 }
 
-func (g groupHandler) GetInviteFriends(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
+func (g groupHandler) Handover(c *gin.Context) {
+	params := &types.GroupHandoverRequest{}
+	if err := c.ShouldBindJSON(params); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	uid, err2 := jwt.HeaderObtainUID(c)
+	if err2 != nil {
+		logger.Warn("uid obtain error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	ctx := middleware.WrapCtx(c)
+	if !g.groupMemberDao.IsMaster(ctx, params.GroupID, uid) {
+		logger.Warn("not permission ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupNotPermission)
+		return
+	}
+
+	if uid == params.UserID {
+		logger.Warn("not permission ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupNotPermission)
+		return
+	}
+
+	err := g.groupMemberDao.Handover(ctx, params.GroupID, uid, params.UserID)
+	if err != nil {
+		logger.Warn("转让失败", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupHandoverFailed)
+		return
+	}
+
+	members := make([]types.TalkRecordExtraGroupMembers, 0)
+	g.db.Table("users").Select("id as user_id", "username").Where("id in ?", []int{uid, params.UserID}).Scan(&members)
+	extra := types.TalkRecordExtraGroupTransfer{}
+	for _, member := range members {
+		if member.UserId == uid {
+			extra.OldOwnerId = member.UserId
+			extra.OldOwnerName = member.Username
+		} else {
+			extra.NewOwnerId = member.UserId
+			extra.NewOwnerName = member.Username
+		}
+	}
+	_ = g.messageService.SendSysOther(&ctx, &model.TalkRecords{
+		MsgType:    constant.ChatMsgSysGroupTransfer,
+		TalkType:   constant.TalkRecordTalkTypeGroup,
+		UserID:     uid,
+		ReceiverID: params.GroupID,
+		Extra:      jsonutil.Encode(extra),
+	})
+
+	response.Success(c, "ok")
 }
 
-func (g groupHandler) GroupList(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
+func (g groupHandler) AssignAdmin(c *gin.Context) {
+	params := &types.GroupAssignAdminRequest{}
+	if err := c.ShouldBindJSON(params); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	uid, err2 := jwt.HeaderObtainUID(c)
+	if err2 != nil {
+		logger.Warn("uid obtain error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+
+	ctx := middleware.WrapCtx(c)
+	if !g.groupMemberDao.IsMaster(ctx, params.GroupID, uid) {
+		logger.Warn("not permission ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupNotPermission)
+		return
+	}
+
+	leader := 0
+	if params.Mode == 1 {
+		leader = 1
+	}
+	err := g.groupMemberDao.SetLeaderStatus(ctx, params.GroupID, params.UserID, leader)
+	if err != nil {
+		logger.Warn("[Group AssignAdmin] 设置管理员信息失败 err :%s", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupAssignAdmin)
+		return
+	}
+	response.Success(c, "ok")
 }
 
-func (g groupHandler) Members(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
+func (g groupHandler) NoSpeak(c *gin.Context) {
+	params := &types.GroupNoSpeakRequest{}
+	if err := c.ShouldBindJSON(params); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	uid, err2 := jwt.HeaderObtainUID(c)
+	if err2 != nil {
+		logger.Warn("uid obtain error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+
+	ctx := middleware.WrapCtx(c)
+
+	if !g.groupMemberDao.IsLeader(ctx, params.GroupID, uid) {
+		logger.Warn("not permission ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupNotPermission)
+		return
+	}
+	status := 1
+	if params.Mode == 2 {
+		status = 0
+	}
+	err := g.groupMemberDao.SetMuteStatus(ctx, params.GroupID, params.UserID, status)
+	if err != nil {
+		logger.Warn("设置群成员禁言失败 ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupBanSpeakFailed)
+		return
+	}
+
+	data := &model.TalkRecords{
+		TalkType:   constant.TalkRecordTalkTypeGroup,
+		UserID:     uid,
+		ReceiverID: params.GroupID,
+	}
+	members := make([]types.TalkRecordExtraGroupMembers, 0)
+	g.db.Table("users").Select("id as user_id", "username").Where("id = ?", params.UserID).Scan(&members)
+
+	user, err2 := g.usersDao.GetByID(ctx, uint64(uid))
+	if err2 != nil {
+		logger.Warn("获取当前用户信息失败 ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupBanSpeakFailed)
+		return
+	}
+
+	if status == 1 {
+		data.MsgType = constant.ChatMsgSysGroupMemberMuted
+		data.Extra = jsonutil.Encode(types.TalkRecordExtraGroupMemberCancelMuted{
+			OwnerId:   uid,
+			OwnerName: user.Username,
+			Members:   members,
+		})
+	} else {
+		data.MsgType = constant.ChatMsgSysGroupMemberCancelMuted
+		data.Extra = jsonutil.Encode(types.TalkRecordExtraGroupMemberCancelMuted{
+			OwnerId:   uid,
+			OwnerName: user.Username,
+			Members:   members,
+		})
+	}
+	_ = g.messageService.SendSysOther(&ctx, data)
+
+	response.Success(c, "ok")
 }
 
-func (g groupHandler) OvertList(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
-}
+func (g groupHandler) Mute(c *gin.Context) {
+	params := &types.GroupMuteRequest{}
+	if err := c.ShouldBindJSON(params); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	uid, err2 := jwt.HeaderObtainUID(c)
+	if err2 != nil {
+		logger.Warn("uid obtain error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
 
-func (g groupHandler) Overt(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
-}
+	ctx := middleware.WrapCtx(c)
+	group, err := g.groupDao.GetByID(ctx, uint64(params.GroupID))
+	if err != nil {
+		logger.Warn("获取当前群失败: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupMuteFailed)
+		return
+	}
 
-func (g groupHandler) Handover(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
-}
+	if group.IsDismiss == 1 {
+		logger.Warn("当前群已解散: ", middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupAlreadyDismiss)
+		return
+	}
 
-func (g groupHandler) AssignAdmin(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
-}
+	if !g.groupMemberDao.IsLeader(ctx, params.GroupID, uid) {
+		logger.Warn("not permission ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupNotPermission)
+		return
+	}
 
-func (g groupHandler) NoSpeak(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
-}
+	data := &model.Group{}
+	data.ID = params.GroupID
+	if params.Mode == 1 {
+		data.IsMute = 1
+	} else {
+		data.IsMute = 0
+	}
 
-func (g groupHandler) Mute(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
+	err = g.groupDao.UpdateByID(ctx, data)
+	if err != nil {
+		logger.Warn("更新群信息失败: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupMuteFailed)
+		return
+	}
+
+	user, err := g.usersDao.GetByID(ctx, uint64(uid))
+	if err != nil {
+		logger.Warn("获取当前用户失败: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupMuteFailed)
+		return
+	}
+
+	var (
+		extra   any
+		msgType int
+	)
+	if params.Mode == 1 {
+		msgType = constant.ChatMsgSysGroupMuted
+		extra = types.TalkRecordExtraGroupMuted{
+			OwnerId:   int(user.ID),
+			OwnerName: user.Username,
+		}
+	} else {
+		msgType = constant.ChatMsgSysGroupCancelMuted
+		extra = types.TalkRecordExtraGroupCancelMuted{
+			OwnerId:   int(user.ID),
+			OwnerName: user.Username,
+		}
+	}
+
+	_ = g.messageService.SendSysOther(&ctx, &model.TalkRecords{
+		MsgType:    uint(msgType),
+		TalkType:   constant.TalkRecordTalkTypeGroup,
+		UserID:     uid,
+		ReceiverID: params.GroupID,
+		Extra:      jsonutil.Encode(extra),
+	})
+
+	response.Success(c, "ok")
 }
 
 func NewGroupHandler() GroupHandler {
 	return &groupHandler{
-		groupDao:        dao.NewGroupDao(model.GetDB(), cache.NewGroupCache(model.GetCacheType())),
-		db:              model.GetDB(),
-		talkRecordsDao:  dao.NewTalkRecordsDao(model.GetDB(), cache.NewTalkRecordsCache(model.GetCacheType())),
-		talkRecordCache: cache.NewTalkRecordsCache(model.GetCacheType()),
-		redis:           model.GetRedisCli(),
-		groupMemberDao:  dao.NewGroupMemberDao(model.GetDB(), cache.NewGroupMemberCache(model.GetCacheType())),
-		talkSessionDao:  dao.NewTalkSessionDao(model.GetDB()),
+		groupDao:         dao.NewGroupDao(model.GetDB(), cache.NewGroupCache(model.GetCacheType())),
+		db:               model.GetDB(),
+		talkRecordsDao:   dao.NewTalkRecordsDao(model.GetDB(), cache.NewTalkRecordsCache(model.GetCacheType())),
+		talkRecordCache:  cache.NewTalkRecordsCache(model.GetCacheType()),
+		redis:            model.GetRedisCli(),
+		groupMemberDao:   dao.NewGroupMemberDao(model.GetDB(), cache.NewGroupMemberCache(model.GetCacheType())),
+		talkSessionDao:   dao.NewTalkSessionDao(model.GetDB()),
 		groupMemberCache: cache.NewGroupMemberCache(model.GetCacheType()),
+		usersDao:         dao.NewUsersDao(model.GetDB(), cache.NewUsersCache(model.GetCacheType())),
 	}
 }

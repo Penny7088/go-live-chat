@@ -33,6 +33,9 @@ type GroupMemberDao interface {
 	Handover(ctx context.Context, groupId int, userId int, memberId int) error
 	SetLeaderStatus(ctx context.Context, groupId int, userId int, leader int) error
 	SetMuteStatus(ctx context.Context, groupId int, userId int, status int) error
+	UpdateWhere(ctx context.Context, data any, where string, args ...any) (int64, error)
+	FindByWhere(ctx context.Context, where string, args ...any) (*model.GroupMember, error)
+	FindAll(ctx context.Context, arg ...func(*gorm.DB)) ([]*model.GroupMember, error)
 }
 
 type groupMemberDao struct {
@@ -50,6 +53,34 @@ func NewGroupMemberDao(db *gorm.DB, xCache cache.GroupMemberCache) GroupMemberDa
 		cache: xCache,
 		sfg:   new(singleflight.Group),
 	}
+}
+
+func (g groupMemberDao) FindAll(ctx context.Context, arg ...func(*gorm.DB)) ([]*model.GroupMember, error) {
+	tx := g.db.Model(ctx)
+	for _, fn := range arg {
+		fn(tx)
+	}
+
+	var items []*model.GroupMember
+	if err := tx.Scan(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+func (g groupMemberDao) FindByWhere(ctx context.Context, where string, args ...any) (*model.GroupMember, error) {
+	var item *model.GroupMember
+	err := g.db.Model(ctx).Where(where, args...).First(&item).Error
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
+}
+
+func (g groupMemberDao) UpdateWhere(ctx context.Context, data any, where string, args ...any) (int64, error) {
+	updates := g.db.Model(ctx).Where(where, args...).Updates(data)
+	return updates.RowsAffected, updates.Error
 }
 
 func (g groupMemberDao) IsMaster(ctx context.Context, gid, uid int) bool {
