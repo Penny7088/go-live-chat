@@ -138,14 +138,105 @@ func (g groupApplyHandler) Agree(ctx *gin.Context) {
 	panic("implement me")
 }
 
-func (g groupApplyHandler) Decline(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
+func (g groupApplyHandler) Decline(c *gin.Context) {
+	params := &types.GroupApplyDeclineRequest{}
+	if err := c.ShouldBindJSON(params); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	uid, err2 := jwt.HeaderObtainUID(c)
+	if err2 != nil {
+		logger.Warn("uid obtain error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	ctx := middleware.WrapCtx(c)
+	apply, err := g.iDao.GetByID(ctx, uint64(params.ApplyID))
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Warn("apply not found  error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupApplyCreateFailed)
+		return
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Warn("apply not found  error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupApplyNotFound)
+		return
+	}
+
+	isLeader := g.groupMemberDao.IsLeader(ctx, int(apply.GroupID), uid)
+	if !isLeader {
+		logger.Warn("not permission ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupNotPermission)
+		return
+	}
+
+	if apply.Status != constant.GroupApplyStatusWait {
+		logger.Warn("申请信息已被他(她)人处理 ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupApplyAlreadyHandler)
+		return
+	}
+
+	apply = &model.GroupApply{
+		ID:     uint64(params.ApplyID),
+		Status: constant.GroupApplyStatusRefuse,
+		Reason: params.Remark,
+	}
+
+	err = g.iDao.UpdateByID(ctx, apply)
+	if err != nil {
+		logger.Warn("更新失败 ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupApplyUpdate)
+		return
+	}
+
+	response.Success(c, "ok")
 }
 
-func (g groupApplyHandler) List(ctx *gin.Context) {
-	// TODO implement me
-	panic("implement me")
+func (g groupApplyHandler) List(c *gin.Context) {
+	params := &types.GroupApplyListRequest{}
+	if err := c.ShouldBindJSON(params); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	uid, err2 := jwt.HeaderObtainUID(c)
+	if err2 != nil {
+		logger.Warn("uid obtain error: ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	ctx := middleware.WrapCtx(c)
+	isLeader := g.groupMemberDao.IsLeader(ctx, params.GroupID, uid)
+	if !isLeader {
+		logger.Warn("not permission ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupNotPermission)
+		return
+	}
+	list, err := g.iDao.List(ctx, []uint{uint(params.GroupID)})
+	if err != nil {
+		logger.Warn("list err ", logger.Err(err2), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGroupApplyCreateFailed)
+		return
+	}
+
+	items := make([]*types.GroupApplyItem, 0)
+	for _, item := range list {
+		items = append(items, &types.GroupApplyItem{
+			ID:        item.Id,
+			UserID:    item.UserId,
+			GroupID:   item.GroupId,
+			Remark:    item.Remark,
+			Avatar:    item.Avatar,
+			Username:  item.Nickname,
+			CreatedAt: timeutil.FormatDatetime(item.CreatedAt),
+		})
+	}
+
+	response.Success(c, gin.H{
+		"list": items,
+	})
 }
 
 func (g groupApplyHandler) All(c *gin.Context) {

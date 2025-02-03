@@ -35,6 +35,9 @@ var (
 	ErrGroupBanSpeakFailed          = errcode.NewError(groupBaseCode+21, "Group ban speak failed failed  "+groupName)
 	ErrGroupMuteFailed              = errcode.NewError(groupBaseCode+22, "Group mute failed  "+groupName)
 	ErrGroupApplyCreateFailed       = errcode.NewError(groupBaseCode+23, "Group apply create failed  "+groupName)
+	ErrGroupApplyNotFound           = errcode.NewError(groupBaseCode+24, "Group apply not found  "+groupName)
+	ErrGroupApplyAlreadyHandler     = errcode.NewError(groupBaseCode+25, "Group apply already handler  "+groupName)
+	ErrGroupApplyUpdate             = errcode.NewError(groupBaseCode+26, "Group apply update err  "+groupName)
 
 	// error codes are globally unique, adding 1 to the previous error code
 )
