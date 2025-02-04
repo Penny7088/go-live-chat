@@ -4,10 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"golang.org/x/sync/singleflight"
 	"gorm.io/gorm"
+	"lingua_exchange/internal/constant"
+	"lingua_exchange/internal/types"
+	"lingua_exchange/pkg/jsonutil"
+	"lingua_exchange/pkg/sliceutil"
+	"lingua_exchange/pkg/timeutil"
 
 	cacheBase "github.com/zhufuyi/sponge/pkg/cache"
 	"github.com/zhufuyi/sponge/pkg/ggorm/query"
@@ -32,12 +38,14 @@ type TalkRecordsDao interface {
 
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id string) error
 	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.TalkRecords) error
+	FindTalkRecord(ctx context.Context, id string) (*types.TalkRecordItem, error)
 }
 
 type talkRecordsDao struct {
-	db    *gorm.DB
-	cache cache.TalkRecordsCache // if nil, the cache is not used.
-	sfg   *singleflight.Group    // if cache is nil, the sfg is not used.
+	db                 *gorm.DB
+	cache              cache.TalkRecordsCache // if nil, the cache is not used.
+	sfg                *singleflight.Group    // if cache is nil, the sfg is not used.
+	talkRecordsVoteDao TalkRecordsVoteDao
 }
 
 // NewTalkRecordsDao creating the dao interface
@@ -46,9 +54,10 @@ func NewTalkRecordsDao(db *gorm.DB, xCache cache.TalkRecordsCache) TalkRecordsDa
 		return &talkRecordsDao{db: db}
 	}
 	return &talkRecordsDao{
-		db:    db,
-		cache: xCache,
-		sfg:   new(singleflight.Group),
+		db:                 db,
+		cache:              xCache,
+		sfg:                new(singleflight.Group),
+		talkRecordsVoteDao: NewTalkRecordsVoteDao(db, cache.NewTalkRecordsVoteCache(model.GetCacheType())),
 	}
 }
 
@@ -404,4 +413,160 @@ func (d *talkRecordsDao) UpdateByTx(ctx context.Context, tx *gorm.DB, table *mod
 	_ = d.deleteCache(ctx, table.MsgID)
 
 	return err
+}
+
+func (d *talkRecordsDao) FindTalkRecord(ctx context.Context, id string) (*types.TalkRecordItem, error) {
+	var (
+		err    error
+		item   *types.QueryTalkRecord
+		fields = []string{
+			"talk_records.msg_id",
+			"talk_records.sequence",
+			"talk_records.talk_type",
+			"talk_records.msg_type",
+			"talk_records.user_id",
+			"talk_records.receiver_id",
+			"talk_records.is_revoke",
+			"talk_records.extra",
+			"talk_records.created_at",
+		}
+	)
+
+	query := d.db.Table("talk_records")
+	query.Where("talk_records.msg_id = ?", id)
+	if err = query.Select(fields).Take(&item).Error; err != nil {
+		return nil, err
+	}
+
+	list, err := d.handleTalkRecords(ctx, []*types.QueryTalkRecord{item})
+	if err != nil {
+		return nil, err
+	}
+
+	return list[0], nil
+}
+
+// HandleTalkRecords 处理消息
+func (s *talkRecordsDao) handleTalkRecords(ctx context.Context, items []*types.QueryTalkRecord) ([]*types.TalkRecordItem, error) {
+	if len(items) == 0 {
+		return make([]*types.TalkRecordItem, 0), nil
+	}
+
+	var (
+		votes     []string
+		voteItems []*model.TalkRecordsVote
+	)
+
+	uids := make([]int, 0, len(items))
+	for _, item := range items {
+		uids = append(uids, item.UserId)
+
+		switch item.MsgType {
+		case constant.ChatMsgTypeVote:
+			votes = append(votes, item.MsgId)
+		}
+	}
+
+	var usersItems []*model.Users
+	err := s.db.Model(&model.Users{}).Select("id,username,profile_picture").Where("id in ?", sliceutil.Unique(uids)).Scan(&usersItems).Error
+	if err != nil {
+		return nil, err
+	}
+
+	hashUser := make(map[uint64]*model.Users)
+	for _, user := range usersItems {
+		hashUser[user.ID] = user
+	}
+
+	hashVotes := make(map[string]*model.TalkRecordsVote)
+	if len(votes) > 0 {
+		s.db.Model(&model.TalkRecordsVote{}).Where("msg_id in ?", votes).Scan(&voteItems)
+		for i := range voteItems {
+			hashVotes[voteItems[i].MsgID] = voteItems[i]
+		}
+	}
+
+	newItems := make([]*types.TalkRecordItem, 0, len(items))
+	for _, item := range items {
+		data := &types.TalkRecordItem{
+			MsgId:      item.MsgId,
+			Sequence:   int(item.Sequence),
+			TalkType:   item.TalkType,
+			MsgType:    item.MsgType,
+			UserId:     item.UserId,
+			ReceiverId: item.ReceiverId,
+			Nickname:   item.Nickname,
+			Avatar:     item.Avatar,
+			IsRevoke:   item.IsRevoke,
+			IsMark:     item.IsMark,
+			CreatedAt:  timeutil.FormatDatetime(item.CreatedAt),
+			Extra:      make(map[string]any),
+		}
+
+		if user, ok := hashUser[uint64(item.UserId)]; ok {
+			data.Nickname = user.Username
+			data.Avatar = user.ProfilePicture
+		}
+
+		_ = jsonutil.Decode(item.Extra, &data.Extra)
+
+		switch item.MsgType {
+		case constant.ChatMsgTypeVote:
+			if value, ok := hashVotes[item.MsgId]; ok {
+				options := make(map[string]any)
+				opts := make([]any, 0)
+
+				if err := jsonutil.Decode(value.AnswerOption, &options); err == nil {
+					arr := make([]string, 0, len(options))
+					for k := range options {
+						arr = append(arr, k)
+					}
+
+					sort.Strings(arr)
+
+					for _, v := range arr {
+						opts = append(opts, map[string]any{
+							"key":   v,
+							"value": options[v],
+						})
+					}
+				}
+
+				users := make([]int, 0)
+				if uids, err := s.talkRecordsVoteDao.GetVoteAnswerUser(ctx, int(value.ID)); err == nil {
+					users = uids
+				}
+
+				var statistics any
+
+				if res, err := s.talkRecordsVoteDao.GetVoteStatistics(ctx, int(value.ID)); err != nil {
+					statistics = map[string]any{
+						"count":   0,
+						"options": map[string]int{},
+					}
+				} else {
+					statistics = res
+				}
+
+				data.Extra = map[string]any{
+					"detail": map[string]any{
+						"id":            value.ID,
+						"msg_id":        value.MsgID,
+						"title":         value.Title,
+						"answer_mode":   value.AnswerMode,
+						"status":        value.Status,
+						"answer_option": opts,
+						"answer_num":    value.AnswerNum,
+						"answered_num":  value.AnsweredNum,
+					},
+					"statistics": statistics,
+					"vote_users": users, // 已投票成员
+				}
+			}
+		}
+
+		newItems = append(newItems, data)
+	}
+
+	return newItems, nil
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/zhufuyi/sponge/pkg/ggorm/query"
 	"github.com/zhufuyi/sponge/pkg/logger"
+	"gorm.io/gorm"
 	"lingua_exchange/internal/cache"
 	"lingua_exchange/internal/constant"
 	"lingua_exchange/internal/dao"
@@ -69,6 +70,7 @@ type MessageService struct {
 	groupMemberDao   dao.GroupMemberDao
 	messageCache     *cache.MessageCache
 	serverCache      cache.ServerCache
+	db               *gorm.DB
 }
 
 func NewMessageService() IMessageService {
@@ -81,6 +83,7 @@ func NewMessageService() IMessageService {
 		groupMemberDao:   dao.NewGroupMemberDao(model.GetDB(), cache.NewGroupMemberCache(model.GetCacheType())),
 		messageCache:     cache.NewMessageCache(model.GetCacheType()),
 		serverCache:      cache.NewServerCache(model.GetCacheType()),
+		db:               model.GetDB(),
 	}
 }
 
@@ -247,8 +250,8 @@ func (m MessageService) SendMixedMessage(ctx *context.Context, uid int, req *typ
 
 func (m MessageService) Revoke(ctx *context.Context, uid int, msgId string) error {
 	ctx2 := *ctx
-	record, err := m.talkRecordsDao.GetByID(ctx2, msgId)
-	if err != nil {
+	var record *model.TalkRecords
+	if err := m.db.First(&record, "msg_id = ?", msgId).Error; err != nil {
 		return err
 	}
 
@@ -264,7 +267,7 @@ func (m MessageService) Revoke(ctx *context.Context, uid int, msgId string) erro
 		return errors.New("超出有效撤回时间范围，无法进行撤销！")
 	}
 	record.IsRevoke = 1
-	err = m.talkRecordsDao.UpdateByID(ctx2, record)
+	err := m.talkRecordsDao.UpdateByID(ctx2, record)
 	if err != nil {
 		return err
 	}

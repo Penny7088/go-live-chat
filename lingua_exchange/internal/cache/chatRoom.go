@@ -11,14 +11,15 @@ import (
 	"github.com/zhufuyi/sponge/pkg/cache"
 	"github.com/zhufuyi/sponge/pkg/encoding"
 	"lingua_exchange/internal/model"
+	"lingua_exchange/internal/types"
 )
 
 type ChatRoomCache interface {
-	Add(ctx context.Context, opt *model.RoomOption) error
-	BatchAdd(ctx context.Context, opts []*model.RoomOption) error
-	Del(ctx context.Context, opt *model.RoomOption) error
-	BatchDel(ctx context.Context, opts []*model.RoomOption) error
-	All(ctx context.Context, opt *model.RoomOption) []int64
+	Add(ctx context.Context, opt *types.RoomOption) error
+	BatchAdd(ctx context.Context, opts []*types.RoomOption) error
+	Del(ctx context.Context, opt *types.RoomOption) error
+	BatchDel(ctx context.Context, opts []*types.RoomOption) error
+	All(ctx context.Context, opt *types.RoomOption) []int64
 }
 
 type chatRoomCache struct {
@@ -34,12 +35,12 @@ func NewChatRoomCache(cacheType *model.CacheType) ChatRoomCache {
 	switch cType {
 	case "redis":
 		c := cache.NewRedisCache(cacheType.Rdb, cachePrefix, jsonEncoding, func() interface{} {
-			return &model.RoomOption{}
+			return &types.RoomOption{}
 		})
 		return &chatRoomCache{cache: c, redis: model.GetRedisCli()}
 	case "memory":
 		c := cache.NewMemoryCache(cachePrefix, jsonEncoding, func() interface{} {
-			return &model.RoomOption{}
+			return &types.RoomOption{}
 		})
 		return &chatRoomCache{cache: c, redis: model.GetRedisCli()}
 	}
@@ -47,11 +48,11 @@ func NewChatRoomCache(cacheType *model.CacheType) ChatRoomCache {
 	return nil // no cache
 }
 
-func (c chatRoomCache) chatRoomKey(opt *model.RoomOption) string {
+func (c chatRoomCache) chatRoomKey(opt *types.RoomOption) string {
 	return fmt.Sprintf("ws:%s:%s:%s", opt.Sid, opt.RoomType, opt.Number)
 }
 
-func (c chatRoomCache) Add(ctx context.Context, opt *model.RoomOption) error {
+func (c chatRoomCache) Add(ctx context.Context, opt *types.RoomOption) error {
 	key := c.chatRoomKey(opt)
 
 	err := c.redis.SAdd(ctx, key, opt.Cid).Err()
@@ -62,7 +63,7 @@ func (c chatRoomCache) Add(ctx context.Context, opt *model.RoomOption) error {
 	return err
 }
 
-func (c chatRoomCache) BatchAdd(ctx context.Context, opts []*model.RoomOption) error {
+func (c chatRoomCache) BatchAdd(ctx context.Context, opts []*types.RoomOption) error {
 	pipeline := c.redis.Pipeline()
 	for _, opt := range opts {
 		key := c.name(opt)
@@ -75,11 +76,11 @@ func (c chatRoomCache) BatchAdd(ctx context.Context, opts []*model.RoomOption) e
 	return err
 }
 
-func (c chatRoomCache) Del(ctx context.Context, opt *model.RoomOption) error {
+func (c chatRoomCache) Del(ctx context.Context, opt *types.RoomOption) error {
 	return c.redis.SRem(ctx, c.name(opt), opt.Cid).Err()
 }
 
-func (c chatRoomCache) BatchDel(ctx context.Context, opts []*model.RoomOption) error {
+func (c chatRoomCache) BatchDel(ctx context.Context, opts []*types.RoomOption) error {
 	pipeline := c.redis.Pipeline()
 	for _, opt := range opts {
 		pipeline.SRem(ctx, c.name(opt), opt.Cid)
@@ -89,7 +90,7 @@ func (c chatRoomCache) BatchDel(ctx context.Context, opts []*model.RoomOption) e
 	return err
 }
 
-func (c chatRoomCache) All(ctx context.Context, opt *model.RoomOption) []int64 {
+func (c chatRoomCache) All(ctx context.Context, opt *types.RoomOption) []int64 {
 	arr := c.redis.SMembers(ctx, c.name(opt)).Val()
 
 	cids := make([]int64, 0, len(arr))
@@ -102,6 +103,6 @@ func (c chatRoomCache) All(ctx context.Context, opt *model.RoomOption) []int64 {
 	return cids
 }
 
-func (c chatRoomCache) name(opt *model.RoomOption) string {
+func (c chatRoomCache) name(opt *types.RoomOption) string {
 	return fmt.Sprintf("ws:%s:%s:%s", opt.Sid, opt.RoomType, opt.Number)
 }

@@ -30,6 +30,7 @@ type SessionHandler interface {
 	Top(c *gin.Context)
 	Disturb(c *gin.Context)
 	ClearUnreadMessage(c *gin.Context)
+	GetRecords(c *gin.Context)
 }
 
 type sessionHandler struct {
@@ -39,6 +40,10 @@ type sessionHandler struct {
 	lockCache      *cache.RedisLock
 	userDao        dao.UsersDao
 	groupDao       dao.GroupDao
+}
+
+func (s sessionHandler) GetRecords(c *gin.Context) {
+
 }
 
 // ClearUnreadMessage  清除未读消息

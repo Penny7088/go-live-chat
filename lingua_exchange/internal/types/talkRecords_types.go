@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 // TalkRecordExtraText 文本消息
 type TalkRecordExtraText struct {
 	Content  string  `json:"content"`            // 文本消息
@@ -110,4 +112,44 @@ type TalkRecordExtraGroupMuted struct {
 type TalkRecordExtraGroupCancelMuted struct {
 	OwnerId   int    `json:"owner_id"`   // 操作人ID
 	OwnerName string `json:"owner_name"` // 操作人昵称
+}
+
+type QueryTalkRecord struct {
+	MsgId      string    `json:"msg_id"`
+	Sequence   int64     `json:"sequence"`
+	TalkType   int       `json:"talk_type"`
+	MsgType    int       `json:"msg_type"`
+	UserId     int       `json:"user_id"`
+	ReceiverId int       `json:"receiver_id"`
+	IsRevoke   int       `json:"is_revoke"`
+	IsMark     int       `json:"is_mark"`
+	QuoteId    int       `json:"quote_id"`
+	Nickname   string    `json:"nickname"`
+	Avatar     string    `json:"avatar"`
+	Extra      string    `json:"extra"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+type TalkRecordItem struct {
+	MsgId      string `json:"msg_id"`
+	Sequence   int    `json:"sequence"`
+	TalkType   int    `json:"talk_type"`
+	MsgType    int    `json:"msg_type"`
+	UserId     int    `json:"user_id"`
+	ReceiverId int    `json:"receiver_id"`
+	Nickname   string `json:"nickname"`
+	Avatar     string `json:"avatar"`
+	IsRevoke   int    `json:"is_revoke"`
+	IsMark     int    `json:"is_mark"`
+	IsRead     int    `json:"is_read"`
+	CreatedAt  string `json:"created_at"`
+	Extra      any    `json:"extra"` // 额外参数
+}
+
+type GetTalkRecordsRequest struct {
+	TalkType   int `form:"talk_type" json:"talk_type" binding:"required,oneof=1 2"`         // 对话类型
+	MsgType    int `form:"msg_type" json:"msg_type" binding:"numeric"`                      // 消息类型
+	ReceiverId int `form:"receiver_id" json:"receiver_id" binding:"required,numeric,min=1"` // 接收者ID
+	Cursor     int `form:"cursor" json:"cursor" binding:"min=0,numeric"`                    // 上次查询的游标
+	Limit      int `form:"limit" json:"limit" binding:"required,numeric,max=100"`           // 数据行数
 }

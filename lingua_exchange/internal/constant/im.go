@@ -137,3 +137,14 @@ const (
 	GroupApplyStatusPass   = 2 // 通过
 	GroupApplyStatusRefuse = 3 // 拒绝
 )
+
+type RoomType string
+
+const (
+	RoomImGroup RoomType = "room_chat_group" // 群聊房间
+)
+
+const (
+	VoteAnswerModeSingleChoice   = 0
+	VoteAnswerModeMultipleChoice = 1
+)
