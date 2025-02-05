@@ -124,10 +124,10 @@ func (s sessionHandler) GetRecords(c *gin.Context) {
 // @Summary 清除未读消息
 // @Description  清除未读消息
 // @Tags    消息
-// @Param data body types.TalkSessionClearUnreadNumRequest true
+// @Param data body types.TalkSessionClearUnreadNumRequest true "request body"
 // @accept  json
 // @Produce json
-// @Success 200 {object}
+// @Success 200 {object} types.Result
 // @Router /api/v1/session/disturb [post]
 func (s sessionHandler) ClearUnreadMessage(c *gin.Context) {
 	params := &types.TalkSessionClearUnreadNumRequest{}
