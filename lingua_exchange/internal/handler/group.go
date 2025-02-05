@@ -57,6 +57,15 @@ type groupHandler struct {
 	usersDao         dao.UsersDao
 }
 
+// Create
+// @Summary 创建群组
+// @Description 创建一个新的群组，需要提供群组名称、成员ID和可选的头像。
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param request body types.GroupCreateRequest true "创建群组所需参数"
+// @Success 200 {object} types.GroupCreateReply "成功创建群组"
+// @Router /group/create [post]
 func (g groupHandler) Create(ctx *gin.Context) {
 	var (
 		members  []*model.GroupMember
@@ -552,6 +561,15 @@ func (g groupHandler) Detail(c *gin.Context) {
 	response.Success(c, resp)
 }
 
+// GroupList
+// @Summary 获取群组列表
+// @Description 返回所有群组的信息，用户ID 从请求头中的token提取。
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token，用于身份验证"
+// @Success 200 {object} types.GroupListResponse
+// @Router /group/list [get]
 func (g groupHandler) GroupList(c *gin.Context) {
 	uid, err := jwt.HeaderObtainUID(c)
 	if err != nil {
