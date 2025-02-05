@@ -16,6 +16,7 @@ import (
 	"github.com/zhufuyi/sponge/pkg/logger"
 	"github.com/zhufuyi/sponge/pkg/servicerd/registry"
 	"golang.org/x/sync/errgroup"
+	"lingua_exchange/internal/chat/subscribe"
 	"lingua_exchange/internal/config"
 	"lingua_exchange/pkg/socket"
 )
@@ -27,13 +28,14 @@ type ServerOption struct {
 }
 
 type SocketServerConfig struct {
-	Config   *config.Config
-	ctx      context.Context
-	cancel   context.CancelFunc
-	engine   *gin.Engine
-	server   *http.Server
-	registry registry.Registry
-	instance *registry.ServiceInstance
+	Config          *config.Config
+	ctx             context.Context
+	cancel          context.CancelFunc
+	engine          *gin.Engine
+	server          *http.Server
+	registry        registry.Registry
+	instance        *registry.ServiceInstance
+	subscribeServer *subscribe.Server
 }
 
 func (s *SocketServerConfig) String() string {
@@ -63,10 +65,11 @@ func WithServerOption(opt ServerOption) Option {
 func NewSocketServer(engine *gin.Engine, opts ...Option) *SocketServerConfig {
 	ctx, cancel := context.WithCancel(context.Background())
 	s := &SocketServerConfig{
-		Config: config.Get(),
-		ctx:    ctx,
-		cancel: cancel,
-		engine: engine,
+		Config:          config.Get(),
+		ctx:             ctx,
+		cancel:          cancel,
+		engine:          engine,
+		subscribeServer: subscribe.NewServer(subscribe.NewSubscriberServers()),
 	}
 
 	for _, opt := range opts {
@@ -96,6 +99,11 @@ func (s *SocketServerConfig) Start() error {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 
+	time.AfterFunc(3*time.Second, func() {
+		s.subscribeServer.Start(eg, groupCtx)
+	})
+
+	logger.Any("Server ID   :%s", s.Config.App.Sid)
 	logger.Any("WebSocket server starting on port: %d", s.Config.Server.Websocket)
 
 	return s.run(eg, groupCtx, c)

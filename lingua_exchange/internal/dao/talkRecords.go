@@ -39,13 +39,15 @@ type TalkRecordsDao interface {
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id string) error
 	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.TalkRecords) error
 	FindTalkRecord(ctx context.Context, id string) (*types.TalkRecordItem, error)
+	FindAllTalkRecords(ctx context.Context, opt *types.FindAllTalkRecordsOpt) ([]*types.TalkRecordItem, error)
 }
 
 type talkRecordsDao struct {
-	db                 *gorm.DB
-	cache              cache.TalkRecordsCache // if nil, the cache is not used.
-	sfg                *singleflight.Group    // if cache is nil, the sfg is not used.
-	talkRecordsVoteDao TalkRecordsVoteDao
+	db                   *gorm.DB
+	cache                cache.TalkRecordsCache // if nil, the cache is not used.
+	sfg                  *singleflight.Group    // if cache is nil, the sfg is not used.
+	talkRecordsVoteDao   TalkRecordsVoteDao
+	talkRecordsDeleteDao TalkRecordsDeleteDao
 }
 
 // NewTalkRecordsDao creating the dao interface
@@ -54,11 +56,118 @@ func NewTalkRecordsDao(db *gorm.DB, xCache cache.TalkRecordsCache) TalkRecordsDa
 		return &talkRecordsDao{db: db}
 	}
 	return &talkRecordsDao{
-		db:                 db,
-		cache:              xCache,
-		sfg:                new(singleflight.Group),
-		talkRecordsVoteDao: NewTalkRecordsVoteDao(db, cache.NewTalkRecordsVoteCache(model.GetCacheType())),
+		db:                   db,
+		cache:                xCache,
+		sfg:                  new(singleflight.Group),
+		talkRecordsVoteDao:   NewTalkRecordsVoteDao(db, cache.NewTalkRecordsVoteCache(model.GetCacheType())),
+		talkRecordsDeleteDao: NewTalkRecordsDeleteDao(db, cache.NewTalkRecordsDeleteCache(model.GetCacheType())),
 	}
+}
+
+func (d *talkRecordsDao) FindAllTalkRecords(ctx context.Context, opt *types.FindAllTalkRecordsOpt) ([]*types.TalkRecordItem, error) {
+	var (
+		items  = make([]*types.QueryTalkRecord, 0, opt.Limit)
+		cursor = opt.Cursor
+	)
+
+	for {
+		// 这里查询数据放弃了关联查询，所以这里需要查询多次，防止查询中存在用户已删除的数据需要过滤掉
+		list, err := d.findAllRecords(ctx, &types.FindAllTalkRecordsOpt{
+			TalkType:   opt.TalkType,
+			UserId:     opt.UserId,
+			ReceiverId: opt.ReceiverId,
+			MsgType:    opt.MsgType,
+			Cursor:     cursor,
+			Limit:      opt.Limit + 10, // 多查几条数据
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(list) == 0 {
+			break
+		}
+
+		tmpMsgIds := make([]string, 0, len(list))
+		for _, v := range list {
+			tmpMsgIds = append(tmpMsgIds, v.MsgId)
+		}
+
+		msgIds, err := d.talkRecordsDeleteDao.FindAllMsgIds(ctx, tmpMsgIds, opt.UserId)
+		if err != nil {
+			return nil, err
+		}
+
+		hashIds := make(map[string]struct{}, len(msgIds))
+		for _, msgId := range msgIds {
+			hashIds[msgId] = struct{}{}
+		}
+
+		for _, v := range list {
+			if _, ok := hashIds[v.MsgId]; ok {
+				continue
+			}
+
+			items = append(items, v)
+		}
+
+		if len(items) >= opt.Limit || len(list) < opt.Limit {
+			break
+		}
+
+		// 设置游标继续往下执行
+		cursor = int(list[len(list)-1].Sequence)
+	}
+
+	if len(items) > opt.Limit {
+		items = items[:opt.Limit]
+	}
+
+	return d.handleTalkRecords(ctx, items)
+
+}
+
+func (d *talkRecordsDao) findAllRecords(ctx context.Context, opt *types.FindAllTalkRecordsOpt) ([]*types.QueryTalkRecord, error) {
+	query := d.db.WithContext(ctx).Table("talk_records")
+	query.Select([]string{
+		"talk_records.sequence",
+		"talk_records.talk_type",
+		"talk_records.msg_type",
+		"talk_records.msg_id",
+		"talk_records.user_id",
+		"talk_records.receiver_id",
+		"talk_records.is_revoke",
+		"talk_records.extra",
+		"talk_records.created_at",
+	})
+
+	if opt.Cursor > 0 {
+		query.Where("talk_records.sequence < ?", opt.Cursor)
+	}
+
+	if opt.TalkType == constant.ChatPrivateMode {
+		subQuery := d.db.Where("talk_records.user_id = ? and talk_records.receiver_id = ?", opt.UserId, opt.ReceiverId)
+		subQuery.Or("talk_records.user_id = ? and talk_records.receiver_id = ?", opt.ReceiverId, opt.UserId)
+
+		query.Where(subQuery)
+	} else {
+		query.Where("talk_records.receiver_id = ?", opt.ReceiverId)
+	}
+
+	if opt.MsgType != nil && len(opt.MsgType) > 0 {
+		query.Where("talk_records.msg_type in ?", opt.MsgType)
+	}
+
+	query.Where("talk_records.talk_type = ?", opt.TalkType)
+	query.Order("talk_records.sequence desc").Limit(opt.Limit)
+
+	var items []*types.QueryTalkRecord
+	if err := query.Scan(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
 
 func (d *talkRecordsDao) deleteCache(ctx context.Context, id string) error {

@@ -14,6 +14,7 @@ import (
 	"lingua_exchange/internal/constant"
 	"lingua_exchange/internal/dao"
 	"lingua_exchange/internal/ecode"
+	"lingua_exchange/internal/imService"
 	"lingua_exchange/internal/model"
 	"lingua_exchange/internal/types"
 	"lingua_exchange/pkg/jwt"
@@ -34,16 +35,89 @@ type SessionHandler interface {
 }
 
 type sessionHandler struct {
-	unreadCache    cache.UnreadCache
-	talkSessionDao dao.TalkSessionDao
-	messageCache   *cache.MessageCache
-	lockCache      *cache.RedisLock
-	userDao        dao.UsersDao
-	groupDao       dao.GroupDao
+	unreadCache        cache.UnreadCache
+	talkSessionDao     dao.TalkSessionDao
+	messageCache       *cache.MessageCache
+	lockCache          *cache.RedisLock
+	userDao            dao.UsersDao
+	groupDao           dao.GroupDao
+	permissionsService imService.IPermissionService
+	talkRecordsDao     dao.TalkRecordsDao
 }
 
 func (s sessionHandler) GetRecords(c *gin.Context) {
+	params := &types.GetTalkRecordsRequest{}
+	ctx := middleware.WrapCtx(c)
+	if err := c.ShouldBind(params); err != nil {
+		logger.Warn("ShouldBindJSON error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.InvalidParams)
+		return
+	}
+	uid, err := jwt.HeaderObtainUID(c)
+	if err != nil {
+		logger.Warn("obtain uid  error: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.Unauthorized, err)
+		return
+	}
 
+	if params.TalkType == constant.ChatGroupMode {
+		err := s.permissionsService.IsAuth(ctx, &types.AuthOption{
+			TalkType:   params.TalkType,
+			UserId:     uid,
+			ReceiverId: uint64(params.ReceiverId),
+		})
+
+		if err != nil {
+			items := make([]types.TalkRecordItem, 0)
+			items = append(items, types.TalkRecordItem{
+				ID:         1,
+				MsgId:      strutil.NewMsgId(),
+				Sequence:   1,
+				TalkType:   params.TalkType,
+				MsgType:    constant.ChatMsgSysText,
+				ReceiverId: params.ReceiverId,
+				Extra: types.TalkRecordExtraText{
+					Content: "暂无权限查看群消息",
+				},
+				CreatedAt: timeutil.DateTime(),
+			})
+			response.Success(c, gin.H{
+				"cursor": 1,
+				"list":   items,
+			})
+			return
+		}
+	}
+
+	records, err := s.talkRecordsDao.FindAllTalkRecords(ctx, &types.FindAllTalkRecordsOpt{
+		TalkType:   params.TalkType,
+		UserId:     uid,
+		ReceiverId: params.ReceiverId,
+		Cursor:     params.Cursor,
+		Limit:      params.Limit,
+	})
+
+	if err != nil {
+		logger.Warn("获取记录失败: ", logger.Err(err), middleware.GCtxRequestIDField(c))
+		response.Error(c, ecode.ErrGetRecordsFailed, err)
+		return
+
+	}
+
+	cursor := 0
+	if length := len(records); length > 0 {
+		cursor = records[length-1].Sequence
+	}
+
+	for i, record := range records {
+		if record.IsRevoke == 1 {
+			records[i].Extra = make(map[string]any)
+		}
+	}
+	response.Success(c, gin.H{
+		"cursor": cursor,
+		"list":   records,
+	})
 }
 
 // ClearUnreadMessage  清除未读消息

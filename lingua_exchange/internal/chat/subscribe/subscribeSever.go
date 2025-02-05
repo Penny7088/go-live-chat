@@ -21,6 +21,15 @@ type IConsume interface {
 }
 
 type SubscriberServers struct {
+	HealthSubscribe  *HealthSubscribe  // 注册健康上报
+	MessageSubscribe *MessageSubscribe // 注册消息订阅
+}
+
+func NewSubscriberServers() *SubscriberServers {
+	return &SubscriberServers{
+		HealthSubscribe:  NewHealthSubscribe(),
+		MessageSubscribe: NewMessageSubscribe(),
+	}
 }
 
 type Server struct {

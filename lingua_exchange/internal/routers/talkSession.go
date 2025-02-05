@@ -21,4 +21,5 @@ func sessionRouter(group *gin.RouterGroup, h handler.SessionHandler) {
 	g.POST("/topping", h.Top)
 	g.POST("/disturb", h.Disturb)
 	g.POST("/unread/clear", h.ClearUnreadMessage)
+	g.POST("/records", h.GetRecords)
 }

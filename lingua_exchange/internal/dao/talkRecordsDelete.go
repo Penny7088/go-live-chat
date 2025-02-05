@@ -35,12 +35,24 @@ type TalkRecordsDeleteDao interface {
 	CreateByTx(ctx context.Context, tx *gorm.DB, table *model.TalkRecordsDelete) (uint64, error)
 	DeleteByTx(ctx context.Context, tx *gorm.DB, id uint64) error
 	UpdateByTx(ctx context.Context, tx *gorm.DB, table *model.TalkRecordsDelete) error
+	FindAllMsgIds(ctx context.Context, msgIds []string, userId int) ([]string, error)
 }
 
 type talkRecordsDeleteDao struct {
 	db    *gorm.DB
 	cache cache.TalkRecordsDeleteCache // if nil, the cache is not used.
 	sfg   *singleflight.Group          // if cache is nil, the sfg is not used.
+}
+
+func (d *talkRecordsDeleteDao) FindAllMsgIds(ctx context.Context, msgIds []string, userId int) ([]string, error) {
+	var records []string
+
+	err := d.db.WithContext(ctx).Table("talk_records_delete").Select("msg_id").Where("user_id =?", userId).Where("msg_id in ?", msgIds).Scan(&records).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
 }
 
 // NewTalkRecordsDeleteDao creating the dao interface
@@ -124,7 +136,7 @@ func (d *talkRecordsDeleteDao) GetByID(ctx context.Context, id uint64) (*model.T
 
 	if errors.Is(err, model.ErrCacheNotFound) {
 		// for the same id, prevent high concurrent simultaneous access to database
-		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { //nolint
+		val, err, _ := d.sfg.Do(utils.Uint64ToStr(id), func() (interface{}, error) { // nolint
 			table := &model.TalkRecordsDelete{}
 			err = d.db.WithContext(ctx).Where("id = ?", id).First(table).Error
 			if err != nil {

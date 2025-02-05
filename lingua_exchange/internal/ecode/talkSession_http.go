@@ -15,4 +15,5 @@ var (
 	ErrDeleteSessionFail     = errcode.NewError(sessionBaseCode+7, "delete session fail "+sessionName)
 	ErrTopSessionFail        = errcode.NewError(sessionBaseCode+8, "top session fail "+sessionName)
 	ErrDisturbSessionFail    = errcode.NewError(sessionBaseCode+9, "Disturb session fail "+sessionName)
+	ErrGetRecordsFailed      = errcode.NewError(sessionBaseCode+10, "get records  fail "+sessionName)
 )

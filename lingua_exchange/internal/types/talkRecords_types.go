@@ -131,6 +131,7 @@ type QueryTalkRecord struct {
 }
 
 type TalkRecordItem struct {
+	ID         int    `json:"id"`
 	MsgId      string `json:"msg_id"`
 	Sequence   int    `json:"sequence"`
 	TalkType   int    `json:"talk_type"`
@@ -152,4 +153,13 @@ type GetTalkRecordsRequest struct {
 	ReceiverId int `form:"receiver_id" json:"receiver_id" binding:"required,numeric,min=1"` // 接收者ID
 	Cursor     int `form:"cursor" json:"cursor" binding:"min=0,numeric"`                    // 上次查询的游标
 	Limit      int `form:"limit" json:"limit" binding:"required,numeric,max=100"`           // 数据行数
+}
+
+type FindAllTalkRecordsOpt struct {
+	TalkType   int   // 对话类型
+	UserId     int   // 获取消息的用户
+	ReceiverId int   // 接收者ID
+	MsgType    []int // 消息类型
+	Cursor     int   // 上次查询的游标
+	Limit      int   // 数据行数
 }
