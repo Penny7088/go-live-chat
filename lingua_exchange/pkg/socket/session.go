@@ -15,8 +15,8 @@ var once sync.Once
 
 // session 渠道客户端结构
 type session struct {
-	Chat    *Channel // 默认分组
-	Example *Channel // 示例分组
+	Chat *Channel // 默认分组
+	// Example *Channel // 示例分组
 
 	channels map[string]*Channel
 }
@@ -38,13 +38,13 @@ func Initialize(ctx context.Context, eg *errgroup.Group, fn func(name string)) {
 // initialize 内部初始化逻辑，创建默认 Chat 和 Example 渠道并启动各项服务
 func initialize(ctx context.Context, eg *errgroup.Group, fn func(name string)) {
 	Session = &session{
-		Chat:     NewChannel("chat", make(chan *SenderContent, 5<<20)),  // 创建 chat 渠道，缓冲区为 5MB
-		Example:  NewChannel("example", make(chan *SenderContent, 100)), // 创建 example 渠道，缓冲区为 100
+		Chat: NewChannel("chat", make(chan *SenderContent, 5<<20)), // 创建 chat 渠道，缓冲区为 5MB
+		// Example:  NewChannel("example", make(chan *SenderContent, 100)), // 创建 example 渠道，缓冲区为 100
 		channels: map[string]*Channel{},
 	}
 
 	Session.channels["chat"] = Session.Chat
-	Session.channels["example"] = Session.Example
+	// Session.channels["example"] = Session.Example
 
 	// 延时 3 秒启动守护协程
 	time.AfterFunc(3*time.Second, func() {
