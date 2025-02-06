@@ -67,9 +67,9 @@ func initialize(ctx context.Context, eg *errgroup.Group, fn func(name string)) {
 		})
 
 		// 启动 example 渠道协程
-		eg.Go(func() error {
-			defer fn("example exit")
-			return Session.Example.Start(ctx)
-		})
+		// eg.Go(func() error {
+		// 	defer fn("example exit")
+		// 	return Session.Example.Start(ctx)
+		// })
 	})
 }
