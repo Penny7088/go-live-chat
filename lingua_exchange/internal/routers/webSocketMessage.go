@@ -30,8 +30,8 @@ func messageRouter(group *gin.Engine, h handler.MessageHandler) {
 	routerGroup := group.Group("ws")
 	routerGroup.GET("/connect/detail", func(ctx *gin.Context) {
 		ctx.JSON(200, map[string]any{
-			"chat":    socket.Session.Chat.Count(),
-			"example": socket.Session.Example.Count(),
+			"chat": socket.Session.Chat.Count(),
+			//"example": socket.Session.Example.Count(),
 		})
 	})
 
